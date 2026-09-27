@@ -7,7 +7,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Skills-23-4B5563?style=flat-square" alt="Skills" />
   <img src="https://img.shields.io/badge/Conformance-12%20rules-0969DA?style=flat-square" alt="Conformance rules" />
-  <img src="https://img.shields.io/badge/Tests-69%20passed-2EA44F?style=flat-square" alt="Tests" />
+  <img src="https://img.shields.io/badge/Tests-92%20passed-2EA44F?style=flat-square" alt="Tests" />
   <img src="https://img.shields.io/badge/Mutation-14%2F14%20caught-2EA44F?style=flat-square" alt="Mutation harness" />
   <img src="https://img.shields.io/badge/Dependencies-0%20(stdlib)-gray?style=flat-square" alt="Zero dependencies" />
   <img src="https://img.shields.io/badge/Python-3.11%20%7C%203.14-3776AB?style=flat-square" alt="Python" />
@@ -95,7 +95,7 @@ python scripts/vault-inbox-consolidate.py --vault-path <知识库根> --dry-run
 
 | 技能 | 作用 | 前置 | MCP | 附带资产 |
 |---|---|---|---|---|
-| **主链** `dfs` | Route developer intent to optimal Defensive Skills. | 需知识库 | — | refs×2 |
+| **主链** `dfs` | Route developer intent to optimal Defensive Skills. | 需知识库 | — | refs×3 |
 | **主链** `dfs-plan` | Draft bite-sized TDD implementation plans from specs. | 需知识库 | omni_search, get_code_template | tpl×1 |
 | **主链** `dfs-exec` | Execute TDD plans via isolated subagents with maker-checker. | 需知识库 | — | tpl×2 |
 | **主链** `dfs-debug` | Execute 4-step systematic root-cause debugging with repro. | 需知识库 | search_vault, save_inbox_draft | tpl×1 |
@@ -134,9 +134,10 @@ python tests/test_docs_links.py            # 文档链接不悬空、不指向�
 python tests/test_bootstrap_script.py      # bootstrap.py：幂等 / 不覆写钩子 / 不泄路径 → exit 0
 python tests/test_readme_skill_table.py    # README 技能表可被树重新导出（含前置分档）→ exit 0
 python tests/test_install.py               # 安装器：分档筛选 / 不覆盖已有 / dry-run → exit 0
+python tests/test_harness_field_mapping.py # frontmatter 字段映射表与树一致 → exit 0
 ```
 
-八个门禁在 **Python 3.11.8 与 3.14.7 下结果完全一致**（这条是设计目标：门禁的结论不该取决于你碰巧用哪个解释器调用它——早期版本 `import yaml`，在没有 PyYAML 的解释器下直接跑不起来）。
+九个门禁在 **Python 3.11.8 与 3.14.7 下结果完全一致**（这条是设计目标：门禁的结论不该取决于你碰巧用哪个解释器调用它——早期版本 `import yaml`，在没有 PyYAML 的解释器下直接跑不起来）。
 
 几条刻意的设计，值得单独说：
 
@@ -167,7 +168,7 @@ python tests/test_install.py               # 安装器：分档筛选 / 不覆�
 
 ## 🗂️ 知识库布局与根目录契约
 
-技能与脚本都不假定你的目录名。根目录解析契约（`--root` / `--vault-path` → `$WIKI_PATH` → `$OBSIDIAN_VAULT_PATH` → 向上找 `AGENTS.md` / `.obsidian/` → **失败即报错**，绝不回退到某个硬编码路径）：
+技能与脚本都不假定你的目录名。根目录解析契约（`--root` / `--vault-path` → `$WIKI_PATH` → `$OBSIDIAN_VAULT_PATH` → 向上找 `AGENTS.md` / `.obsidian/` → **没有知识库时进入「只存档」模式**，绝不回退到某个硬编码路径）：
 
 ```json
 {
@@ -183,6 +184,8 @@ python tests/test_install.py               # 安装器：分档筛选 / 不覆�
 
 把这段存成知识库根目录的 `knowledge.json` 即可覆盖默认布局；未知键会被**报错**而不是忽略。默认值对应 DFS 一贯使用的目录名（`01-Rules/`、`03-Languages/`、`99-Inbox/`…），所以不改也没问题。
 
+**还没有知识库？** 也能用：`save_inbox_draft` 会把草稿落到投放箱（`$DFS_INBOX`，否则 `<cwd>/.dfs-inbox/`），首次写入时自动生成一个自我说明的 `README.md`，并把**绝对路径**打进输出；检索类工具此时一律拒绝，并说明原因（"没找到" 与 "没接知识库" 必须长得不一样）。`--root` 指错则直接 exit 2，不会悄悄变成投放箱；之后配好知识库，用 `vault-inbox-consolidate.py --inbox <投放箱> --vault-path <你的根> --execute` 一次性归档。
+
 ---
 
 ## ⚠️ 已知边界（不藏）
@@ -190,7 +193,8 @@ python tests/test_install.py               # 安装器：分档筛选 / 不覆�
 * **`dfs-bootstrap` Phase 3.5 已完成跨平台移植。** `dfs-bootstrap/scripts/bootstrap.py`（stdlib）一次跑完：校验并补齐 `.gitignore`、安装密钥扫描钩子（**绝不覆写**已有钩子）并设置 `core.hooksPath`、注入规则锚点、下发 `WORKMEMORY/` 四件套；幂等，`--dry-run` 可预览，模板缺失即 **exit 2** 而不是跳过。原先那版 Windows-only PowerShell 不随包（对照见 [`scripts/README.md`](scripts/README.md)）。
 * **`vault-healthcheck.py` / `vault-inbox-triage.py` 不随包。** 它们体检的是特定知识库的结构，换成别人的库天生就是错的——受影响的是 `dfs-inbox-consolidate`（即表格里唯一标为「需额外资产」的技能）。
 * **检索是加权关键词/标签打分，不是 BM25 + 图谱。** 对笔记量级的知识库足够；上万篇就该换真正的排序器（升级点写在 `mcp/knowledge_server.py` 的模块注释里）。
-* **frontmatter 里的 `disable-model-invocation` / `metadata.hermes.*` 是 Hermes 方言。** 映射到其他 harness 的说明待补。
+* **frontmatter 里的 `disable-model-invocation` / `metadata.hermes.*` 是 Hermes 方言。** 映射到其他 harness 的说明待补（见 [`dfs/references/harness-field-mapping.md`](dfs/references/harness-field-mapping.md)）。
+* **投放箱不是知识库。** 完全没有知识库时草稿能存能列，但**归档（晋级）必须有一个知识库根**——`--execute` 在没有根时会 exit 2，而不是猜一个目标目录。这是刻意的：归档是"删原件 + 写正式目录"，目标都不能猜。
 * 仓库内含 **23 个技能**（`dfs-agent-sdk` 已移出、另行发布）；表格的「前置」列把每个技能的依赖实测标出，最轻的 5 个零前置技能装完即用。
 
 ---
@@ -201,6 +205,7 @@ python tests/test_install.py               # 安装器：分档筛选 / 不覆�
 |---|---|
 | 知识层 MCP：注册、根契约、无 MCP 降级表 | [`mcp/README.md`](mcp/README.md) |
 | 随包引擎脚本 / 未随包清单 / 移植分歧 | [`scripts/README.md`](scripts/README.md) |
+| 各 harness 认哪些 frontmatter 字段 | [`dfs/references/harness-field-mapping.md`](dfs/references/harness-field-mapping.md) |
 | 一致性门禁与变异夹具 | [`tests/`](tests/) |
 | 按分档安装到目标 harness | [`install.py`](install.py) |
 | 仓库安全守卫（密钥扫描钩子） | [`.githooks/pre-commit`](.githooks/) |

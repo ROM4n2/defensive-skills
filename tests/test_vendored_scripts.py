@@ -56,6 +56,18 @@ def run(cmd, cwd=None, env=None):
                           encoding="utf-8", cwd=cwd, env=env)
 
 
+def clean_env(**overrides):
+    """os.environ with every knowledge-base variable stripped — i.e. a stranger's machine.
+
+    Without this the gate would pass on the author's box (where $WIKI_PATH is exported) and
+    quietly test nothing.
+    """
+    env = {k: v for k, v in os.environ.items()
+           if k not in ("WIKI_PATH", "OBSIDIAN_VAULT_PATH", "DFS_INBOX")}
+    env.update(overrides)
+    return env
+
+
 class TestExecStateLedger(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -172,12 +184,62 @@ class TestInboxConsolidate(unittest.TestCase):
         self.assertEqual(len(names), 2, f"fallback route not applied: {names}")
 
     def test_05_missing_root_fails_loudly_instead_of_reporting_empty(self):
-        env = {k: v for k, v in os.environ.items()
-               if k not in ("WIKI_PATH", "OBSIDIAN_VAULT_PATH")}
         empty_cwd = pathlib.Path(self.tmp.name)
-        p = run([str(CONSOLIDATE)], cwd=str(empty_cwd), env=env)
+        p = run([str(CONSOLIDATE)], cwd=str(empty_cwd), env=clean_env())
         self.assertEqual(p.returncode, 2, f"expected a loud failure, got {p.returncode}: {p.stdout}")
         self.assertIn("无法解析知识库根目录", p.stderr)
+
+    # -- tier 3: no knowledge base, drafts still land somewhere findable --------------------
+    def make_dropbox(self, name="dropbox"):
+        drop = pathlib.Path(self.tmp.name) / name
+        drop.mkdir()
+        (drop / "2026-09-27-alt.md").write_text(DRAFT_BODY, encoding="utf-8")
+        return drop
+
+    def test_06_inbox_flag_files_drafts_from_an_arbitrary_directory(self):
+        drop = self.make_dropbox()
+        p = run([str(CONSOLIDATE), "--vault-path", str(self.root), "--inbox", str(drop),
+                 "--execute"], cwd=str(self.tmp.name), env=clean_env())
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertEqual(len(list((self.root / "06-Sources").glob("*.md"))), 1)
+        self.assertFalse((drop / "2026-09-27-alt.md").exists(), "archived draft was not removed")
+        self.assertTrue((self.root / "99-Inbox" / "2026-09-27-gbk.md").is_file(),
+                        "--inbox leaked into the default queue")
+
+    def test_07_drop_box_without_a_root_lists_but_never_files(self):
+        drop = self.make_dropbox()
+        p = run([str(CONSOLIDATE), "--inbox", str(drop)], cwd=str(self.tmp.name), env=clean_env())
+        self.assertEqual(p.returncode, 0, f"listing must work without a root: {p.stderr}")
+        self.assertIn(str(drop), p.stdout, "the absolute drop-box path is the whole point")
+        self.assertIn("2026-09-27-alt.md", p.stdout)
+        self.assertIn("--execute", p.stdout, "the user must be told how to promote")
+        self.assertTrue((drop / "2026-09-27-alt.md").is_file(), "listing must not move anything")
+
+    def test_08_execute_without_a_root_is_refused(self):
+        drop = self.make_dropbox()
+        p = run([str(CONSOLIDATE), "--inbox", str(drop), "--execute"],
+                cwd=str(self.tmp.name), env=clean_env())
+        self.assertEqual(p.returncode, 2, f"filing without a destination must fail loudly: {p.stdout}")
+        self.assertIn("无知识库根目录", p.stderr)
+        self.assertTrue((drop / "2026-09-27-alt.md").is_file(), "refused run still moved the draft")
+
+    def test_09_drop_box_is_discovered_from_the_working_directory(self):
+        cwd = pathlib.Path(self.tmp.name) / "project"
+        (cwd / ".dfs-inbox").mkdir(parents=True)
+        (cwd / ".dfs-inbox" / "2026-09-27-local.md").write_text(DRAFT_BODY, encoding="utf-8")
+        p = run([str(CONSOLIDATE)], cwd=str(cwd), env=clean_env())
+        self.assertEqual(p.returncode, 0, f"tier 3 was not discovered from cwd: {p.stderr}")
+        self.assertIn("2026-09-27-local.md", p.stdout)
+
+    def test_10_the_drop_box_marker_is_never_treated_as_a_draft(self):
+        drop = self.make_dropbox()
+        (drop / "README.md").write_text("# DFS draft drop box\n", encoding="utf-8")
+        p = run([str(CONSOLIDATE), "--vault-path", str(self.root), "--inbox", str(drop),
+                 "--execute"], cwd=str(self.tmp.name), env=clean_env())
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertEqual(len(list((self.root / "06-Sources").glob("*.md"))), 1,
+                         "the marker was filed as knowledge")
+        self.assertTrue((drop / "README.md").is_file(), "the marker was deleted or moved")
 
 
 class TestTransactionRollback(unittest.TestCase):
@@ -214,6 +276,46 @@ class TestTransactionRollback(unittest.TestCase):
             self.assertFalse((root / "b.md.tmp").exists(), "temp file left behind")
             journal = json.loads((root / ".vault-tx" / "tx-injected.json").read_text(encoding="utf-8"))
             self.assertEqual(journal["status"], "rolled_back")
+
+
+class TestDeletionBounds(unittest.TestCase):
+    """The path bound must survive --inbox: only an explicitly declared root is ever extra."""
+
+    def setUp(self):
+        import vault_transaction as vt
+        self.vt = vt
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = pathlib.Path(self._tmp.name)
+        self.root = self.tmp / "kb"
+        self.drop = self.tmp / "drop"
+        self.elsewhere = self.tmp / "elsewhere"
+        for d in (self.root, self.drop, self.elsewhere):
+            d.mkdir()
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_an_undeclared_path_is_still_refused(self):
+        victim = self.elsewhere / "notes.md"
+        victim.write_text("do not touch\n", encoding="utf-8")
+        with self.assertRaises(self.vt.TransactionError):
+            with self.vt.VaultTransaction(self.root, tx_id="tx-bounds") as tx:
+                tx.stage_deletion(victim)
+        self.assertTrue(victim.is_file(), "an out-of-root deletion actually happened")
+
+    def test_a_declared_extra_root_may_be_deleted(self):
+        draft = self.drop / "draft.md"
+        draft.write_text("draft\n", encoding="utf-8")
+        with self.vt.VaultTransaction(self.root, tx_id="tx-inbox", extra_roots=[self.drop]) as tx:
+            tx.stage_deletion(draft)
+        self.assertFalse(draft.exists(), "the consumed draft should be removed")
+
+    def test_writes_stay_inside_the_root_even_with_an_extra_root(self):
+        outside = self.elsewhere / "target.md"
+        with self.assertRaises(self.vt.TransactionError):
+            with self.vt.VaultTransaction(self.root, tx_id="tx-write", extra_roots=[self.elsewhere]) as tx:
+                tx.stage(outside, new_text="nope")
+        self.assertFalse(outside.exists(), "the extra root leaked into the write path")
 
 
 if __name__ == "__main__":

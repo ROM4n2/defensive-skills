@@ -8,5 +8,11 @@
 *.md      text=auto
 *.ps1     text eol=crlf
 
+# `*.md` stays `text=auto` because skill Markdown must remain byte-identical to the live tree.
+# The two front pages have no live counterpart, so pin them: a CRLF rewrite silently breaks
+# multi-line edits to them (it broke three patches during the README work).
+README.md     text eol=lf
+README.en.md  text eol=lf
+
 # The hook and the shipped engines are expected to be runnable directly.
 .githooks/pre-commit   text eol=lf

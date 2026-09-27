@@ -19,8 +19,11 @@ ponytail: ceilings kept deliberately, each with its upgrade path —
     AST analyser with ROI scoring.
 
 Layout is configurable, not assumed: see `knowledge.json` / DEFAULT_LAYOUT below.
-Root is resolved by the documented contract (env -> upward search -> hard failure); this
-server never falls back to a hardcoded absolute path, because a stranger has no such path.
+Root is resolved by the documented contract: flag -> env -> upward search -> **drafts-only mode**
+(`degraded_root()`), never a hardcoded absolute path, because a stranger has no such path. In
+drafts-only mode `save_inbox_draft` still works and lands in a local, self-describing drop box;
+every retrieval tool refuses out loud instead of reporting an empty corpus, because "nothing
+found" and "no knowledge base wired up" must never look the same.
 
 Register in a harness MCP config as:
     {"command": "python", "args": ["<repo>/mcp/knowledge_server.py", "--root", "<kb root>"]}
@@ -64,6 +67,36 @@ DEFAULT_LAYOUT: Dict[str, Any] = {
 }
 CONFIG_FILENAME = "knowledge.json"
 
+# Tier 3 of the root contract: no knowledge base at all. Saving a draft is the one operation that
+# still makes sense, so it must not be blocked behind knowledge-base setup — but a drop box is not
+# a knowledge base, so retrieval stays off and says why.
+DROPDIR_ENV = "DFS_INBOX"
+DROPDIR_NAME = ".dfs-inbox"
+DROPDIR_MARKER = "README.md"
+DEGRADED_TOOLS = frozenset({"save_inbox_draft"})
+DROPDIR_README = """# DFS draft drop box
+
+No knowledge base was configured, so `save_inbox_draft` wrote drafts here instead of failing.
+
+**What this is**: a plain folder of markdown drafts saved by the Defensive Skills. It is *not* a
+knowledge base. Retrieval tools (`search_vault`, `omni_search`, `get_note`, ...) stay disabled
+until a root is configured, because searching this folder would answer "nothing found" when the
+truth is "no knowledge base is wired up".
+
+**How to leave this state** — any one is enough:
+
+* `export WIKI_PATH=/path/to/your/knowledge/base` (or `OBSIDIAN_VAULT_PATH`)
+* register this server with `--root /path/to/your/knowledge/base`
+* `export DFS_INBOX=/some/stable/dir` — moves this drop box, e.g. out of a project directory
+
+**How to promote what is already here**: once a root is configured, call `promote_inbox_draft` per
+draft, or let the consolidator file them:
+
+    python <repo>/scripts/vault-inbox-consolidate.py --inbox <this folder> --vault-path <your root> --execute
+
+This file is a marker. The consolidator skips it and so should `promote_inbox_draft`.
+"""
+
 # Directories never scanned: tool assets, VCS, and harness state.
 SKIP_DIR_NAMES = {".git", ".obsidian", ".claude", ".venv", "node_modules", "__pycache__", "scripts"}
 
@@ -76,8 +109,10 @@ def resolve_root(explicit: Optional[str] = None) -> pathlib.Path:
     """Resolve the knowledge root: explicit flag -> env -> upward search -> hard failure.
 
     Mirrors `dfs/references/vault-root-resolution.md` Tier 1/2. There is deliberately no
-    Tier 3: the vault copy's Tier 3 fallback was a hardcoded absolute path on the author's
-    machine, which for anyone else is a silent wrong answer. Failing loudly is the feature.
+    hardcoded Tier 3 path: the vault copy's Tier 3 was an absolute path on the author's machine,
+    which for anyone else is a silent wrong answer. Failing loudly here is the feature, and the
+    caller turns that failure into the drop box below — the same "degrade, but never silently"
+    shape the skills use.
     """
     if explicit:
         root = pathlib.Path(explicit).expanduser().resolve()
@@ -105,6 +140,18 @@ def resolve_root(explicit: Optional[str] = None) -> pathlib.Path:
     )
 
 
+def degraded_root() -> pathlib.Path:
+    """The drop box used when no knowledge root resolves. $DFS_INBOX wins, else <cwd>/.dfs-inbox.
+
+    Deliberately not a name like `docs/`: that is a directory a real project already owns, and
+    agent drafts landing in someone's documentation tree are indistinguishable from content
+    afterwards. An unstable cwd is a real hazard here, which is why $DFS_INBOX exists and why
+    every message prints the absolute path.
+    """
+    val = os.environ.get(DROPDIR_ENV)
+    return (pathlib.Path(val).expanduser() if val else pathlib.Path.cwd() / DROPDIR_NAME).resolve()
+
+
 def load_layout(root: pathlib.Path) -> Dict[str, Any]:
     """Merge an optional `<root>/knowledge.json` over DEFAULT_LAYOUT."""
     layout = dict(DEFAULT_LAYOUT)
@@ -124,9 +171,10 @@ def load_layout(root: pathlib.Path) -> Dict[str, Any]:
 
 
 class KnowledgeBase:
-    def __init__(self, root: pathlib.Path, layout: Dict[str, Any]):
+    def __init__(self, root: pathlib.Path, layout: Dict[str, Any], degraded: bool = False):
         self.root = root
         self.layout = layout
+        self.degraded = degraded
 
     # -- paths -------------------------------------------------------------
     def layer(self, key: str) -> pathlib.Path:
@@ -484,6 +532,25 @@ def tool_save_inbox_draft(kb: KnowledgeBase, title: str, content: str,
         target.write_text(frontmatter + c_clean + "\n", encoding="utf-8")
     except OSError as e:
         return f"Failed to write draft: {e}"
+
+    if kb.degraded:
+        marker = kb.root / DROPDIR_MARKER
+        marker_note = ""
+        if not marker.exists():
+            try:
+                marker.write_text(DROPDIR_README, encoding="utf-8")
+                marker_note = f"\n- `{DROPDIR_MARKER}` written so the next reader knows what this folder is"
+            except OSError as e:
+                marker_note = f"\n- [WARN] could not write the drop-box marker: {e}"
+        return ("Draft saved (A-MAC passed) — **NO KNOWLEDGE BASE IS CONFIGURED**.\n\n"
+                f"- path: `{target}` (absolute){marker_note}\n"
+                f"- title: {t_clean}\n- tags: {', '.join(tag_list)}\n\n"
+                f"This is a drop box, not a knowledge base: retrieval tools refuse until a root is set "
+                f"(`$WIKI_PATH`, or `--root <path>` when registering the server). If `{kb.root}` is not "
+                f"where you want drafts to accumulate, set `$DFS_INBOX` to a stable directory.\n"
+                f"Promote later with `promote_inbox_draft` once a root exists, or file them with "
+                f"`vault-inbox-consolidate.py --inbox {kb.root}`.")
+
     return (f"Draft saved (A-MAC passed).\n\n"
             f"- path: `{kb.rel(target)}`\n- title: {t_clean}\n- tags: {', '.join(tag_list)}\n\n"
             f"Promote it later with `promote_inbox_draft`.")
@@ -498,6 +565,9 @@ def tool_promote_inbox_draft(kb: KnowledgeBase, draft_filename: str, target_dir:
     draft = (inbox / draft_filename).resolve()
     if not kb.inside(inbox.resolve()) or not str(draft).startswith(str(inbox.resolve())):
         return f"Refused: '{draft_filename}' is not inside {kb.layout['inbox_dir']}/."
+
+    if draft.exists() and draft.name == DROPDIR_MARKER:
+        return f"Refused: '{DROPDIR_MARKER}' is the drop-box marker, not a draft."
 
     if not draft.exists():
         matches = sorted(inbox.glob(f"*{draft_filename}*"))
@@ -716,6 +786,12 @@ def handle_request(kb: KnowledgeBase, req: Dict[str, Any]) -> Optional[Dict[str,
         handler = TOOL_DISPATCH.get(name)
         if handler is None:
             return ok({"content": [{"type": "text", "text": f"Unknown tool: {name}"}], "isError": True})
+        if kb.degraded and name not in DEGRADED_TOOLS:
+            return ok({"content": [{"type": "text", "text": (
+                f"Refused: no knowledge base is configured, so `{name}` cannot answer — and reporting "
+                f"an empty result would be a silent wrong answer. Only `save_inbox_draft` works here; "
+                f"it writes to the drop box at {kb.root}. Set $WIKI_PATH, $OBSIDIAN_VAULT_PATH or "
+                f"register the server with --root <path> to enable retrieval.")}], "isError": True})
         try:
             return ok({"content": [{"type": "text", "text": handler(kb, arguments)}]})
         except Exception as e:  # a tool crash must be reported, not swallowed
@@ -736,14 +812,31 @@ def main(argv: Optional[List[str]] = None) -> int:
             return 2
         explicit = argv[i + 1]
 
+    degraded = False
     try:
         root = resolve_root(explicit)
-        kb = KnowledgeBase(root, load_layout(root))
     except LayoutError as e:
-        sys.stderr.write(f"{SERVER_NAME}: {e}\n")
-        return 2
+        if explicit:
+            # A root the user named must not be second-guessed: falling back to a drop box here
+            # would be the silent wrong answer this whole contract exists to prevent.
+            sys.stderr.write(f"{SERVER_NAME}: {e}\n")
+            return 2
+        dropbox = degraded_root()
+        kb = KnowledgeBase(dropbox, dict(DEFAULT_LAYOUT, inbox_dir=".", content_dirs=[]), degraded=True)
+        degraded = True
+        sys.stderr.write(
+            f"{SERVER_NAME}: no knowledge base resolved ({e})\n"
+            f"{SERVER_NAME}: DRAFTS-ONLY mode — `save_inbox_draft` writes to {dropbox}; every "
+            f"retrieval tool will refuse. Set $WIKI_PATH, $OBSIDIAN_VAULT_PATH or --root to fix this.\n")
+    else:
+        try:
+            kb = KnowledgeBase(root, load_layout(root))
+        except LayoutError as e:
+            # A root was found but its knowledge.json is broken: a config error, not "no KB".
+            sys.stderr.write(f"{SERVER_NAME}: {e}\n")
+            return 2
 
-    sys.stderr.write(f"{SERVER_NAME} {SERVER_VERSION} serving {kb.root}\n")
+    sys.stderr.write(f"{SERVER_NAME} {SERVER_VERSION} serving {kb.root}{' (drafts-only)' if degraded else ''}\n")
     sys.stderr.flush()
 
     for line in sys.stdin:

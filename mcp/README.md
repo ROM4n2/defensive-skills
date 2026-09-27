@@ -37,13 +37,26 @@ printf '%s\n' \
 
 ## Root resolution
 
-Same contract as the skills use (`dfs/references/vault-root-resolution.md`), no third tier:
+Same contract as the skills use (`dfs/references/vault-root-resolution.md`):
 
 1. `--root <path>`
 2. `$WIKI_PATH`, then `$OBSIDIAN_VAULT_PATH`
 3. Upward search from the current directory for `AGENTS.md` or `.obsidian/`
-4. **Hard failure.** There is deliberately no hardcoded fallback path: the private original fell
-   back to an absolute path on its author's machine, which for anyone else is a silent wrong answer.
+4. **Drafts-only mode** — the server still starts, and `save_inbox_draft` writes to a local drop
+   box (`$DFS_INBOX`, else `<cwd>/.dfs-inbox`), which is created on first use with a `README.md`
+   that explains itself. Every retrieval tool refuses with a message naming the missing root.
+
+Two rules keep step 4 from turning into the silent wrong answer that the private original's
+hardcoded absolute fallback was:
+
+* **A root you named is never second-guessed.** `--root /typo` exits 2; it does not quietly become
+  a drop box. Same for a found root whose `knowledge.json` is broken — that is a config error.
+* **Retrieval refuses instead of answering "nothing found."** A drop box is not a knowledge base,
+  and "no matches" must never look the same as "no knowledge base wired up."
+
+The drop box is deliberately *not* a directory like `docs/` — that name belongs to a real project
+already, and agent drafts landing in someone's documentation tree are indistinguishable from
+content afterwards.
 
 ## Layout (not assumed)
 
@@ -63,7 +76,7 @@ Defaults match the layout the DFS skills were written against. Override any of i
 ```
 
 ```bash
-python tests/test_knowledge_server.py        # 15 end-to-end tests, temp knowledge root
+python tests/test_knowledge_server.py        # 22 end-to-end tests, temp knowledge root
 ```
 
 ## When the MCP server is unavailable
@@ -80,7 +93,7 @@ knowledge step. Resolve `{vault_root}` first, then:
 | `get_rule_snippet` | `read_file` the rules file, then use only the matching `##` section — never paste the whole file |
 | `get_code_template` | `read_file` the template file under the templates dir |
 | `list_standards` | `search_files` for `*-STANDARDS.md` / `*-CHEATSHEET.md` under the languages dir |
-| `save_inbox_draft` | `write_file` to `{vault_root}/<inbox_dir>/YYYY-MM-DD-<slug>.md` with the frontmatter documented below |
+| `save_inbox_draft` | `write_file` to `{vault_root}/<inbox_dir>/YYYY-MM-DD-<slug>.md` with the frontmatter documented below — or, with no root at all, to `$DFS_INBOX` / `.dfs-inbox/` in the working directory, and then **say the absolute path in your output** |
 | `promote_inbox_draft` | `read_file` the draft, `write_file` it to the destination with `status: stable`, then delete the draft |
 | `vault_proactive_scan` | `search_files` for `TODO|FIXME|HACK|WORKAROUND` across the project |
 
@@ -88,6 +101,10 @@ The **A-MAC admission gate is normative, not server-enforced**: without the serv
 it itself. Reject a draft whose title is shorter than 4 characters, whose body is shorter than 30
 characters, or which is a throwaway scratch record — the gate exists to stop noise from entering
 the knowledge base, and it does not stop being true just because a tool is missing.
+
+**Whatever the path, say where the draft went.** The whole point of the drop box is that a draft
+written with no configuration is still findable later; a draft announced as "saved" without a path
+is one the user will never see again.
 
 ## Deliberate ceilings
 

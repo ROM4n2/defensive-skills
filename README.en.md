@@ -7,7 +7,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Skills-23-4B5563?style=flat-square" alt="Skills" />
   <img src="https://img.shields.io/badge/Conformance-12%20rules-0969DA?style=flat-square" alt="Conformance rules" />
-  <img src="https://img.shields.io/badge/Tests-69%20passed-2EA44F?style=flat-square" alt="Tests" />
+  <img src="https://img.shields.io/badge/Tests-92%20passed-2EA44F?style=flat-square" alt="Tests" />
   <img src="https://img.shields.io/badge/Mutation-14%2F14%20caught-2EA44F?style=flat-square" alt="Mutation harness" />
   <img src="https://img.shields.io/badge/Dependencies-0%20(stdlib)-gray?style=flat-square" alt="Zero dependencies" />
   <img src="https://img.shields.io/badge/Python-3.11%20%7C%203.14-3776AB?style=flat-square" alt="Python" />
@@ -95,7 +95,7 @@ The "prerequisite" column is **measured**, not decorative — `tests/test_readme
 
 | Skill | Purpose | Prerequisite | MCP | Bundled |
 |---|---|---|---|---|
-| **chain** `dfs` | Route developer intent to optimal Defensive Skills. | knowledge base | — | refs×2 |
+| **chain** `dfs` | Route developer intent to optimal Defensive Skills. | knowledge base | — | refs×3 |
 | **chain** `dfs-plan` | Draft bite-sized TDD implementation plans from specs. | knowledge base | omni_search, get_code_template | tpl×1 |
 | **chain** `dfs-exec` | Execute TDD plans via isolated subagents with maker-checker. | knowledge base | — | tpl×2 |
 | **chain** `dfs-debug` | Execute 4-step systematic root-cause debugging with repro. | knowledge base | search_vault, save_inbox_draft | tpl×1 |
@@ -134,9 +134,10 @@ python tests/test_docs_links.py            # docs links resolve; never to untrac
 python tests/test_bootstrap_script.py      # bootstrap.py: idempotent / never clobbers / never leaks → exit 0
 python tests/test_readme_skill_table.py    # the skill table is re-derivable from the tree → exit 0
 python tests/test_install.py               # installer: tier filter / never clobbers / dry-run → exit 0
+python tests/test_harness_field_mapping.py # the harness field map matches the tree → exit 0
 ```
 
-All eight produce **identical results under Python 3.11.8 and 3.14.7**. That is a design goal, not a coincidence: a gate's verdict must not depend on which interpreter you happen to invoke it with. An early version did `import yaml` and simply could not run on an interpreter without PyYAML.
+All nine produce **identical results under Python 3.11.8 and 3.14.7**. That is a design goal, not a coincidence: a gate's verdict must not depend on which interpreter you happen to invoke it with. An early version did `import yaml` and simply could not run on an interpreter without PyYAML.
 
 Four deliberate design choices worth calling out:
 
@@ -190,7 +191,11 @@ Save that as `knowledge.json` in your knowledge-base root to override the defaul
 * **`dfs-bootstrap` Phase 3.5 is ported and cross-platform now.** `dfs-bootstrap/scripts/bootstrap.py` (stdlib) does the whole pass in one shot: verify/extend `.gitignore`, install the secret-scanning hook (**never overwriting** an existing one) and set `core.hooksPath`, inject the rule anchor, scaffold the 4-piece `WORKMEMORY/` set. Idempotent, `--dry-run` previews, and a missing template is **exit 2** rather than a skip. The old Windows-only PowerShell version does not ship (comparison in [`scripts/README.md`](scripts/README.md)).
 * **`vault-healthcheck.py` / `vault-inbox-triage.py` do not ship.** They audit the structure of one specific knowledge base; pointed at anyone else's, they are wrong by construction. They affect `dfs-inbox-consolidate`, the one skill labelled "extra assets" in the table above.
 * **Retrieval is weighted keyword/tag scoring, not BM25 + a graph.** Fine for a knowledge base at note scale; past tens of thousands of notes you want a real ranker (the upgrade point is documented in `mcp/knowledge_server.py`'s module docstring).
-* **`disable-model-invocation` / `metadata.hermes.*` in frontmatter is Hermes dialect.** The mapping to other harnesses is still to be written.
+* **`disable-model-invocation` / `metadata.hermes.*` in frontmatter is Hermes dialect.** The map to
+  other harnesses is [`dfs/references/harness-field-mapping.md`](dfs/references/harness-field-mapping.md):
+  which harness honors which key, and — for the keys it does not — the lever that enforces the same
+  intent. `metadata.hermes.mcp_tools` is **not** a harness feature at all: it is this suite's own
+  declaration, checked by the conformance gate.
 * The repo contains **23 skills** (`dfs-agent-sdk` was moved out and ships separately); the "prerequisite" column measures what each skill actually depends on, and the 5 with no prerequisite work the moment they are installed.
 
 ---
@@ -201,6 +206,7 @@ Save that as `knowledge.json` in your knowledge-base root to override the defaul
 |---|---|
 | Knowledge-layer MCP: registration, root contract, no-MCP fallback table | [`mcp/README.md`](mcp/README.md) |
 | Bundled engine scripts / what does not ship / port divergences | [`scripts/README.md`](scripts/README.md) |
+| Which harness honors which frontmatter field | [`dfs/references/harness-field-mapping.md`](dfs/references/harness-field-mapping.md) |
 | Conformance gate and mutation harness | [`tests/`](tests/) |
 | Install into a harness by tier | [`install.py`](install.py) |
 | Repo security guard (secret-scanning hook) | [`.githooks/pre-commit`](.githooks/) |

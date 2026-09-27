@@ -50,6 +50,11 @@ ROUTING_DIR = Path(__file__).resolve().parent
 ROUTING_JSON = ROUTING_DIR / "routing.json"
 ROUTING_EXAMPLE = ROUTING_DIR / "routing.example.json"
 
+# Tier 3 of the root contract, same as mcp/knowledge_server.py: with no knowledge base at all,
+# drafts land in a local drop box. Both halves must agree on the name and on the marker file.
+DROPDIR_NAME = ".dfs-inbox"
+DROPDIR_MARKER = "README.md"
+
 
 def routing_config() -> Path:
     """Local routing.json when present, else the shipped example."""
@@ -288,8 +293,15 @@ def analyze_draft(file_path: Path, vault_root: Path):
         # Make it a routing.json key if anyone actually uses the type.
         target_path = f"08-Projects/{project}/{snake}.md"
 
+    try:
+        label = file_path.relative_to(vault_root).as_posix()
+    except ValueError:
+        # An --inbox outside the knowledge root has no vault-relative name; the absolute path is
+        # the honest label. Upstream never had this case because the inbox was always inside.
+        label = str(file_path)
+
     return {
-        "file": str(file_path.relative_to(vault_root)).replace("\\", "/"),
+        "file": label,
         "filename": file_path.name,
         "title": title,
         "tags": tags,
@@ -347,14 +359,18 @@ def _write_text(path: Path, new_text: str, plan: "_ArchivePlan | None") -> None:
         plan.stage_write(path, new_text)
 
 
-def _commit_plan(vault_root: Path, plan: _ArchivePlan) -> None:
+def _commit_plan(vault_root: Path, plan: _ArchivePlan, extra_root=None) -> None:
     """把收集到的建目标+删原件动作包进单个 VaultTransaction 提交（P1 Task-3）。
 
     任何一步失败（含 commit 中途）→ 事务整体回滚并抛出异常；调用方负责
     stderr 说明与非 0 退出码。
+
+    ``extra_root``（--inbox 指向知识库之外时的那个目录）是唯一允许在 vault_root
+    之外删除的位置：被消费的草稿原件在那里，不删就会反复归档。
     """
     tx_id = f"inbox-consolidate-{datetime.now().strftime('%Y%m%d-%H%M%S-%f')}"
-    with VaultTransaction(vault_root, tx_id=tx_id) as tx:
+    with VaultTransaction(vault_root, tx_id=tx_id,
+                          extra_roots=[extra_root] if extra_root else None) as tx:
         for path, text in plan.writes.items():
             tx.stage(path, new_text=text)
         for path in plan.deletes:
@@ -551,9 +567,14 @@ def _delete_original(file_path: Path, dry_run: bool,
 # ---------------------------------------------------------------------------
 # Main pipeline
 # ---------------------------------------------------------------------------
-def consolidate(vault_root: Path, target_file=None, dry_run=True, execute=False, as_json=False):
-    """主流程：扫描 → 分析 → 执行（可选）。"""
-    inbox_dir = vault_root / "99-Inbox"
+def consolidate(vault_root: Path, target_file=None, dry_run=True, execute=False, as_json=False,
+                inbox_dir: "Path | None" = None):
+    """主流程：扫描 → 分析 → 执行（可选）。
+
+    `inbox_dir` overrides `<vault_root>/99-Inbox`, so a differently-named queue (or a drop box
+    later pointed at a real knowledge base) can be filed without renaming anything.
+    """
+    inbox_dir = inbox_dir or (vault_root / "99-Inbox")
     if not inbox_dir.exists():
         # git **不跟踪空目录** ⇒ 草稿全部归档后，全新检出里 99-Inbox/ 会消失。
         # 「目录不存在」与「目录为空」语义上都等于「无待处理草稿」，MUST NOT 视为失败
@@ -570,14 +591,16 @@ def consolidate(vault_root: Path, target_file=None, dry_run=True, execute=False,
     if target_file:
         p = Path(target_file)
         if not p.is_absolute():
-            p = vault_root / "99-Inbox" / target_file
+            p = inbox_dir / target_file
         if not p.exists():
             found = list(inbox_dir.glob(f"*{target_file}*"))
             if found:
                 p = found[0]
         drafts_raw = [p] if p.exists() and p.suffix == ".md" else []
     else:
-        drafts_raw = [f for f in inbox_dir.glob("*.md") if not f.name.startswith("tpl-")]
+        # README.md is the drop-box marker (see DROPDIR_MARKER), not a draft.
+        drafts_raw = [f for f in inbox_dir.glob("*.md")
+                      if not f.name.startswith("tpl-") and f.name != DROPDIR_MARKER]
 
     if not drafts_raw:
         msg = "📭 99-Inbox/ 当前无待处理草稿。"
@@ -642,7 +665,8 @@ def consolidate(vault_root: Path, target_file=None, dry_run=True, execute=False,
     if plan is not None:
         # 全部建目标+删原件动作包进单个事务：任何一步失败 → 整体回滚、非 0 退出
         try:
-            _commit_plan(vault_root, plan)
+            _commit_plan(vault_root, plan,
+                         extra_root=inbox_dir if not inbox_dir.is_relative_to(vault_root) else None)
         except TransactionError as exc:
             print(
                 f"❌ 归档事务提交失败，已整体回滚（无半成品写入）: {exc}",
@@ -674,12 +698,16 @@ def consolidate(vault_root: Path, target_file=None, dry_run=True, execute=False,
     return 0
 
 
-def resolve_vault_root(explicit: "str | None") -> Path:
+def resolve_vault_root(explicit: "str | None", loud: bool = True) -> "Path | None":
     """--vault-path -> $WIKI_PATH/$OBSIDIAN_VAULT_PATH -> upward marker -> script-relative.
 
     DFS-PORT(2/2): upstream silently defaulted to `<script>/../..`, which in this repo is not a
     knowledge base — the tool then reported "no drafts" and exited 0, i.e. a silent wrong answer.
     No root resolvable now exits 2 with instructions instead.
+
+    `loud=False` returns None without exiting: main() uses that to fall back to a drop box, and
+    then either prints the very same instructions itself or refuses to execute. The silent path
+    stays closed either way — this only moves who reports it.
     """
     if explicit:
         p = Path(explicit).resolve()
@@ -709,12 +737,42 @@ def resolve_vault_root(explicit: "str | None") -> Path:
     if (script_rel / "99-Inbox").is_dir():
         return script_rel
 
+    if not loud:
+        return None
+
     print(
         "❌ 无法解析知识库根目录。请传 --vault-path <root>，或设置 $WIKI_PATH / "
         "$OBSIDIAN_VAULT_PATH，或在知识库根目录（含 AGENTS.md 或 .obsidian/）下运行。",
         file=sys.stderr,
     )
     raise SystemExit(2)
+
+
+def list_pending_dropbox(inbox: Path, as_json: bool) -> int:
+    """No knowledge base, but a drop box exists: say what is waiting, do not pretend to file it.
+
+    Listing is useful without a root (it tells the user what they would lose); filing is not,
+    because a destination directory only exists inside a knowledge base.
+    """
+    drafts = sorted(f for f in inbox.glob("*.md")
+                    if not f.name.startswith("tpl-") and f.name != DROPDIR_MARKER)
+    if as_json:
+        print(json.dumps({"status": "dropbox", "inbox": str(inbox),
+                          "drafts": [str(d) for d in drafts]}, ensure_ascii=False))
+        return 0
+
+    print(f"📥 未配置知识库，改从投放箱读取：{inbox}")
+    if not drafts:
+        print("   投放箱为空。")
+        return 0
+    print(f"   待处理草稿 {len(drafts)} 篇（**尚未**归档，它们还没有归属目录）：")
+    for draft in drafts:
+        print(f"     - {draft}")
+    print("   归档需要知识库根目录，任选其一后重跑本命令：")
+    print(f"     1) python {Path(__file__).name} --inbox {inbox} --vault-path <你的知识库根> --execute")
+    print("     2) 设 $WIKI_PATH（或 $OBSIDIAN_VAULT_PATH）后重跑同一条命令")
+    print("   投放箱不是知识库：检索工具此时一律拒绝，不会假装「没找到」。")
+    return 0
 
 
 def main():
@@ -728,14 +786,40 @@ def main():
                         help="仅预览（默认行为，--execute 覆盖）")
     parser.add_argument("--json", action="store_true", help="JSON 格式输出")
     parser.add_argument("--vault-path", help="知识库根目录")
+    parser.add_argument("--inbox",
+                        help="草稿目录（默认 <知识库根>/99-Inbox）。没有知识库也能用它列出待归档草稿")
 
     args = parser.parse_args()
 
-    vault_root = resolve_vault_root(args.vault_path)
+    inbox_override = None
+    if args.inbox:
+        inbox_override = Path(args.inbox).expanduser().resolve()
+        if not inbox_override.is_dir():
+            print(f"❌ --inbox 不是目录: {inbox_override}", file=sys.stderr)
+            sys.exit(2)
+
+    vault_root = resolve_vault_root(args.vault_path, loud=False)
+    if vault_root is None:
+        dropbox = inbox_override or (Path.cwd() / DROPDIR_NAME)
+        if not dropbox.is_dir():
+            print(
+                "❌ 无法解析知识库根目录。请传 --vault-path <root>，或设置 $WIKI_PATH / "
+                "$OBSIDIAN_VAULT_PATH，或在知识库根目录（含 AGENTS.md 或 .obsidian/）下运行。",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+        if args.execute:
+            print(
+                f"❌ 无知识库根目录：能列出 {dropbox} 里的草稿，但归档需要目标目录。"
+                "先指定 --vault-path 或设置 $WIKI_PATH。",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+        sys.exit(list_pending_dropbox(dropbox, args.json))
 
     dry_run = not args.execute
     sys.exit(consolidate(vault_root, args.file, dry_run=dry_run,
-                         execute=args.execute, as_json=args.json))
+                         execute=args.execute, as_json=args.json, inbox_dir=inbox_override))
 
 
 if __name__ == "__main__":

@@ -103,10 +103,13 @@ class VaultTransaction:
     """vault 级事务：锁 → stage / stage_deletion（快照+校验）
     → commit（原子替换/删除）/ rollback（确定性恢复）。"""
 
-    def __init__(self, vault_root: pathlib.Path, tx_id: str, lock_timeout: float = 10.0) -> None:
+    def __init__(self, vault_root: pathlib.Path, tx_id: str, lock_timeout: float = 10.0,
+                 extra_roots: "list[pathlib.Path] | None" = None) -> None:
         if not _TX_ID_PATTERN.match(tx_id):
             raise TransactionError(f"非法 tx_id（仅允许 [A-Za-z0-9._-]）: {tx_id!r}")
         self.vault_root = pathlib.Path(vault_root)
+        # 调用方显式声明的额外允许根，目前只有一个用途：删除被消费的草稿原件（见 _check_inside）。
+        self.extra_roots = [pathlib.Path(r).resolve() for r in (extra_roots or [])]
         self.tx_id = tx_id
         self.lock_timeout = lock_timeout
         self.tx_dir = self.vault_root / _TX_DIRNAME
@@ -160,6 +163,20 @@ class VaultTransaction:
 
     # ---------- 核心操作 ----------
 
+    def _check_inside(self, p: pathlib.Path, what: str, allow_extra: bool) -> None:
+        """越界检查。写入永远只允许 ``vault_root`` 内；删除额外允许调用方显式声明的根。
+
+        ``--inbox`` 指向知识库之外的目录时，归档完必须能删掉那份原件，否则同一份草稿会被
+        反复归档。这个例外**必须由调用方显式传入** ``extra_roots``，绝不从路径推断——
+        否则越界保护就只是装饰。
+        """
+        rp = p.resolve()
+        if rp.is_relative_to(self.vault_root.resolve()):
+            return
+        if allow_extra and any(rp.is_relative_to(r) for r in self.extra_roots):
+            return
+        raise TransactionError(f"{what} 目标越界: {p} 解析后不在 vault_root 内 ({self.vault_root})")
+
     def stage(
         self,
         path: pathlib.Path,
@@ -177,10 +194,7 @@ class VaultTransaction:
         if (new_text is None) == (new_bytes is None):
             raise TransactionError("new_text 与 new_bytes 必须二选一")
         p = path if path.is_absolute() else self.vault_root / path
-        if not p.resolve().is_relative_to(self.vault_root.resolve()):
-            raise TransactionError(
-                f"stage 目标越界: {p} 解析后不在 vault_root 内 ({self.vault_root})"
-            )
+        self._check_inside(p, "stage", allow_extra=False)
         if any(e.path == p for e in self._entries):
             raise TransactionError(f"同一事务内重复登记同一文件: {p}")
         payload = new_bytes if new_bytes is not None else new_text.encode("utf-8")
@@ -226,10 +240,7 @@ class VaultTransaction:
                 f"stage_deletion 仅允许在 staged 状态调用，当前 status={self.status}"
             )
         p = path if path.is_absolute() else self.vault_root / path
-        if not p.resolve().is_relative_to(self.vault_root.resolve()):
-            raise TransactionError(
-                f"stage_deletion 目标越界: {p} 解析后不在 vault_root 内 ({self.vault_root})"
-            )
+        self._check_inside(p, "stage_deletion", allow_extra=True)
         if any(e.path == p for e in self._entries):
             raise TransactionError(f"同一事务内重复登记同一文件: {p}")
         if not p.is_file():

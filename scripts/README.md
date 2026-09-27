@@ -12,7 +12,7 @@ the cross-platform workspace bootstrap (`.gitignore` guards, secret-scanning hoo
 | Script | Invoked by | What it does |
 |---|---|---|
 | `vault_exec_state.py` | `dfs-exec`, `dfs-handoff` | Persistent execution ledger (`.vault-exec-ledger.json`) with crash recovery: `init` / `start-task` / `complete-task` / `resume` / `status` / `reset` |
-| `vault-inbox-consolidate.py` | `dfs-inbox-consolidate` | Batch-classifies inbox drafts by frontmatter tag and archives them in one transaction (`--dry-run` default, `--execute` / `--apply` to commit) |
+| `vault-inbox-consolidate.py` | `dfs-inbox-consolidate` | Batch-classifies inbox drafts by frontmatter tag and archives them in one transaction (`--dry-run` default, `--execute` / `--apply` to commit, `--inbox <dir>` to read a queue from anywhere) |
 | `vault_transaction.py` | imported by the above | Generic multi-file atomic replace + rollback primitive (lock, SHA-256 precondition, journal, backup) — a library, no CLI |
 | `routing.example.json` | read by the consolidator | Starter tag → destination routing table. Copy it to `routing.json` and edit |
 
@@ -29,6 +29,31 @@ consolidator works out of the box — it will route unmatched drafts to `06-Sour
 it. Route types: `rule-append` (append to one rules file), `source-article` (one new note in a
 directory), `dual` (append to a STANDARDS file and flag its CHEATSHEET as stale), `project` (new
 note under a project directory).
+
+### `--inbox`: consuming a queue that is not `<root>/99-Inbox`
+
+A drop box (see `mcp/README.md` § Root resolution) lives outside the knowledge base, so `--inbox`
+has to work from anywhere — including with no root at all:
+
+```bash
+# no knowledge base yet: list what is waiting, file nothing
+python scripts/vault-inbox-consolidate.py --inbox .dfs-inbox
+
+# later, with a root: file the same drafts, and remove the originals from the drop box
+python scripts/vault-inbox-consolidate.py --inbox .dfs-inbox --vault-path <kb root> --execute
+```
+
+Three rules make that safe rather than convenient:
+
+* **Listing needs no root; filing does.** `--execute` without a resolvable root exits 2 — archiving
+  means "write a destination + delete the original", and neither end may be guessed.
+* **A named root is never second-guessed.** If `$WIKI_PATH`/`--vault-path` resolve to nothing, the
+  tool says so and exits 2. It does not silently fall back to a drop box the way the server does.
+* **The transaction's path bound is extended explicitly, not dismantled.** `stage_deletion` refuses
+  any path outside `vault_root` — except a root the *caller* declared via `VaultTransaction(...,
+  extra_roots=[...])`, which the consolidator passes only for the `--inbox` directory. Writes still
+  never leave the root. `tests/test_vendored_scripts.py::TestDeletionBounds` pins all three
+  behaviors, including the refusal, so the bound cannot be quietly relaxed.
 
 ## Optional integrations (deliberately NOT shipped)
 
@@ -67,11 +92,14 @@ port. Three marks make every divergence greppable — `grep -rn "DFS-PORT\|ponyt
   drop a hardcoded projects-root assumption (`D:\Code\{project}`) for a neutral placeholder.
   `dfs-bootstrap` additionally gains `scripts/bootstrap.py` + `templates/workmemory/`, which the
   private tree does not have (it still runs the PowerShell original).
+* **`vault_transaction.py` gains `extra_roots`** — a caller-declared exception to the deletion bound,
+  needed so `--inbox <dir outside the root>` can remove the draft it just filed. Default behavior is
+  unchanged (no extra roots → the same refusal), and writes are never allowed outside the root.
 
 ## Tests
 
 ```bash
-python tests/test_vendored_scripts.py      # ledger lifecycle + transactional archival on a temp root
+python tests/test_vendored_scripts.py      # ledger + transaction + archival + deletion bounds (17)
 python tests/test_bootstrap_script.py      # bootstrap.py against a temp repo: idempotency, no clobber
 python tests/test_skills_conformance.py    # 12 rules over all 23 skills, incl. these pointers
 ```

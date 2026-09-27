@@ -90,11 +90,18 @@ def build_root(base: pathlib.Path) -> pathlib.Path:
 class Server:
     """Minimal JSON-RPC client over the server's stdio."""
 
-    def __init__(self, root: pathlib.Path):
+    def __init__(self, root: "pathlib.Path | None" = None, env_extra=None, cwd=None):
+        args = [sys.executable, str(_SERVER)]
+        if root is not None:
+            args += ["--root", str(root)]
+        # Strip every knowledge-base variable: this machine exports $WIKI_PATH, so without this a
+        # test written for "a stranger's box" would silently test the author's setup instead.
+        env = {k: v for k, v in __import__("os").environ.items()
+               if k not in ("WIKI_PATH", "OBSIDIAN_VAULT_PATH", "DFS_INBOX")}
+        env.update(env_extra or {})
         self.proc = subprocess.Popen(
-            [sys.executable, str(_SERVER), "--root", str(root)],
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            text=True, encoding="utf-8",
+            args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            text=True, encoding="utf-8", env=env, cwd=str(cwd) if cwd else None,
         )
         self._id = 0
 
@@ -124,6 +131,11 @@ class Server:
             self.proc.wait(timeout=10)
         except Exception:
             self.proc.kill()
+
+    def finish(self) -> str:
+        """Close stdin and return everything the server wrote to stderr."""
+        self.close()
+        return self.proc.stderr.read() if self.proc.stderr else ""
 
 
 class TestKnowledgeServer(unittest.TestCase):
@@ -267,7 +279,7 @@ class TestRootResolution(unittest.TestCase):
 
     def _run(self, args, env_root=None, cwd=None):
         env = dict(**{k: v for k, v in __import__("os").environ.items()
-                      if k not in ("WIKI_PATH", "OBSIDIAN_VAULT_PATH")})
+                      if k not in ("WIKI_PATH", "OBSIDIAN_VAULT_PATH", "DFS_INBOX")})
         if env_root:
             env["WIKI_PATH"] = env_root
         proc = subprocess.run([sys.executable, str(_SERVER), *args], input="",
@@ -281,17 +293,131 @@ class TestRootResolution(unittest.TestCase):
             self.assertEqual(proc.returncode, 0)
             self.assertIn("serving", proc.stderr)
 
-    def test_no_root_anywhere_fails_loudly(self):
+    def test_no_root_anywhere_starts_in_drafts_only_mode(self):
+        """Tier 3: no knowledge base is a state a user can be in, so the server must survive it."""
         with tempfile.TemporaryDirectory() as td:
             proc = self._run([], cwd=td)
-            self.assertEqual(proc.returncode, 2, "missing root must exit non-zero, not pick a default")
-            self.assertIn("No knowledge root found", proc.stderr)
+            self.assertEqual(proc.returncode, 0, "the server must still start without a knowledge base")
+            self.assertIn("DRAFTS-ONLY", proc.stderr)
+            self.assertIn(str(pathlib.Path(td) / ".dfs-inbox"), proc.stderr,
+                          "the drop box must be named by absolute path")
             self.assertNotIn("Obsidian", proc.stderr, "must not hint at the author's own path")
 
     def test_bad_root_flag_is_rejected(self):
         with tempfile.TemporaryDirectory() as td:
             proc = self._run(["--root", str(pathlib.Path(td) / "nope")])
+            self.assertEqual(proc.returncode, 2,
+                             "a --root the user named must fail, never silently become a drop box")
+
+    def test_broken_knowledge_json_is_fatal_not_a_drop_box(self):
+        """A found root with a bad config is a config error; degrading would hide it."""
+        with tempfile.TemporaryDirectory() as td:
+            root = build_root(pathlib.Path(td) / "kb")
+            (root / "knowledge.json").write_text('{"nonsense": 1}', encoding="utf-8")
+            proc = self._run(["--root", str(root)])
             self.assertEqual(proc.returncode, 2)
+            self.assertIn("unknown keys", proc.stderr)
+
+
+class TestDraftsOnlyMode(unittest.TestCase):
+    """Tier 3 in use: saving must work, retrieval must refuse out loud, nothing may be silent."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = pathlib.Path(self._tmp.name)
+        self.cwd = self.tmp / "project"
+        self.cwd.mkdir()
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def draft(self, srv, title="cp936 codec on Windows CI"):
+        return srv.text("save_inbox_draft", title=title,
+                        content="Symptom: mojibake on stdout. Root cause: cp936. Fix: reconfigure stdin/stdout.")
+
+    def test_20_saving_works_and_names_the_absolute_path(self):
+        srv = Server(cwd=self.cwd)
+        try:
+            text = self.draft(srv)
+            self.assertIn("NO KNOWLEDGE BASE IS CONFIGURED", text)
+            drop = self.cwd / ".dfs-inbox"
+            drafts = [f for f in drop.glob("*.md") if f.name != "README.md"]
+            self.assertEqual(len(drafts), 1, f"expected one draft in {drop}, got {drafts}")
+            self.assertIn(str(drafts[0]), text, "the absolute path is what makes it findable again")
+            self.assertIn("$DFS_INBOX", text)
+        finally:
+            srv.close()
+
+    def test_21_the_drop_box_explains_itself(self):
+        srv = Server(cwd=self.cwd)
+        try:
+            self.draft(srv)
+            marker = (self.cwd / ".dfs-inbox" / "README.md").read_text(encoding="utf-8")
+            self.assertIn("*not* a", marker)
+            self.assertIn("WIKI_PATH", marker)
+            self.assertIn("vault-inbox-consolidate.py", marker)
+        finally:
+            srv.close()
+
+    def test_22_retrieval_refuses_instead_of_reporting_nothing(self):
+        srv = Server(cwd=self.cwd)
+        try:
+            for tool, args in (("search_vault", {"query": "concurrency"}),
+                               ("omni_search", {"query": "concurrency"}),
+                               ("list_standards", {})):
+                with self.subTest(tool=tool):
+                    resp = srv.call("tools/call", {"name": tool, "arguments": args})
+                    self.assertTrue(resp["result"].get("isError"), f"{tool} answered without a root")
+                    self.assertIn("no knowledge base is configured", resp["result"]["content"][0]["text"])
+        finally:
+            srv.close()
+
+    def test_23_dfs_inbox_env_moves_the_drop_box(self):
+        stable = self.tmp / "stable-drop"
+        srv = Server(cwd=self.cwd, env_extra={"DFS_INBOX": str(stable)})
+        try:
+            text = self.draft(srv)
+            self.assertTrue(list(stable.glob("*.md")), "draft did not land in $DFS_INBOX")
+            self.assertIn(str(stable), text)
+            self.assertFalse((self.cwd / ".dfs-inbox").exists(), "cwd drop box created anyway")
+        finally:
+            srv.close()
+
+    def test_24_the_marker_is_never_promoted_as_a_draft(self):
+        """A rooted inbox can also contain the marker — promote must refuse it, not file it."""
+        with tempfile.TemporaryDirectory() as td:
+            root = build_root(pathlib.Path(td) / "kb")
+            inbox = root / "99-Inbox"
+            inbox.mkdir(parents=True, exist_ok=True)
+            (inbox / "README.md").write_text("# DFS draft drop box\n", encoding="utf-8")
+            srv = Server(root)
+            try:
+                text = srv.text("promote_inbox_draft", draft_filename="README.md", target_dir="01-Rules")
+                self.assertIn("marker", text)
+                self.assertTrue((inbox / "README.md").is_file(), "the marker was filed")
+            finally:
+                srv.close()
+
+    def test_25_a_draft_survives_into_a_real_knowledge_base(self):
+        """The point of the drop box: once a root exists, what was saved there is usable."""
+        with tempfile.TemporaryDirectory() as td:
+            root = build_root(pathlib.Path(td) / "kb")
+            srv = Server(cwd=self.cwd)
+            try:
+                drop = self.cwd / ".dfs-inbox"
+                self.draft(srv)
+                drafts = [f for f in drop.glob("*.md") if f.name != "README.md"]
+            finally:
+                srv.close()
+            (root / "99-Inbox").mkdir(parents=True, exist_ok=True)
+            shutil.copy(drafts[0], root / "99-Inbox" / drafts[0].name)
+            srv2 = Server(root)
+            try:
+                text = srv2.text("promote_inbox_draft", draft_filename=drafts[0].name,
+                                 target_dir="01-Rules")
+                self.assertIn("01-Rules", text)
+            finally:
+                srv2.close()
 
 
 if __name__ == "__main__":
