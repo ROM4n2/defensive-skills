@@ -16,3 +16,11 @@ README.en.md  text eol=lf
 
 # The hook and the shipped engines are expected to be runnable directly.
 .githooks/pre-commit   text eol=lf
+
+# The dfs-bootstrap templates land verbatim in somebody else's repo and have no live-tree
+# counterpart, so they fall under the same rule as the two front pages above: pin LF. Left to
+# `text=auto`, a Windows clone received CRLF for the same shipped asset a Linux clone got as LF
+# (measured: 31/16/105/7 CRLF lines across the four files). Gates would not have noticed —
+# bootstrap.py reads with universal newlines — which is exactly why it is pinned rather than
+# trusted to stay harmless.
+dfs-bootstrap/templates/workmemory/*   text eol=lf
