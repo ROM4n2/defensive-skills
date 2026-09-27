@@ -40,7 +40,14 @@ harness：24 个 `dfs-*` skill（1 个 router `dfs` + 23 个域技能），纯 M
   含技能全览、门禁自验方式、12 条规则表、布局契约、声明缺口、目录导航。
 - 下一步：① Axis B（公开子集收敛：论证或移出 dfs-exec / dfs-debug）；② B3（`99-Inbox/` 必须存在或自动创建）；
   ③ B5（Hermes 专有 frontmatter 字段的其他 harness 映射）；④ dfs-bootstrap 的 bootstrap.ps1 跨平台移植（B4 留下的显式缺口）；
-  ⑤ shipped 子集白名单门禁；⑥ `install.py`；⑦ **首个 commit（仓库至今零提交）**。
+  ⑤ shipped 子集白名单门禁；⑥ `install.py`。
+- **首个 commit 已落地**（2026-09-27，`0e021c0`，136 文件，工作区干净；无 remote，未推送）。
+  提交前修掉两个「对陌生人无价值」的坑：`.gitattributes` 钉 `eol=lf`（CRLF shebang 会让 Linux 上的
+  `.githooks/pre-commit` 直接失效，而所有技能都声明 `platforms: [linux, macos, windows]`）；
+  `git update-index --chmod=+x` 钉执行位（Windows 下 `core.filemode=false`，钩子与引擎脚本的执行位
+  被静默记成 100644，Linux clone 会拿到一个跑不起来的钩子）。
+  验证方式：把仓库 clone 到临时目录，**在 clone 内**检查钩子的 shebang/行尾/权限、跑 `bash .githooks/pre-commit`
+  与四个门禁（双解释器）→ 全部 exit 0。
 
 ## 高频坑（踩过的雷区）
 

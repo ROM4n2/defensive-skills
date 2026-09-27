@@ -130,3 +130,23 @@ Caps: filesystem-read, filesystem-write, shell-exec
   `~/.codex/skills/`（含 dfs 全套）、hermes profile 的 `skills/`。`~/.cursor` 不存在，故 README 未提 Cursor。
 - 未闭合风险：① 仓库仍零提交（135 个未跟踪文件），LICENSE/README 落地后首个 commit 已无阻塞；
   ② Axis B 未决 → 公开子集与 `install.py` 都还不能定稿；③ README 目前中文优先，若要面向国际读者需英文版（待裁决）。
+
+### 2026-09-27 20:xx | deepseek-flash__hermes | WORK_END
+Caps: filesystem-read, filesystem-write, shell-exec
+任务：在 README/LICENSE 落地后执行首个 commit（原被 B4 阻塞，现解除）。
+不做范围：未 push（无 remote）；未做 Axis B / B3 / B5；未写 install.py；未改任何 skill 正文。
+- 产出：首个 commit `0e021c0`（136 tracked files，工作区干净），含 24 技能 + `mcp/` + `scripts/` + `tests/` + 文档。
+  pre-commit 钩子在**真实暂存树**上跑通（commit exit 0），不是只在我的合成探针上。
+- 关键发现（已修）：git 刷了一屏 `LF will be replaced by CRLF` → 本仓库带 bash 钩子却声明
+  `platforms: [linux, macos, windows]`，CRLF shebang 会让 Linux/macOS 上钩子直接失效（与 BOM 同类故障）。
+  补 `.gitattributes`：`*.sh/*.py/*.json` 钉 `eol=lf`，`*.md` 交给 auto，`*.ps1` 钉 CRLF。
+- 关键发现（已修）：Windows 下 `core.filemode=false` → `.githooks/pre-commit` 与 scripts/*.py 的执行位
+  在索引里被静默记成 **100644**，Linux 用户 clone 下来会拿到跑不起来的钩子。
+  用 `git update-index --chmod=+x` 钉成 100755 后 amend 首个 commit（当时未推送，历史保持单条干净）。
+- 验证（终极，原始命令 + exit code）：`git clone . <scratch>/clone-check` 后**在 clone 内**检查 ——
+  钩子 `-rwxr-xr-x`、LF-only、无 BOM、shebang `#!/usr/bin/env bash`；`bash .githooks/pre-commit` → exit 0；
+  四个门禁在 `python`(3.14.7) 与 `python3`(3.11.8) 下全部 exit 0；`git status --short` 为 0 行。
+  交付物自洽：不依赖工作区里任何未跟踪文件。
+- 未闭合风险：① Axis B 未决 → 公开子集 / install.py 无法定稿；② `HANDOFF.md` + `WORKMEMORY/` 内含本机路径
+  （`D:\Obsidian\Coding`、`<home>\.cc-switch`）与内部流程，**公开发布前需决定去留**（建议发布版移入
+  dev/ 或不入库）；③ README 中文优先，面向国际读者需英文版；④ 仓库尚无 remote。

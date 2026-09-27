@@ -314,6 +314,17 @@ to port first — it is what keeps the public subset honest.
    `bootstrap.ps1`'s 11 required patterns (verified 0 missing) plus a port-local state block;
    `README.md` leads with the three failure modes and carries only numbers that were measured
    (24 skills / 12 rules / 38 tests / 14 mutations / two interpreters).
+   **First commit landed: `0e021c0`, 136 tracked files, clean tree.** Two things that had to be
+   fixed before it was worth anything to a stranger:
+   * `.gitattributes` pins `eol=lf` for `*.sh` / `*.py` / `*.json` — a CRLF shebang on
+     `.githooks/pre-commit` fails on Linux/macOS, and every skill declares
+     `platforms: [linux, macos, windows]`.
+   * `git update-index --chmod=+x` pins the hook and shipped engines to 100755. On Windows
+     `core.filemode=false`, so their exec bits were silently recorded as 100644 — a Linux clone
+     would have received a hook that cannot run.
+   Verified by cloning the repo into a scratch dir and, **inside the clone**, checking the hook's
+   shebang/line-endings/permissions, running `bash .githooks/pre-commit` (exit 0) and all four
+   gates under both Python 3.11.8 and 3.14.7 (all exit 0).
 2. ~~Decide B1~~ **DONE 2026-09-27** — both: server in-repo + documented file-level fallback.
    `mcp/knowledge_server.py`, `mcp/README.md`, `tests/test_knowledge_server.py` (15 tests, exit 0).
 3. Separate the truly domain-neutral set from `dfs-exec`/`dfs-debug` — justify or move them (Axis B caveat).
@@ -339,8 +350,9 @@ gate once Axis B's `dfs-exec`/`dfs-debug` decision lands; then `install.py`.
 > Read `HANDOFF.md` first — it holds the verified state, the 12-vs-24 distinction, and five
 > publication blockers. Do not re-derive them.
 > Next action: Axis B — curate the public subset (justify or move `dfs-exec` / `dfs-debug`), then
-> B3/B5, then `install.py`, then the FIRST COMMIT (nothing is committed yet).
-> DONE: LICENSE + README + .gitignore (step 1), B1, B2, B4 — see their sections; do not re-litigate.
+> B3/B5, then `install.py`.
+> Repo state: committed at `0e021c0` (136 files, clean tree). Nothing is pushed — no remote exists.
+> DONE: LICENSE + README + .gitignore + first commit (step 1), B1, B2, B4 — do not re-litigate.
 > Constraint: `~/.cc-switch/skills/` stays the live truth; `vault-*.py` scripts keep their names
 > locally; every new claim must come with a raw command receipt, not a self-report.
 > Gate has teeth only if `python tests/mutation_check.py` still exits 0 (14 mutations, empty baseline).
