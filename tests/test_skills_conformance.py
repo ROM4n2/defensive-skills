@@ -36,9 +36,10 @@ _REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 # The 23 shipped Defensive Skills. Declared, not derived: Rule 1 exists to catch a skill being
 # silently added or dropped, which a disk-derived set can never notice.
-# `dfs-agent-sdk` is deliberately NOT here: it vendors the author's own pi-agent SDK docs
-# (90% of this repo's bytes before it was removed) and is published separately. It still lives
-# in the author's private skills tree, so the two trees intentionally differ — see scripts/README.md.
+# `dfs-agent-sdk` is deliberately NOT here: it vendors a THIRD-PARTY pi-agent SDK doc corpus
+# (the `dg-piagent` skill from github.com/buchidonggua/dg-ai-notes; docs are CC-BY-SA-4.0) —
+# not this author's work, and not published here. It still lives in the author's private
+# skills tree, so the two trees intentionally differ — see scripts/README.md.
 SKILL_NAMES = [
     "dfs",
     "dfs-adr",

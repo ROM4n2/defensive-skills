@@ -91,7 +91,7 @@ python scripts/vault-inbox-consolidate.py --vault-path <知识库根> --dry-run
 
 「前置」这一列是**实测**的，不是分类癖好——`tests/test_readme_skill_table.py` 会重新推导每一行，手改对不上就判红。**—** 装完即用；**需知识库** 要先接上自己的知识库（MCP 或文件级降级）；**需额外资产** 引用了刻意不随包的私有工具，需要自备等价物（见 [`scripts/README.md`](scripts/README.md)）。
 
-> `dfs-agent-sdk`（作者的 pi-agent SDK 文档语料，曾占本仓库 90% 字节、与 DFS 的工程约束论点无关）**不随本仓库发布**，另行发布。
+> `dfs-agent-sdk`（一份 **pi-agent SDK 的第三方文档语料**：来自 [`buchidonggua/dg-ai-notes`](https://github.com/buchidonggua/dg-ai-notes) 的 `dg-piagent` skill，**非本仓库作者作品**；曾占本仓库 90% 字节、与 DFS 的工程约束论点无关）**不随本仓库发布**。
 
 | 技能 | 作用 | 前置 | MCP | 附带资产 |
 |---|---|---|---|---|
@@ -193,9 +193,10 @@ python tests/test_harness_field_mapping.py # frontmatter 字段映射表与树�
 * **`dfs-bootstrap` Phase 3.5 已完成跨平台移植。** `dfs-bootstrap/scripts/bootstrap.py`（stdlib）一次跑完：校验并补齐 `.gitignore`、安装密钥扫描钩子（**绝不覆写**已有钩子）并设置 `core.hooksPath`、注入规则锚点、下发 `WORKMEMORY/` 四件套；幂等，`--dry-run` 可预览，模板缺失即 **exit 2** 而不是跳过。原先那版 Windows-only PowerShell 不随包（对照见 [`scripts/README.md`](scripts/README.md)）。
 * **`vault-healthcheck.py` / `vault-inbox-triage.py` 不随包。** 它们体检的是特定知识库的结构，换成别人的库天生就是错的——受影响的是 `dfs-inbox-consolidate`（即表格里唯一标为「需额外资产」的技能）。
 * **检索是加权关键词/标签打分，不是 BM25 + 图谱。** 对笔记量级的知识库足够；上万篇就该换真正的排序器（升级点写在 `mcp/knowledge_server.py` 的模块注释里）。
-* **frontmatter 里的 `disable-model-invocation` / `metadata.hermes.*` 是 Hermes 方言。** 映射到其他 harness 的说明待补（见 [`dfs/references/harness-field-mapping.md`](dfs/references/harness-field-mapping.md)）。
+* **frontmatter 里的 `disable-model-invocation` / `metadata.hermes.*` 是 Hermes 方言。** 映射表已落地于 [`dfs/references/harness-field-mapping.md`](dfs/references/harness-field-mapping.md)：逐条说明哪个 harness 认哪个键，以及不认的键该用哪个等效杠杆来强制同一意图。注意 `metadata.hermes.mcp_tools` **不是任何 harness 的功能**——它是本套件自己的声明，由一致性门禁校验。
 * **投放箱不是知识库。** 完全没有知识库时草稿能存能列，但**归档（晋级）必须有一个知识库根**——`--execute` 在没有根时会 exit 2，而不是猜一个目标目录。这是刻意的：归档是"删原件 + 写正式目录"，目标都不能猜。
-* 仓库内含 **23 个技能**（`dfs-agent-sdk` 已移出、另行发布）；表格的「前置」列把每个技能的依赖实测标出，最轻的 5 个零前置技能装完即用。
+* 仓库内含 **23 个技能**（`dfs-agent-sdk` 已移出——它是第三方语料，不随本仓库发布）；表格的「前置」列把每个技能的依赖实测标出，最轻的 5 个零前置技能装完即用。
+* **语言策略：英文机器面、双语 README、正文英文优先。** agent 路由时必然加载的 frontmatter（`name` / `description` / `mcp_tools`）已全英文；`SKILL.md` 正文 14/23 为纯英文，残余 **1,854 个汉字**集中在 5 个技能的表格与示例里（`dfs` / `dfs-inbox-consolidate` / `dfs-grill` / `dfs-handoff` / `dfs-interview`）——**刻意保留，不是未完工**：面板数据不参与指令，对模型理解无影响，翻译的收益远小于它带来的维护成本。提 issue / PR 用英文即可。
 
 ---
 

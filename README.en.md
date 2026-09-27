@@ -91,7 +91,7 @@ The main chain is `dfs` (route) → `dfs-plan` (plan) → `dfs-exec` (TDD execut
 
 The "prerequisite" column is **measured**, not decorative — `tests/test_readme_skill_table.py` re-derives every row and fails if the table disagrees. **—** works out of the box; **knowledge base** wants your own knowledge base wired up (MCP, or the file-level fallback); **extra assets** references deliberately unshipped private tooling, so bring an equivalent (see [`scripts/README.md`](scripts/README.md)).
 
-> `dfs-agent-sdk` (the author's own pi-agent SDK documentation corpus — 90% of this repo's bytes, and unrelated to the DFS argument) **is not published here**; it ships separately.
+> `dfs-agent-sdk` (a **third-party** pi-agent SDK documentation corpus — the `dg-piagent` skill from [`buchidonggua/dg-ai-notes`](https://github.com/buchidonggua/dg-ai-notes), **not this repo author's work**; it was 90% of this repo's bytes and unrelated to the DFS argument) **is not published here**.
 
 | Skill | Purpose | Prerequisite | MCP | Bundled |
 |---|---|---|---|---|
@@ -196,7 +196,8 @@ Save that as `knowledge.json` in your knowledge-base root to override the defaul
   which harness honors which key, and — for the keys it does not — the lever that enforces the same
   intent. `metadata.hermes.mcp_tools` is **not** a harness feature at all: it is this suite's own
   declaration, checked by the conformance gate.
-* The repo contains **23 skills** (`dfs-agent-sdk` was moved out and ships separately); the "prerequisite" column measures what each skill actually depends on, and the 5 with no prerequisite work the moment they are installed.
+* The repo contains **23 skills** (`dfs-agent-sdk` was moved out because it is third-party material and is not published here); the "prerequisite" column measures what each skill actually depends on, and the 5 with no prerequisite work the moment they are installed.
+* **Language policy: English machine surface, bilingual READMEs, English-first bodies.** Every frontmatter field the agent must load to route (`name` / `description` / `mcp_tools`) is already English. 14 of the 23 `SKILL.md` files are pure English; the remaining **1,854 CJK characters** sit in the tables and examples of 5 skills (`dfs`, `dfs-inbox-consolidate`, `dfs-grill`, `dfs-handoff`, `dfs-interview`) — **kept on purpose, not unfinished work**: they are presentation data, not instructions, so they cost the model nothing to understand, while translating them would cost more to maintain than it returns. Issues and PRs in English are welcome.
 
 ---
 
