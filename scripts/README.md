@@ -48,7 +48,10 @@ port. Three marks make every divergence greppable — `grep -rn "DFS-PORT\|ponyt
   resolution is the shared contract and fails loudly with exit 2 when nothing resolves, instead of
   silently defaulting to `<script>/../..` and reporting "no inbox drafts" for a directory that was
   never a knowledge base.
-* **`vault_exec_state.py`, `vault_transaction.py`** — byte-identical to the private originals.
+* **`vault_exec_state.py`, `vault_transaction.py`** — content-identical to the private originals.
+  The repository stores LF for `*.py` (see `.gitattributes`), so a byte-level comparison against a
+  CRLF working copy differs by line endings only; verify with
+  `git show HEAD:scripts/<file> | tr -d '\r' | sha256sum`.
 * **`dfs-agent-sdk/references/skill-maintenance.md`** — points at this repo's gate
   (`tests/test_skills_conformance.py`) instead of the private `scripts/tests/` copy.
 * **`dfs-bootstrap/SKILL.md`, `dfs-onboard/SKILL.md`** — the vault-side `search-vault.py` CLI is
