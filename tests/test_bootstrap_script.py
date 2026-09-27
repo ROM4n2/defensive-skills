@@ -182,6 +182,25 @@ class BootstrapScriptTest(unittest.TestCase):
         """This repo bootstrapped itself with this tool — if the two drift, one of them is wrong."""
         self.assertEqual((REPO / ".githooks" / "pre-commit").read_bytes(), HOOK_TEMPLATE.read_bytes())
 
+    def test_13_the_scaffolded_work_log_ships_no_history(self):
+        """work.log is append-only history, so its template may contribute comments only.
+
+        The shipped template used to carry a ready-made event signed `claude-sonnet-4-6__claude-code`
+        claiming "bootstrap complete" — so every bootstrapped repo opened with a stranger's history,
+        one that never happened. Structure ships (the other three templates are skeletons); events
+        and claims do not. A comment is inert, so comments are the only content allowed here — and a
+        `###` line is an event declaration however it is spaced, never inert. The trailing newline is
+        part of the contract too: without it the next `cat >>` lands on the last comment line instead
+        of starting a new event.
+        """
+        proc = run_bootstrap(self.target)
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        raw = (self.target / "WORKMEMORY" / "work.log").read_bytes()
+        self.assertTrue(raw.endswith(b"\n"), "work.log does not end with a newline — appends corrupt it")
+        live = [line for line in raw.decode("utf-8").splitlines()
+                if line.strip() and (line.startswith("###") or not line.lstrip().startswith("#"))]
+        self.assertEqual(live, [], f"the scaffolded work.log ships real content, not just structure: {live}")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

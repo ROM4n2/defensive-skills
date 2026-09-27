@@ -7,7 +7,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Skills-23-4B5563?style=flat-square" alt="Skills" />
   <img src="https://img.shields.io/badge/Conformance-12%20rules-0969DA?style=flat-square" alt="Conformance rules" />
-  <img src="https://img.shields.io/badge/Tests-98%20passed-2EA44F?style=flat-square" alt="Tests" />
+  <img src="https://img.shields.io/badge/Tests-99%20passed-2EA44F?style=flat-square" alt="Tests" />
   <img src="https://img.shields.io/badge/Mutation-14%2F14%20caught-2EA44F?style=flat-square" alt="Mutation harness" />
   <img src="https://img.shields.io/badge/Dependencies-0%20(stdlib)-gray?style=flat-square" alt="Zero dependencies" />
   <img src="https://img.shields.io/badge/Python-3.11%20%7C%203.14-3776AB?style=flat-square" alt="Python" />
@@ -131,7 +131,7 @@ python tests/mutation_check.py             # 给每条规则注入缺陷，必�
 python tests/test_knowledge_server.py      # MCP 服务真实 stdio 协议      → exit 0
 python tests/test_vendored_scripts.py      # 台账 / 事务化归档 / 回滚     → exit 0
 python tests/test_docs_links.py            # 文档链接不悬空、不指向未随包文件 → exit 0
-python tests/test_bootstrap_script.py      # bootstrap.py：幂等 / 不覆写钩子 / 不泄路径 → exit 0
+python tests/test_bootstrap_script.py      # bootstrap.py：幂等 / 不覆写钩子 / 不泄路径 / 不预置伪造历史 → exit 0
 python tests/test_readme_skill_table.py    # README 技能表可被树重新导出（含前置分档）→ exit 0
 python tests/test_install.py               # 安装器：分档筛选 / 不覆盖已有 / dry-run → exit 0
 python tests/test_harness_field_mapping.py # frontmatter 字段映射表与树一致 → exit 0
