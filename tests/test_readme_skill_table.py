@@ -31,6 +31,18 @@ ROW = re.compile(
 )
 TIER_LABEL = {"A": {"—"}, "B": {"需知识库", "knowledge base"}, "C": {"需额外资产", "extra assets"}}
 
+# Build/editor artifacts are git-ignored but still sit on disk, and this gate measures the DISK.
+# Counting them made the assertion order-dependent: one background `mypy` run left
+# `dfs-migrate/scripts/.mypy_cache/` behind, `glob("*")` counted it, and `scripts×1` measured as
+# `scripts×2` — so the "fix" offered to a developer was to bake a cache directory into the
+# published README table. Ignore dot-entries and `__pycache__`; `test_06` pins this behaviour.
+IGNORED_ENTRY = re.compile(r"^(?:\.|__pycache__$)")
+
+
+def asset_entries(path: pathlib.Path) -> list[pathlib.Path]:
+    """Everything a directory actually contributes to a published asset count."""
+    return [p for p in path.glob("*") if not IGNORED_ENTRY.match(p.name)]
+
 
 def shipped_script_names() -> set[str]:
     names = {p.name for p in (REPO / "scripts").glob("*")}
@@ -63,7 +75,7 @@ def skill_measurements() -> dict[str, dict]:
         assets = {}
         for key, sub in (("tpl", "templates"), ("refs", "references"), ("scripts", "scripts")):
             if (d / sub).is_dir():
-                assets[key] = len(list((d / sub).glob("*")))
+                assets[key] = len(asset_entries(d / sub))
         if priv:
             tier = "C"
         elif mcp or any(blob.count(t) for t in TAXONOMY_DIRS) or "{vault_root}" in blob:
@@ -142,6 +154,34 @@ class ReadmeSkillTableTest(unittest.TestCase):
             self.assertIn(str(total), text)
         self.assertIn(f"（{total} 个 · 主链 {chain} 个）", zh, "README.md catalogue heading is stale")
         self.assertIn(f"({total} skills · {chain} on the main chain)", en, "README.en.md heading is stale")
+
+
+    def test_06_ignored_build_artifacts_do_not_move_the_asset_count(self):
+        """The probe must be visible to a naive count BEFORE asserting the measurement ignores it.
+
+        Without that first assertion this test would pass even with the bug present. The bug was
+        real: a background `mypy` run dropped `dfs-migrate/scripts/.mypy_cache/`, the gate counted
+        it, and the README was reported as drifted — the tempting repair being to write `scripts×2`
+        into the published table, i.e. bake a build artifact into release data.
+
+        The probe name is dot-prefixed on purpose: if this test ever dies mid-flight it leaves
+        behind an entry the (fixed) measurement ignores, instead of a landmine for `test_04`.
+        """
+        target = REPO / "dfs-migrate" / "scripts"
+        self.assertTrue(target.is_dir(), "fixture skill lost its scripts/ directory")
+        naive_before = len(list(target.glob("*")))
+        before = skill_measurements()["dfs-migrate"]["assets"]["scripts"]
+
+        probe = target / ".dfs-probe-artifact"
+        probe.mkdir()
+        try:
+            self.assertEqual(len(list(target.glob("*"))), naive_before + 1,
+                             "probe is invisible even to a naive glob — this test proves nothing")
+            after = skill_measurements()["dfs-migrate"]["assets"]["scripts"]
+            self.assertEqual(after, before,
+                             "a git-ignored build artifact moved the published asset count")
+        finally:
+            probe.rmdir()
 
 
 if __name__ == "__main__":
