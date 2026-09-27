@@ -24,6 +24,9 @@ Present on all 23 skills; each harness either reads it or ignores it without har
 
 ## 2. Per-skill extensions — behavior differs, so read the row
 
+Set per skill, not everywhere. `disable-model-invocation` and `metadata.hermes.mcp_tools` are the
+two whose presence changes behavior, so check those first.
+
 | Key | Used by | Hermes | Claude Code | Lever when the harness ignores it |
 |---|---|---|---|---|
 | `disable-model-invocation: true` (7 skills: router `dfs`, `dfs-bootstrap`, `dfs-handoff`, `dfs-inbox-consolidate`, `dfs-incident`, `dfs-interview`, `dfs-pipeline`) | keep a side-effecting or router skill from being auto-selected | **not implemented** — see the evidence in §4 | honored: "To keep a personal or project skill but stop Claude from invoking it on its own" | Claude Code: set the skill to `"user-invocable-only"` in `skillOverrides`, or say it in prose; any harness: see §2.1 |
@@ -31,29 +34,37 @@ Present on all 23 skills; each harness either reads it or ignores it without har
 | `metadata.hermes.requires_tools` / `fallback_for_tools` (+ `*_toolsets`) | would be the Hermes-native way to make a skill appear only when a tool exists | read (source) | ignored | not used by DFS today; if a skill ever *needs* a toolset to work, this is the documented mechanism, and ignoring it costs nothing |
 
 **The one that matters:** seven skills rely on a key Hermes does not implement. Nothing breaks —
-they still work when invoked — but on Hermes the *prevention* is missing, so auto-selection is
+they still work when invoked — but on Hermes the *prevention* was missing, so auto-selection was
 possible. Two of the seven (`dfs-bootstrap`, `dfs-inbox-consolidate`) write into a repository or
-move notes, which is exactly why the rule exists.
+move notes, which is exactly why the rule exists. §2.1 closes this by stating the rule in the file.
 
-### 2.1 The gap, stated plainly
+### 2.1 The gap, and how it was closed
 
-**The intent lives only in the key.** Checked, not assumed:
+The intent lives in the key; on a harness that ignores the key, nothing else stopped the router or
+the repo-bootstrapper from being auto-selected. So the missing line was added to all seven — at the
+top of each file, where an agent that reads only the first screen still sees it:
 
 ```bash
-grep -inE "explicitly invoked|explicit invocation|only when .*explicit" dfs*/SKILL.md   # -> no hits
+grep -l 'Invocation . explicit only' dfs*/SKILL.md      # -> 7 files, one per skill below
 ```
 
-So on a harness that ignores `disable-model-invocation`, nothing at all stops the router or the
-repo-bootstrapper from being auto-selected. Three ways to close it, in ascending order of effort:
+The banner is the *same sentence* in all seven (so it is greppable and gateable), and it names the
+key so a reader knows why it is there:
 
-1. **Do nothing** — acceptable if you only ever run Claude Code, where the key is honored.
-2. **Harness-side**: use that harness's own mechanism (Claude Code: `skillOverrides`;
+> **Invocation — explicit only.** `disable-model-invocation: true` is honored by Claude Code and
+> ignored elsewhere, so the same rule is stated here in the file itself: do not auto-select this
+> skill on your own — wait until the user asks for it, or until an already-running DFS skill routes
+> here. (See `dfs/references/harness-field-mapping.md`.)
+
+`tests/test_harness_field_mapping.py::test_06` checks this in the direction that matters: if the doc
+claims the banner is applied, every one of the seven files must actually contain it. If you delete a
+banner, the gate goes red rather than the doc quietly becoming a lie.
+
+Two other levers remain available and are not mutually exclusive with the banner:
+
+1. **Nothing at all** — fine if you only run Claude Code, where the key itself is honored.
+2. **Harness-side**: the harness's own mechanism (Claude Code: `skillOverrides`;
    Hermes: a permission rule or a line in your project rules file).
-3. **Portable**: add one line to each of the seven bodies —
-   *"Run only on explicit request; this skill must not be auto-selected."* — after which the
-   protection travels with the file. This is the only fix that works on a harness that has no
-   override mechanism, and it is deliberately **not done yet**: it edits seven production skills,
-   so it is a decision, not a cleanup.
 
 ## 3. Harnesses with no skills subsystem
 

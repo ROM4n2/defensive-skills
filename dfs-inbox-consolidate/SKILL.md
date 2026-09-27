@@ -14,6 +14,11 @@ metadata:
 
 # DFS-INBOX-CONSOLIDATE: Inbox Draft Archival Pipeline
 
+> **Invocation — explicit only.** `disable-model-invocation: true` is honored by Claude Code and ignored
+> elsewhere, so the same rule is stated here in the file itself: do not auto-select this skill
+> on your own — wait until the user asks for it, or until an already-running DFS skill routes
+> here. (See `dfs/references/harness-field-mapping.md`.)
+
 ## ⚡ Scope Detection (MUST — 执行前第一步)
 
 **在任何操作前，MUST 先检测当前 Vault 根目录**：

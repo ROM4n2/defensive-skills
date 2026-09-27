@@ -13,6 +13,11 @@ metadata:
 
 # Defensive Skills Master Router & Environment Detector
 
+> **Invocation — explicit only.** `disable-model-invocation: true` is honored by Claude Code and ignored
+> elsewhere, so the same rule is stated here in the file itself: do not auto-select this skill
+> on your own — wait until the user asks for it, or until an already-running DFS skill routes
+> here. (See `dfs/references/harness-field-mapping.md`.)
+
 Intelligently detect workspace environment state and route developer intent to the optimal Defensive Skill.
 
 ## 🧭 Environment-Aware Auto-Detection (Step 0)

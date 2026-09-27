@@ -13,6 +13,11 @@ metadata:
 
 # DFS-PIPELINE: End-to-End Autonomous Engineering Pipeline
 
+> **Invocation — explicit only.** `disable-model-invocation: true` is honored by Claude Code and ignored
+> elsewhere, so the same rule is stated here in the file itself: do not auto-select this skill
+> on your own — wait until the user asks for it, or until an already-running DFS skill routes
+> here. (See `dfs/references/harness-field-mapping.md`.)
+
 Orchestrate the full development lifecycle with Git Worktree branch isolation, multi-subagent task dispatching (`/dfs-exec`), performance profiling, multi-expert review, and automated knowledge harvesting.
 
 ## The 8-Stage Pipeline Ledger

@@ -13,6 +13,11 @@ metadata:
 
 # DFS-INTERVIEW: 1v1 Technical Defense Coach & Adaptive Ladder
 
+> **Invocation — explicit only.** `disable-model-invocation: true` is honored by Claude Code and ignored
+> elsewhere, so the same rule is stated here in the file itself: do not auto-select this skill
+> on your own — wait until the user asks for it, or until an already-running DFS skill routes
+> here. (See `dfs/references/harness-field-mapping.md`.)
+
 Conduct high-rigor technical interview drills and system design defenses against Defensive Skills knowledge assets (`09-Career/`, `03-Languages/`, `04-Systems/`).
 
 ## The Adaptive 3-Tier Difficulty Ladder

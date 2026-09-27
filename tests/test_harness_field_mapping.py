@@ -99,22 +99,33 @@ class HarnessFieldMappingTest(unittest.TestCase):
                          f"the doc lists {sorted(listed)} but the tree has {sorted(measured)}")
 
     def test_04_mcp_tools_is_documented_as_suite_internal(self):
-        row = [ln for ln in self.doc.splitlines() if "`metadata.hermes.mcp_tools`" in ln]
-        self.assertTrue(row, "mcp_tools is not in the mapping table at all")
+        row = [ln for ln in self.doc.splitlines()
+               if ln.startswith("|") and "`metadata.hermes.mcp_tools`" in ln]
+        self.assertTrue(row, "the mcp_tools table row is missing")
         self.assertIn("DFS-internal", row[0],
                       "mcp_tools must be described as this suite's own contract — no harness reads it")
         self.assertIn("no harness support", row[0])
 
     def test_05_the_ignored_case_has_an_actionable_lever(self):
-        for lever in ("skillOverrides", "permission rule", "one line to each"):
+        for lever in ("skillOverrides", "permission rule", "added to all seven"):
             self.assertIn(lever, self.doc, f"no lever documented for a harness that ignores a key: {lever}")
 
-    def test_06_the_open_gap_is_stated_not_hidden(self):
+    def test_06_the_docs_claim_about_the_banner_matches_the_tree(self):
+        """§2.1 says the prose line is applied — so every one of the seven must literally carry it.
+
+        This is the direction that matters: a doc that claims a guard exists while the file does
+        not is worse than no doc at all.
+        """
         section = doc_section("### 2.1", "## 3.")
-        self.assertIn("not done yet", section,
-                      "§2.1 must keep stating that the portable prose line is not applied yet")
+        self.assertIn("applied", section, "§2.1 must state what was actually done to the seven")
         self.assertRegex(section, r"grep .*SKILL\.md",
                          "§2.1's claim needs the command that verifies it")
+        marker = "**Invocation \u2014 explicit only.**"
+        missing = [s for s, ks in self.per_skill.items()
+                   if "disable-model-invocation" in ks
+                   and marker not in (REPO / s / "SKILL.md").read_text(encoding="utf-8")]
+        self.assertEqual(missing, [],
+                         f"§2.1 claims the banner is applied, but these skills lack it: {missing}")
 
     def test_07_the_doc_is_reachable_from_the_front_page(self):
         for readme in ("README.md", "README.en.md"):

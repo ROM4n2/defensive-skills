@@ -13,6 +13,11 @@ metadata:
 
 # DFS-HANDOFF: Session Wrap-up & 1-Click Agent Handoff (v2)
 
+> **Invocation — explicit only.** `disable-model-invocation: true` is honored by Claude Code and ignored
+> elsewhere, so the same rule is stated here in the file itself: do not auto-select this skill
+> on your own — wait until the user asks for it, or until an already-running DFS skill routes
+> here. (See `dfs/references/harness-field-mapping.md`.)
+
 Capture working state at the end of a session, land user corrections before they evaporate, harvest uncommitted learnings to `99-Inbox/`, verify clean git status, and generate a token-budgeted continuation card for the next agent session.
 
 > 协议依据：`CROSS-AGENT-MEMORY.md` §2.5（CORRECTION 事件 + corrections.md 账本）。Phase 0 与 Phase 1 的产出都进 `WORKMEMORY/corrections.md` 与 `work.log`（dfs 宿主 = `11-Agents/corrections.md`）。
