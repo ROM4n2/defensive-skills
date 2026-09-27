@@ -1,9 +1,13 @@
 # Defensive Skills (DFS) · 让 AI 编码代理的门禁真正有牙齿
 
 <p align="center">
+  <b>中文</b> · <a href="README.en.md">English</a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/Skills-24-4B5563?style=flat-square" alt="Skills" />
   <img src="https://img.shields.io/badge/Conformance-12%20rules-0969DA?style=flat-square" alt="Conformance rules" />
-  <img src="https://img.shields.io/badge/Tests-38%20passed-2EA44F?style=flat-square" alt="Tests" />
+  <img src="https://img.shields.io/badge/Tests-42%20passed-2EA44F?style=flat-square" alt="Tests" />
   <img src="https://img.shields.io/badge/Mutation-14%2F14%20caught-2EA44F?style=flat-square" alt="Mutation harness" />
   <img src="https://img.shields.io/badge/Dependencies-0%20(stdlib)-gray?style=flat-square" alt="Zero dependencies" />
   <img src="https://img.shields.io/badge/Python-3.11%20%7C%203.14-3776AB?style=flat-square" alt="Python" />
@@ -120,11 +124,14 @@ python tests/test_skills_conformance.py    # 12 条规则 × 24 个技能       
 python tests/mutation_check.py             # 给每条规则注入缺陷，必须被抓 → exit 0
 python tests/test_knowledge_server.py      # MCP 服务真实 stdio 协议      → exit 0
 python tests/test_vendored_scripts.py      # 台账 / 事务化归档 / 回滚     → exit 0
+python tests/test_docs_links.py            # 文档链接不悬空、不指向未随包文件 → exit 0
 ```
 
-四个门禁在 **Python 3.11.8 与 3.14.7 下结果完全一致**（这条是设计目标：门禁的结论不该取决于你碰巧用哪个解释器调用它——早期版本 `import yaml`，在没有 PyYAML 的解释器下直接跑不起来）。
+五个门禁在 **Python 3.11.8 与 3.14.7 下结果完全一致**（这条是设计目标：门禁的结论不该取决于你碰巧用哪个解释器调用它——早期版本 `import yaml`，在没有 PyYAML 的解释器下直接跑不起来）。
 
 几条刻意的设计，值得单独说：
+
+* **文档也在门禁管辖内。** `test_docs_links.py` 拒绝悬空链接，也拒绝指向「刻意不入库」状态的链接；本仓库准备首个公开发布时它当场抓到两处真链接（README 当时还在链 `HANDOFF.md` 与 `WORKMEMORY/`）。这道门禁自己也做了变异验证：注入 5 个缺陷，全部被抓。
 
 * **没有变异测试的绿不算绿。** `mutation_check.py` 往一棵临时拷贝里注入 14 个缺陷（删文件、改 frontmatter、塞悬空指针、塞绝对路径、塞近似拼错……），断言每个都被**对应的那条规则**抓住，同时断言干净树**零失败**。规则从红转绿时必须同时补它自己的变异用例——本仓库刚刚就是这么做的：Rule 8 修好那一刻，夹具立刻报 `BASELINE MOVED`，因为它此前只靠"预期为红"覆盖，从没用例证明过它真能判红。
 * **豁免是声明，不是消音器。** 少数引用指向**故意不随包**的私有工具，它们登记在 `OPTIONAL_SCRIPT_POINTERS` 里；某条豁免一旦不再被任何技能引用，Rule 8 立刻判红——防止豁免表烂成集体消音器。
@@ -175,7 +182,7 @@ python tests/test_vendored_scripts.py      # 台账 / 事务化归档 / 回滚  
 * **`vault-healthcheck.py` / `vault-inbox-triage.py` 不随包。** 它们体检的是特定知识库的结构，换成别人的库天生就是错的。
 * **检索是加权关键词/标签打分，不是 BM25 + 图谱。** 对笔记量级的知识库足够；上万篇就该换真正的排序器（升级点写在 `mcp/knowledge_server.py` 的模块注释里）。
 * **frontmatter 里的 `disable-model-invocation` / `metadata.hermes.*` 是 Hermes 方言。** 映射到其他 harness 的说明待补。
-* 仓库内含 24 个技能；**面向外部的最小可用子集仍在收敛**，进展记录在 [`HANDOFF.md`](HANDOFF.md)。
+* 仓库内含 24 个技能；**面向外部的最小可用子集仍在收敛**（哪些技能与某个具体知识库强耦合，正在逐个量化）。
 
 ---
 
@@ -183,12 +190,13 @@ python tests/test_vendored_scripts.py      # 台账 / 事务化归档 / 回滚  
 
 | 需要什么 | 去哪 |
 |---|---|
-| 当前状态 / 发布阻塞项 / 决策记录 | [`HANDOFF.md`](HANDOFF.md) |
-| 会话工作记忆（状态、坑、事件日志） | [`WORKMEMORY/`](WORKMEMORY/) |
 | 知识层 MCP：注册、根契约、无 MCP 降级表 | [`mcp/README.md`](mcp/README.md) |
 | 随包引擎脚本 / 未随包清单 / 移植分歧 | [`scripts/README.md`](scripts/README.md) |
 | 一致性门禁与变异夹具 | [`tests/`](tests/) |
 | 仓库安全守卫（密钥扫描钩子） | [`.githooks/pre-commit`](.githooks/) |
+| 英文版 README | [`README.en.md`](README.en.md) |
+
+**刻意不入库的本机生成物**：harness 锚点（`AGENTS.md` / `CLAUDE.md` / `.agent-rules.md` / `.cursorrules`）、`WORKMEMORY/` 工作记忆、会话交接文档 —— 由 `dfs-bootstrap` 在本机生成，且会把 `{vault_root}` 解析成绝对路径；提交它们等于把一台机器的目录布局当成所有人的。见 `.gitignore`。
 
 仓库自带零泄漏 pre-commit 钩子（密钥/keystore/敏感文件扫描），`git config core.hooksPath .githooks` 即可启用。
 

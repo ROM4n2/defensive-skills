@@ -61,6 +61,8 @@ MUTATIONS = [
     ("rule_9_mcp_contract_tools_are_canonical",
      "dfs-adr/SKILL.md", lambda t: t.replace("    related_skills:",
                                              "    mcp_tools: [search_vault, bogus_tool]\n    related_skills:", 1)),
+    # fixture: the path is deliberately shaped to match Rule 10's pattern. "ExampleVault" is
+    # fake on purpose — never swap in a real vault name, that is the leak this rule bans.
     ("rule_10_no_hardcoded_absolute_vault_paths",
      "dfs-adr/SKILL.md", lambda t: t + "\nRead D:/Obsidian/ExampleVault/01-Rules/SOME-RULE.md\n"),
     ("rule_11_declared_mcp_contract_covers_actual_usage",
