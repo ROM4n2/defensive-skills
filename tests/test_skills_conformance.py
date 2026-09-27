@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """Conformance gate for the Defensive Skills tree — repo port, stdlib only.
 
-Ported from `D:\\Obsidian\\Coding\\scripts\\tests\\test_dfs_skills_conformance.py`
-(12 rules, 14 test methods). Two deliberate divergences from the vault original:
+Ported from the private vault-side gate of the same name (12 rules, 14 test methods). Two
+deliberate divergences from the vault original:
 
 1. Skill root: `DFS_SKILLS_DIR` env var, else this repo root. The vault copy defaults to
    `~/.cc-switch/skills`, which resolves to nothing in a public checkout.

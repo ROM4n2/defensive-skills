@@ -13,7 +13,7 @@ metadata:
 
 # DFS-BOOTSTRAP: Repository Security & Knowledge Anchoring
 
-Initialize any new or existing repository (`D:\Code\{project}`) with zero-leak secret detection git hooks and 3-line Defensive Skills knowledge anchors.
+Initialize any new or existing repository (`<your projects root>/{project}`) with zero-leak secret detection git hooks and 3-line Defensive Skills knowledge anchors.
 
 ## The 3-Phase Bootstrap Protocol
 

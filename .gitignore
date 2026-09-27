@@ -1,8 +1,8 @@
 # ============================================================
 #  Sensitive credentials & secrets  (dfs-bootstrap §Phase 1)
 #  This block MUST stay byte-identical to $requiredIgnores
-#  in D:\Obsidian\Coding\scripts\bootstrap.ps1 (single
-#  source of truth). Do not reorder, do not comment out.
+#  in the DFS bootstrap script (single source of truth).
+#  Do not reorder, do not comment out.
 # ============================================================
 config.yaml
 config.yml
@@ -34,6 +34,20 @@ venv/
 .worktrees/
 .agent-cache/
 *.local.md
+
+# ============================================================
+#  Generated per-machine state — kept on disk, never published.
+#  dfs-bootstrap writes these with {vault_root} RESOLVED to the
+#  local absolute path, so committing them would ship one
+#  machine's layout as if it were everyone's. Regenerate with
+#  dfs-bootstrap instead of tracking them.
+# ============================================================
+AGENTS.md
+CLAUDE.md
+.agent-rules.md
+.cursorrules
+WORKMEMORY/
+HANDOFF.md
 
 # ============================================================
 #  Port-local runtime state

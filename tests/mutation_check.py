@@ -62,7 +62,7 @@ MUTATIONS = [
      "dfs-adr/SKILL.md", lambda t: t.replace("    related_skills:",
                                              "    mcp_tools: [search_vault, bogus_tool]\n    related_skills:", 1)),
     ("rule_10_no_hardcoded_absolute_vault_paths",
-     "dfs-adr/SKILL.md", lambda t: t + "\nRead D:/Obsidian/Coding/01-Rules/CROSS-AGENT-MEMORY.md\n"),
+     "dfs-adr/SKILL.md", lambda t: t + "\nRead D:/Obsidian/ExampleVault/01-Rules/SOME-RULE.md\n"),
     ("rule_11_declared_mcp_contract_covers_actual_usage",
      "dfs-adr/SKILL.md", lambda t: t + "\nCall `search_vault(\"x\")` first.\n"),
     ("rule_12_vault_mcp_call_sites_are_canonical",

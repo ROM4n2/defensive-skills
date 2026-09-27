@@ -12,7 +12,7 @@ metadata:
 
 # DFS-ONBOARD: Codebase Takeover & Context Anchor
 
-Quickly orient an AI Agent on an unfamiliar or existing repository (`D:\Code\{project}`) to establish immediate development readiness with verified test baselines and architecture invariants.
+Quickly orient an AI Agent on an unfamiliar or existing repository (`<your projects root>/{project}`) to establish immediate development readiness with verified test baselines and architecture invariants.
 
 ## The 4-Phase Onboarding Protocol
 
