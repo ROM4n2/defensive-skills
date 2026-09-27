@@ -1,0 +1,55 @@
+# ============================================================
+#  Sensitive credentials & secrets  (dfs-bootstrap §Phase 1)
+#  This block MUST stay byte-identical to $requiredIgnores
+#  in D:\Obsidian\Coding\scripts\bootstrap.ps1 (single
+#  source of truth). Do not reorder, do not comment out.
+# ============================================================
+config.yaml
+config.yml
+config.local.yaml
+.env
+.env.*
+*.env
+*.secret
+*.pem
+*.key
+*.local.json
+credentials.json
+
+# ============================================================
+#  Language runtime artifacts
+# ============================================================
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# ============================================================
+#  Agent / harness scratch (never publish local state)
+# ============================================================
+.worktrees/
+.agent-cache/
+*.local.md
+
+# ============================================================
+#  Port-local runtime state
+#  routing.json holds YOUR tag→destination table (scripts/README.md);
+#  the ledger and transaction journal are per-project working state.
+# ============================================================
+routing.json
+.vault-exec-ledger.json
+.vault-tx/
+
+# ============================================================
+#  OS / editor
+# ============================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+*.swp
+*~

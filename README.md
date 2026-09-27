@@ -1,0 +1,199 @@
+# Defensive Skills (DFS) · 让 AI 编码代理的门禁真正有牙齿
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Skills-24-4B5563?style=flat-square" alt="Skills" />
+  <img src="https://img.shields.io/badge/Conformance-12%20rules-0969DA?style=flat-square" alt="Conformance rules" />
+  <img src="https://img.shields.io/badge/Tests-38%20passed-2EA44F?style=flat-square" alt="Tests" />
+  <img src="https://img.shields.io/badge/Mutation-14%2F14%20caught-2EA44F?style=flat-square" alt="Mutation harness" />
+  <img src="https://img.shields.io/badge/Dependencies-0%20(stdlib)-gray?style=flat-square" alt="Zero dependencies" />
+  <img src="https://img.shields.io/badge/Python-3.11%20%7C%203.14-3776AB?style=flat-square" alt="Python" />
+  <img src="https://img.shields.io/badge/License-MIT-gray?style=flat-square" alt="License MIT" />
+</p>
+
+<p align="center">
+  <b>一套给 AI 编码代理用的工程约束框架：纯 Markdown 技能 + 零依赖配置的门禁，专治「看起来全绿、其实没人验过」。</b>
+</p>
+
+---
+
+## 🎯 它反对的三件事
+
+不是功能清单，是三种具体的失败模式。每条都附上本仓库自己的收据。
+
+**1. 假绿门禁 —— 「测试通过」和「真的没问题」是两件事。**
+本仓库的一致性门禁最早只有 6 条规则，报全绿。补上**变异测试**（对每一项声明式检查注入缺陷，断言它必须转红）并砍掉「`scripts/...` 允许解析到作者自己机器上的目录」这类兜底之后，规则扩到 12 条，立刻报出 **21 处只有作者机器解析得通的脚本引用**，分布在 6 个技能里。绿的集合从来没变过——变的只是它到底有没有在检查。
+
+**2. 计划幻觉 —— 对着没读过的代码写详细方案。**
+`dfs-plan` 只产出**当下能确定**的下一步（分段式计划），每步带验证方式；`dfs-exec` 强制「先有复现/先有失败的测试，再动实现」；`dfs-tdd` 专门盯 RED-GREEN-REFACTOR 的偷跑假绿。计划里不许出现没证据的断言。
+
+**3. 静默失败 —— 出了错却退出码 0。**
+移植 `vault-inbox-consolidate.py` 时，它的原型兜底 `<script>/../..` 恰好命中代码检出目录里自己的 `AGENTS.md`，于是工具把工作区当成知识库、报「Inbox 不存在」并**退出码 0**——完全是一次静默错答案。现在无根可解析就 `exit 2` 并打印该怎么配。同一原则贯穿全仓：**能响就响，不吞异常，不给假默认值。**
+
+---
+
+## 🚀 快速开始
+
+### 1) 装技能
+
+技能就是含 `SKILL.md` 的普通目录，拷进（或软链到）你的 harness 的技能目录即可。以下路径已在本机实测存在：
+
+| Harness | 技能目录 |
+|---|---|
+| Claude Code | `~/.claude/skills/` |
+| Codex | `~/.codex/skills/` |
+| Hermes | `<hermes 配置目录>/skills/` |
+
+```bash
+# 例：整包安装（把本仓库的技能目录链/拷到目标 harness）
+cp -r dfs dfs-* ~/.codex/skills/
+```
+
+### 2) 装知识层（可选但强烈建议）
+
+技能靠 `coding-vault-search` MCP 检索你自己的 Markdown 知识库。仓库自带一个 **stdio JSON-RPC、零依赖**的服务：
+
+```jsonc
+{
+  "mcpServers": {
+    "coding-vault-search": {
+      "command": "python",
+      "args": ["<repo>/mcp/knowledge_server.py", "--root", "<你的知识库根目录>"]
+    }
+  }
+}
+```
+
+**没有 MCP 也能跑**：每个能力都有文件级等价物（`search_files` / `read_file` / `write_file`），降级表见 [`mcp/README.md`](mcp/README.md)。工具名 `search_vault`、`get_rule_snippet`、`save_inbox_draft` 等是**契约**，技能在 frontmatter 里声明自己会调哪些，门禁拒绝任何不在规范集合里的名字。
+
+### 3) 引擎脚本
+
+`dfs-exec`、`dfs-handoff`、`dfs-inbox-consolidate` 靠 `scripts/` 下的实际程序工作（执行台账、事务化归档）：
+
+```bash
+python scripts/vault_exec_state.py init --plan-file implementation_plan.md
+python scripts/vault-inbox-consolidate.py --vault-path <知识库根> --dry-run
+```
+
+细节与「哪些没随包」见 [`scripts/README.md`](scripts/README.md)。
+
+---
+
+## 🧭 技能全览（24 个 · 主链 7 个）
+
+主链是 `dfs`（路由）→ `dfs-plan`（计划）→ `dfs-exec`（TDD 执行）→ `dfs-debug`（根因调试）→ `dfs-save`（沉淀）→ `dfs-handoff`（交接），加 `dfs-team`（多专家共识评审）。
+
+| 技能 | 作用 | MCP | 附带资产 |
+|---|---|---|---|
+| **主链** `dfs` | Route developer intent to optimal Defensive Skills. | — | refs×2 |
+| **主链** `dfs-plan` | Draft bite-sized TDD implementation plans from specs. | omni_search, get_code_template | tpl×1 |
+| **主链** `dfs-exec` | Execute TDD plans via isolated subagents with maker-checker. | — | tpl×2 |
+| **主链** `dfs-debug` | Execute 4-step systematic root-cause debugging with repro. | search_vault, save_inbox_draft | tpl×1 |
+| **主链** `dfs-save` | Harvest non-obvious engineering solutions to 99-Inbox. | search_vault, save_inbox_draft | tpl×1 |
+| **主链** `dfs-handoff` | Generate session wrap-up and 1-click continuation cards. | — | tpl×1 |
+| **主链** `dfs-team` | Orchestrate multi-expert subagent reviews with consensus. | — | tpl×1 |
+| `dfs-adr` | Draft and archive numbered Architecture Decision Records. | — | tpl×1 |
+| `dfs-agent-sdk` | Develop with pi-agent SDK and enterprise LLM endpoints. | search_vault | refs×65 |
+| `dfs-bootstrap` | Initialize repos with security git hooks and DFS anchors. | — | tpl×1 |
+| `dfs-grill` | Stress-test architecture via Dual-Lens Socratic inquiry. | omni_search | — |
+| `dfs-inbox-consolidate` | Classify and archive 99-Inbox drafts to DFS destinations. | promote_inbox_draft | — |
+| `dfs-incident` | Triage production incidents and draft blameless postmortems. | — | tpl×1 |
+| `dfs-interview` | Conduct high-rigor 1v1 technical interview defense drills. | — | — |
+| `dfs-migrate` | Plan zero-downtime database schema migrations safely. | — | tpl×1 scripts×1 |
+| `dfs-onboard` | Rapidly orient AI agent to develop on existing codebases. | — | — |
+| `dfs-perf` | Profile multi-language benchmarks, races, and query plans. | — | tpl×1 scripts×1 |
+| `dfs-pipeline` | Execute end-to-end Git Worktree multi-skill pipeline. | — | — |
+| `dfs-refactor` | Execute senior-level refactoring & guard clause flattening. | — | — |
+| `dfs-release` | Draft semantic releases, changelogs, and rollback plans. | — | tpl×2 scripts×1 |
+| `dfs-research` | Research external sources and sink findings into the Vault. | search_vault, omni_search, get_note, get_rule_snippet, save_inbox_draft | tpl×1 |
+| `dfs-review` | Review code diffs against 7-language RFC 2119 DFS rules. | get_rule_snippet, list_standards | tpl×1 |
+| `dfs-spark` | Turn 0-to-1 ideas into specs via Dual-Lens dialogue. | omni_search | tpl×1 |
+| `dfs-tdd` | Enforce strict RED-GREEN-REFACTOR TDD and fake-green guards. | get_code_template | — |
+
+---
+
+## 🛡️ 这套门禁自己怎么被验证
+
+**别读这段，直接跑**——全部零依赖，不需要 pytest：
+
+```bash
+python tests/test_skills_conformance.py    # 12 条规则 × 24 个技能        → exit 0
+python tests/mutation_check.py             # 给每条规则注入缺陷，必须被抓 → exit 0
+python tests/test_knowledge_server.py      # MCP 服务真实 stdio 协议      → exit 0
+python tests/test_vendored_scripts.py      # 台账 / 事务化归档 / 回滚     → exit 0
+```
+
+四个门禁在 **Python 3.11.8 与 3.14.7 下结果完全一致**（这条是设计目标：门禁的结论不该取决于你碰巧用哪个解释器调用它——早期版本 `import yaml`，在没有 PyYAML 的解释器下直接跑不起来）。
+
+几条刻意的设计，值得单独说：
+
+* **没有变异测试的绿不算绿。** `mutation_check.py` 往一棵临时拷贝里注入 14 个缺陷（删文件、改 frontmatter、塞悬空指针、塞绝对路径、塞近似拼错……），断言每个都被**对应的那条规则**抓住，同时断言干净树**零失败**。规则从红转绿时必须同时补它自己的变异用例——本仓库刚刚就是这么做的：Rule 8 修好那一刻，夹具立刻报 `BASELINE MOVED`，因为它此前只靠"预期为红"覆盖，从没用例证明过它真能判红。
+* **豁免是声明，不是消音器。** 少数引用指向**故意不随包**的私有工具，它们登记在 `OPTIONAL_SCRIPT_POINTERS` 里；某条豁免一旦不再被任何技能引用，Rule 8 立刻判红——防止豁免表烂成集体消音器。
+* **不许引用只在自己机器上解析得通的东西。** 规则 8/10 明确禁止把 `scripts/...` 借给仓库外的路径、禁止硬编码知识库绝对路径。
+
+### 12 条一致性规则
+
+| # | 断言 |
+|---|---|
+| 1 | 每个技能目录存在且含非空 `SKILL.md` |
+| 2 | frontmatter 可解析，`name` / `description` 非空 |
+| 3 | `description` ≤ 60 字符、以句点结尾、不含营销词 |
+| 4 | 路由技能 `dfs` 必须 `disable-model-invocation: true` |
+| 5 | `templates/` 与 `references/` 里的指针必须在磁盘上解析得到 |
+| 6 | 不得硬编码 `~/.claude/agents/` 这类路径而不给中性回退 |
+| 7 | `related_skills` 每项都指向真实技能或白名单内的外部技能 |
+| 8 | 每个 `scripts/<file>` 引用必须真实随包；**永不外借** |
+| 9 | 声明的 `mcp_tools` 只能是规范工具名 |
+| 10 | 禁止硬编码知识库绝对路径，改用 `{vault_root}` / 环境变量 |
+| 11 | 正文里调用过 `tool(...)` 就必须在 `mcp_tools` 里声明 |
+| 12 | 形似 MCP 的调用点必须规范；近似拼错（如 `serch_vault`）直接拒绝 |
+
+---
+
+## 🗂️ 知识库布局与根目录契约
+
+技能与脚本都不假定你的目录名。根目录解析契约（`--root` / `--vault-path` → `$WIKI_PATH` → `$OBSIDIAN_VAULT_PATH` → 向上找 `AGENTS.md` / `.obsidian/` → **失败即报错**，绝不回退到某个硬编码路径）：
+
+```json
+{
+  "content_dirs": ["notes", "rules", "inbox"],
+  "rules_dir": "rules",
+  "languages_dir": "standards",
+  "career_dir": "career",
+  "inbox_dir": "inbox",
+  "code_template_dir": "templates/code",
+  "prompts_dir": "tools/subagents"
+}
+```
+
+把这段存成知识库根目录的 `knowledge.json` 即可覆盖默认布局；未知键会被**报错**而不是忽略。默认值对应 DFS 一贯使用的目录名（`01-Rules/`、`03-Languages/`、`99-Inbox/`…），所以不改也没问题。
+
+---
+
+## ⚠️ 已知边界（不藏）
+
+* **`dfs-bootstrap` Phase 3.5 需要一个跨平台移植。** 它依赖的 `scripts/bootstrap.ps1` 是 Windows-only 的 PowerShell，且读取私有模板树，因此**没有随包**。该技能目前不构成可用发布项，缺口在 `scripts/README.md` 里显式声明。
+* **`vault-healthcheck.py` / `vault-inbox-triage.py` 不随包。** 它们体检的是特定知识库的结构，换成别人的库天生就是错的。
+* **检索是加权关键词/标签打分，不是 BM25 + 图谱。** 对笔记量级的知识库足够；上万篇就该换真正的排序器（升级点写在 `mcp/knowledge_server.py` 的模块注释里）。
+* **frontmatter 里的 `disable-model-invocation` / `metadata.hermes.*` 是 Hermes 方言。** 映射到其他 harness 的说明待补。
+* 仓库内含 24 个技能；**面向外部的最小可用子集仍在收敛**，进展记录在 [`HANDOFF.md`](HANDOFF.md)。
+
+---
+
+## 📁 目录导航
+
+| 需要什么 | 去哪 |
+|---|---|
+| 当前状态 / 发布阻塞项 / 决策记录 | [`HANDOFF.md`](HANDOFF.md) |
+| 会话工作记忆（状态、坑、事件日志） | [`WORKMEMORY/`](WORKMEMORY/) |
+| 知识层 MCP：注册、根契约、无 MCP 降级表 | [`mcp/README.md`](mcp/README.md) |
+| 随包引擎脚本 / 未随包清单 / 移植分歧 | [`scripts/README.md`](scripts/README.md) |
+| 一致性门禁与变异夹具 | [`tests/`](tests/) |
+| 仓库安全守卫（密钥扫描钩子） | [`.githooks/pre-commit`](.githooks/) |
+
+仓库自带零泄漏 pre-commit 钩子（密钥/keystore/敏感文件扫描），`git config core.hooksPath .githooks` 即可启用。
+
+---
+
+## 📄 License
+
+MIT — 见 [`LICENSE`](LICENSE)。

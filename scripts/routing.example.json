@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "routes": [
+    {
+      "tag": "category/rules",
+      "type": "rule-append",
+      "name": "Cross-cutting rules",
+      "target": "01-Rules/CODING-UNIVERSAL.md"
+    },
+    {
+      "tag": "category/notes",
+      "type": "source-article",
+      "name": "General notes",
+      "target_dir": "06-Sources"
+    }
+  ],
+  "fallback": {
+    "source-notes": {
+      "type": "source-article",
+      "name": "General notes",
+      "target_dir": "06-Sources"
+    },
+    "default": {
+      "type": "source-article",
+      "name": "General notes",
+      "target_dir": "06-Sources"
+    }
+  }
+}

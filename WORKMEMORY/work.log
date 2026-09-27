@@ -1,0 +1,132 @@
+# skill-dev work.log（HOT 层，append-only）
+# Schema 见 PROTOCOL.md §2；轮转规则见 §5
+
+### 2026-09-27 17:00 | deepseek-flash__hermes | NOTE
+Caps: filesystem-read, filesystem-write, shell-exec
+dfs-bootstrap 3 阶段协议执行完毕，PROJECT_OVERVIEW.md 已由本会话从代码库蒸馏填充（非模板骨架）。
+- P1 安全：`git init -b main`；`.gitignore` 11 条敏感模式与 `bootstrap.ps1 $requiredIgnores` 逐条核对全中；
+  `.githooks/pre-commit` 落盘并 `git config core.hooksPath .githooks`。
+- P2 锚点：CLAUDE.md / .agent-rules.md / .cursorrules / AGENTS.md 四锚点注入（Vault 规范源 + WORKMEMORY 读序）。
+- P3 WORKMEMORY：4 件套由 `scripts/bootstrap.ps1` 脚手架生成，PROJECT_OVERVIEW 已替换为真实内容。
+- P4 硬门禁（实测 exit code，非自述）：T1 干净暂存 → hook exit 0；T2 暂存假 AWS key → exit 1 且准确报
+  `leak.txt:1 (AWS Access Key ID)`；T3 走真实 `git commit` 路径 → 提交被中止；T4 行内 `# git:allow-secret`
+  → exit 0（豁免生效）；T5 强制暂存 `.hooktest/.env` → exit 1 按文件名拦截。
+- 奇偶性：24/24 skill 目录与 live tree `~/.cc-switch/skills/` `diff -rq` 全绿（逐文件一致），可安全入库。
+- 勘误：清除 `bootstrap.ps1` 从 `Templates/workmemory/work.log` 复制的预置示例事件（agent-id 冒名
+  `claude-sonnet-4-6__claude-code`）。该事件非本仓库真实产生，本仓库此前无任何 commit 历史，故在首次
+  commit 前移除不构成改写历史。**遗留**：Vault 模板 `Templates/workmemory/work.log` 仍带样本事件，后续
+  每个新仓库都会继承 —— 待用户决定是否修模板。
+- 勘误：`HANDOFF.md` §1 记 `dfs-agent-sdk` 有 67 个 references，实测 65（两树同值），文档计数有误。
+
+### 2026-09-27 17:04 | deepseek-flash__hermes | WORK_END
+Caps: filesystem-read, filesystem-write, shell-exec
+任务：HANDOFF §6.5/§7 的下一步 —— 把 conformance 门禁移植进本仓库（gate-then-content）。
+不做范围：未改动任何 skill 内容；未移植 shipped 子集白名单测试（其断言依赖"公开子集是哪 12 个"这一未决决策）；
+未做 B1（配套 MCP）任何实现；未修 B4。
+- 产出：`tests/test_skills_conformance.py`（12 规则 / 14 测试，从 vault 原版移植）、
+  `tests/mutation_check.py`（变异测试夹具）。
+- 关键决策：移植版刻意砍掉两样东西 —— ① PyYAML（改用 flat-regex 解析 frontmatter，与原版逐字段比对一致）；
+  ② Rule 8 的"作者 Vault scripts 根"兜底。理由：前者让"绿"取决于解释器（本机默认 python 3.14 无 PyYAML，
+  只有 python3 3.11.8 能跑原版），后者会把 B4 这个真缺陷重新埋成绿。
+- 验证（原始命令 + exit code）：`python tests/test_skills_conformance.py` → Ran 14, FAILED(failures=1)，exit 1；
+  唯一红项 Rule 8 列出 21 处悬空 `scripts/...`（`vault_exec_state.py` ×7、`vault-inbox-consolidate.py` ×6、
+  `vault-healthcheck.py` ×2、`search-vault.py` ×2、`bootstrap.ps1` ×2、`vault-inbox-triage.py` ×1、
+  `tests/test_dfs_skills_conformance.py` ×1），涉及 dfs-exec / dfs-inbox-consolidate / dfs-bootstrap / dfs-onboard /
+  dfs-agent-sdk / dfs-handoff 六个 skill。
+- 验证：`python3 <scratch>/parity_check.py` → PARITY OK（24 skill × 5 字段 + body 与 PyYAML 完全一致），exit 0。
+- 验证：`python tests/mutation_check.py` → 13/13 注入缺陷全部 CAUGHT，exit 0（基线 = 仅 rule_8 红，已固化在
+  KNOWN_RED_BASELINE）。
+- 回写检查：稳定结论已回写本 overview（当前状态 + 3 条新坑）；`vault-inbox-consolidate.py` 未改名、未引入任何
+  临时产物；`.hooktest/` 探针已清除。
+- 未闭合风险：门禁处于"有意红"状态，首个 commit 前需决定是修 B4 还是先在 README 声明前置条件。
+- 发现（未修，等用户裁决）：`dfs-exec/SKILL.md` 的 `related_skills: [dfs-plan, dfs-tdd, dfs-review, dfs-review]`
+  重复项；修它须改 live tree 再回拷，否则破坏 24/24 逐字节奇偶性。
+
+### 2026-09-27 17:5x | deepseek-flash__hermes | WORK_END
+Caps: filesystem-read, filesystem-write, shell-exec
+任务：用户裁决 B1 = 两者都做（服务在就用服务，不在就走有文档的文件级降级），并要求继续下一步。
+不做范围：未改动任何 skill 内容；未移植 shipped 子集白名单测试；未修 B4（Rule 8 仍红）；未做 B3/B5；
+未写 LICENSE/README/install.py；未 commit。
+- 产出：`mcp/knowledge_server.py`（stdio JSON-RPC，stdlib 零依赖，9 个规范工具名与参数 schema 沿用原版契约）、
+  `mcp/README.md`（注册方式 / 根解析契约 / knowledge.json 布局 / 逐工具降级表 / 天花板声明）、
+  `tests/test_knowledge_server.py`（15 个端到端测试）。
+- 关键决策：只移植**契约**，不搬后端。原版 server 会 shell 出去调 `search-vault.py`(1108 行) 与
+  `vault-proactive-scan.py`(663 行)，且 `vault-inbox-consolidate.py` 还依赖本地 `vault_transaction` 模块；
+  把 1800 行作者专有代码搬进公开仓库会连个人知识库分类法一起搬过去。故后端用 stdlib 自实现，
+  三处天花板（关键词打分≠BM25、L0 不探测 codegraph 二进制、正则≠AST 债务扫描）写进模块 docstring。
+- 关键决策：根解析不做第三层兜底。原版第三层是作者机器上的绝对路径 —— 对陌生人就是静默的错误答案；
+  现在无根即 exit 2 并打印如何配置，且不泄露作者的 Obsidian 路径。
+- 关键决策：布局可配置（可选 `knowledge.json`，未知键报错而非忽略），默认值 = 本 Vault 布局，
+  因此既有行为零变化 —— 这就是 B2 的答案。
+- 验证（原始命令 + exit code）：`python tests/test_knowledge_server.py` → Ran 15, OK, exit 0
+  （真实 stdio 协议 + 临时知识库；含 7 种越界读尝试全部未泄露 root 外内容、A-MAC 三档拦截、
+  `tools/list` == 门禁 `KNOWN_MCP_TOOLS` 的漂移断言）。
+- 验证：`python tests/test_skills_conformance.py` → Ran 14, FAILED(failures=1), exit 1（仅 Rule 8，即 B4）。
+- 验证：`python tests/mutation_check.py` → exit 0（13/13 注入缺陷被捕获）。
+- 验证：Rule 8 计数由脚本重新推导（scratch/count_rule8.py，非手算）→ 21 处 / 6 skill / 7 个目标；
+  shipped 子集占 16 处 / 3 skill（dfs-exec, dfs-handoff, dfs-inbox-consolidate）/ 4 个目标。
+- 回写：HANDOFF 的 Axis C 表格（原“1/1”误记已改正）、B1 与 B2 段落（标记 RESOLVED）、§6 行动清单、
+  §7 续接提示均已更新；`dfs-agent-sdk` 引用数 67→65 一并改正。PROJECT_OVERVIEW 当前状态与下一步已更新。
+- 未闭合风险：B1 只解决了“知识层”这一半；B4 的 16 处 shipped 引用仍需裁定处置方式
+  （解决/内置/在 README 显式声明前置条件，禁止再挂静默 Vault 兜底根）。
+
+### 2026-09-27 18:xx | deepseek-flash__hermes | WORK_END
+Caps: filesystem-read, filesystem-write, shell-exec
+任务：用户裁决「按你建议来」= 内置两个 shipped 引擎（vault_exec_state.py / vault-inbox-consolidate.py），
+其余显式声明为可选前置条件。目标：B4 修复，Rule 8 转绿。
+不做范围：未改 live tree（`~/.cc-switch/skills/`）；未动 LICENSE/README/install.py；未 commit；
+未修 dfs-bootstrap 的 bootstrap.ps1 跨平台移植（显式声明为缺口）；未修 vault 模板 work.log 的伪造首条事件。
+- 产出：`scripts/vault_transaction.py`（359 行，字节一致，已读证纯 stdlib 通用原语）、
+  `scripts/vault_exec_state.py`（325 行，字节一致）、`scripts/vault-inbox-consolidate.py`（687 行 + 2 处 DFS-PORT 改动）、
+  `scripts/routing.example.json`（中性 starter；你的 18 条私人路由未抄）、`scripts/README.md`、
+  `tests/test_vendored_scripts.py`（9 个测试）。
+- 关键决策：**只搬代码，不搬内容**。读证 `vault-inbox-consolidate.py` 的路由表已数据化在 routing.json
+  （schema + 校验齐全），所以代码可移植、分类法是私人的 —— 于是 routing.json 换成中性示例，脚本回退读示例。
+- 关键决策：3 处引用改文本指向仓库内真实存在的等价物（dfs-agent-sdk → tests/test_skills_conformance.py；
+  dfs-bootstrap / dfs-onboard → `search_vault` MCP + mcp/README.md 降级表），**不为变绿而扩大豁免**。
+  只有仓库内确实没有替代物的 3 个私人工具进 OPTIONAL_SCRIPT_POINTERS。
+- 关键决策：豁免表**自失效**——某条豁免若不再被任何技能引用，Rule 8 直接判红，防止它烂成集体消音器。
+- 关键发现（已修）：`get_script_roots()` 移植时丢了 `<root>/scripts`，正是这 21 处引用原本能解析的根；
+  补回的是**本仓库自己的** scripts/，不是当初刻意砍掉的「作者机器绝对路径兜底」。
+- 关键发现（已修）：`resolve_vault_root` 的原型兜底 `<script>/../..` 在本仓库会命中仓库自己的 AGENTS.md，
+  于是把工具指向代码检出目录并报「99-Inbox 不存在」，退出码 0 —— 典型静默错答案。改成要求脚本同级存在
+  本工具的服务对象（99-Inbox/），否则 exit 2 并打印配置指引。这条是测试抓出来的，不是推演出来的。
+- 关键发现（已修）：`--tasks` 的 task id 是**原样标签**，只有 `--plan-file` 才生成 `Task-N`。
+- 验证（原始命令 + exit code）：`python tests/test_skills_conformance.py` → Ran 14, OK, **exit 0**（首次全绿）；
+  `python tests/mutation_check.py` → **14/14 CAUGHT, exit 0**，基线 = 空集；
+  `python tests/test_vendored_scripts.py` → Ran 9, OK, exit 0；
+  `python tests/test_knowledge_server.py` → Ran 15, OK, exit 0；
+  Rule 8 悬空引用重推 → 0 处；`bash .githooks/pre-commit` → exit 0。
+- 关键发现（夹具价值兑现）：Rule 8 转绿那一刻，变异夹具报 `BASELINE MOVED`。因为 rule_8 原先只是「预期为红」，
+  **从未有变异用例**——基线一清空，Rule 8 就没有牙齿证明了。已按夹具要求做刻意更新并补 rule_8 变异
+  （注入 `scripts/ghost-helper.py`，刻意不在豁免名单内），同时证明豁免表吞不掉新的悬空引用。
+- 回写：HANDOFF 的 B4 段（误诊 → 重新诊断 + 解决方案 + 缺口）、Axis C 表格行、§6 清单、§7 续接提示；
+  `.gitignore` 增加 port 本地状态段（routing.json / .vault-exec-ledger.json / .vault-tx/），
+  密钥段保持与 bootstrap.ps1 逐字节一致（已核：11 条必需项 0 缺失，仓库为超集）。
+- 树分歧（有意且可 grep）：3/24 技能目录与 live tree 不同，全部带 `DFS-PORT` 标记；
+  `diff -rq` 全 24 目录无其他漂移。
+- 未闭合风险：① `dfs-bootstrap` Phase 3.5 依赖的 bootstrap.ps1 未移植（显式声明缺口）；
+  ② shipped 子集白名单门禁仍未移植（等 Axis B）；③ vault 模板 work.log 的伪造首条事件未清。
+
+### 2026-09-27 19:xx | deepseek-flash__hermes | WORK_END
+Caps: filesystem-read, filesystem-write, shell-exec
+任务：用户「往下做吧」→ 执行 HANDOFF §6 第 1 项：LICENSE + 顶层 README。
+不做范围：未做 Axis B 子集收敛；未做 B3/B5；未移植 shipped 子集门禁；未写 install.py；仍未 commit。
+- 产出：`LICENSE`（MIT，Copyright (c) 2026 Defensive Skills contributors —— 取 D:\Code 与 vault
+  的一贯惯例，唯一例外是 vendored 的 ai-agent-book-main 用 Apache-2.0）、`README.md`（12KB，中文优先，
+  沿用你其他仓库的 badge + 表格 + 证据密度风格）。
+- README 结构：三个失败模式开场（假绿门禁 / 计划幻觉 / 静默失败，每条附本仓库真实收据）→ 快速开始（技能目录实测路径、
+  MCP 注册、引擎脚本）→ 24 技能全览（主链 7 个标注）→ 门禁自验（4 条命令 + 期望 exit）→ 12 条规则表 →
+  布局与根契约 → 声明缺口 → 目录导航。
+- 数字全部实测、脚本生成（scratch/readme_assets.py 从 frontmatter 与真实树导出）：24 技能 / 12 规则 / 38 测试
+  （14+15+9）/ 14 变异 / 0 依赖。技能表由 SKILL.md frontmatter 生成，不手写，避免抄错。
+- 验证（原始命令 + exit code）：四个门禁在 `python`(3.14.7) 与 `python3`(3.11.8) 下**结果完全一致**，全部 exit 0
+  —— 这是「门禁不依赖解释器」这一设计目标的首次双解释器取证。
+- 验证：README 里那条冒烟命令原样执行 → serverInfo coding-vault-search 3.0.0 + 9 tools；
+  MCP 对**真实知识库** `D:/Obsidian/Coding` 只读演练 → list_standards 5595 字符、
+  search_vault「并发」命中 01-Rules/CONCURRENCY-PATTERNS.md / 09-Career/Baguwen/GO-CONCURRENCY-NET-BAGUWEN.md /
+  ADR-0001（排序合理）、get_rule_snippet 切片正常、越界读被拒，exit 0。
+- 验证：harness 技能目录实测存在（不猜路径）：`~/.claude/skills/`（31 项，均为指向 ~/.cc-switch/skills 的 symlink）、
+  `~/.codex/skills/`（含 dfs 全套）、hermes profile 的 `skills/`。`~/.cursor` 不存在，故 README 未提 Cursor。
+- 未闭合风险：① 仓库仍零提交（135 个未跟踪文件），LICENSE/README 落地后首个 commit 已无阻塞；
+  ② Axis B 未决 → 公开子集与 `install.py` 都还不能定稿；③ README 目前中文优先，若要面向国际读者需英文版（待裁决）。
