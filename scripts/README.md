@@ -4,6 +4,11 @@ Four scripts are shipped here because shipped skills invoke them by path. Everyt
 library only, and all of them resolve the knowledge root by the same contract the MCP server uses
 (`--vault-path` / `--root` → `$WIKI_PATH` → `$OBSIDIAN_VAULT_PATH` → upward marker search).
 
+The fifth shipped program lives with its skill instead: **`dfs-bootstrap/scripts/bootstrap.py`** —
+the cross-platform workspace bootstrap (`.gitignore` guards, secret-scanning hook, rule anchors,
+`WORKMEMORY/` scaffold). It reads the templates next to it, so it stays inside the skill directory.
+`tests/test_bootstrap_script.py` drives it against a temp repo.
+
 | Script | Invoked by | What it does |
 |---|---|---|
 | `vault_exec_state.py` | `dfs-exec`, `dfs-handoff` | Persistent execution ledger (`.vault-exec-ledger.json`) with crash recovery: `init` / `start-task` / `complete-task` / `resume` / `status` / `reset` |
@@ -36,7 +41,12 @@ fails Rule 8), so a dangling reference can never hide behind them:
 |---|---|---|
 | `scripts/vault-healthcheck.py` | not shipped | A repo-wide health/structure check is knowledge-base-specific: write one for your own layout, or drop the step |
 | `scripts/vault-inbox-triage.py` | not shipped | Age-based inbox triage; the consolidator's `--dry-run` report covers the common case |
-| `scripts/bootstrap.ps1` | not shipped | **Real gap, declared:** `dfs-bootstrap` Phase 3.5 scaffolds `WORKMEMORY/` from that PowerShell script, which is Windows-only and reads a private Vault template tree. The files it produces (the four-piece `WORKMEMORY` set, git hook, anchors) are documented in `dfs-bootstrap/SKILL.md` and can be created by hand until a cross-platform port lands |
+
+The Windows-only PowerShell bootstrap that used to be a declared gap here is **no longer a gap**:
+`dfs-bootstrap` ships a cross-platform port (`dfs-bootstrap/scripts/bootstrap.py`) and no longer
+references anything outside the repo, so its entry was removed from `OPTIONAL_SCRIPT_POINTERS`
+rather than kept as a permanent exemption. That removal is what the stale-exemption check is for —
+leaving it behind would have turned a real fix into a silent mute.
 
 ## Port divergences from the private vault tree
 
@@ -52,14 +62,16 @@ port. Three marks make every divergence greppable — `grep -rn "DFS-PORT\|ponyt
   The repository stores LF for `*.py` (see `.gitattributes`), so a byte-level comparison against a
   CRLF working copy differs by line endings only; verify with
   `git show HEAD:scripts/<file> | tr -d '\r' | sha256sum`.
-* **`dfs-agent-sdk/references/skill-maintenance.md`** — points at this repo's gate
-  (`tests/test_skills_conformance.py`) instead of the private `scripts/tests/` copy.
 * **`dfs-bootstrap/SKILL.md`, `dfs-onboard/SKILL.md`** — the vault-side `search-vault.py` CLI is
-  replaced by the `search_vault` MCP tool plus the `mcp/README.md` fallback table.
+  replaced by the `search_vault` MCP tool plus the `mcp/README.md` fallback table; both files also
+  drop a hardcoded projects-root assumption (`D:\Code\{project}`) for a neutral placeholder.
+  `dfs-bootstrap` additionally gains `scripts/bootstrap.py` + `templates/workmemory/`, which the
+  private tree does not have (it still runs the PowerShell original).
 
 ## Tests
 
 ```bash
 python tests/test_vendored_scripts.py      # ledger lifecycle + transactional archival on a temp root
-python tests/test_skills_conformance.py    # 12 rules over all 24 skills, incl. these pointers
+python tests/test_bootstrap_script.py      # bootstrap.py against a temp repo: idempotency, no clobber
+python tests/test_skills_conformance.py    # 12 rules over all 23 skills, incl. these pointers
 ```

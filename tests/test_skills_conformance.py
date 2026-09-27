@@ -34,12 +34,14 @@ import unittest
 
 _REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 
-# The 24 Defensive Skills. Declared, not derived: Rule 1 exists to catch a skill being
+# The 23 shipped Defensive Skills. Declared, not derived: Rule 1 exists to catch a skill being
 # silently added or dropped, which a disk-derived set can never notice.
+# `dfs-agent-sdk` is deliberately NOT here: it vendors the author's own pi-agent SDK docs
+# (90% of this repo's bytes before it was removed) and is published separately. It still lives
+# in the author's private skills tree, so the two trees intentionally differ — see scripts/README.md.
 SKILL_NAMES = [
     "dfs",
     "dfs-adr",
-    "dfs-agent-sdk",
     "dfs-bootstrap",
     "dfs-debug",
     "dfs-exec",
@@ -109,7 +111,6 @@ EXTERNAL_SKILL_ALLOWLIST = {"systematic-debugging", "test-driven-development"}
 OPTIONAL_SCRIPT_POINTERS = {
     "scripts/vault-healthcheck.py",
     "scripts/vault-inbox-triage.py",
-    "scripts/bootstrap.ps1",
 }
 
 

@@ -5,9 +5,9 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Skills-24-4B5563?style=flat-square" alt="Skills" />
+  <img src="https://img.shields.io/badge/Skills-23-4B5563?style=flat-square" alt="Skills" />
   <img src="https://img.shields.io/badge/Conformance-12%20rules-0969DA?style=flat-square" alt="Conformance rules" />
-  <img src="https://img.shields.io/badge/Tests-42%20passed-2EA44F?style=flat-square" alt="Tests" />
+  <img src="https://img.shields.io/badge/Tests-69%20passed-2EA44F?style=flat-square" alt="Tests" />
   <img src="https://img.shields.io/badge/Mutation-14%2F14%20caught-2EA44F?style=flat-square" alt="Mutation harness" />
   <img src="https://img.shields.io/badge/Dependencies-0%20(stdlib)-gray?style=flat-square" alt="Zero dependencies" />
   <img src="https://img.shields.io/badge/Python-3.11%20%7C%203.14-3776AB?style=flat-square" alt="Python" />
@@ -48,9 +48,12 @@
 | Hermes | `<hermes 配置目录>/skills/` |
 
 ```bash
-# 例：整包安装（把本仓库的技能目录链/拷到目标 harness）
-cp -r dfs dfs-* ~/.codex/skills/
+# 整包 23 个，或只装「零前置」的 5 个；默认软链，Windows 上自动退回复制
+python install.py --target ~/.codex/skills
+python install.py --target ~/.codex/skills --tier A
 ```
+
+`install.py` 的分档直接从下面的技能表读（那张表有门禁保证与树一致），另有 `--mode copy|link`、`--force`、`--dry-run`。不想用它就直接 `cp -r dfs dfs-* ~/.codex/skills/`。
 
 ### 2) 装知识层（可选但强烈建议）
 
@@ -82,36 +85,39 @@ python scripts/vault-inbox-consolidate.py --vault-path <知识库根> --dry-run
 
 ---
 
-## 🧭 技能全览（24 个 · 主链 7 个）
+## 🧭 技能全览（23 个 · 主链 7 个）
 
 主链是 `dfs`（路由）→ `dfs-plan`（计划）→ `dfs-exec`（TDD 执行）→ `dfs-debug`（根因调试）→ `dfs-save`（沉淀）→ `dfs-handoff`（交接），加 `dfs-team`（多专家共识评审）。
 
-| 技能 | 作用 | MCP | 附带资产 |
-|---|---|---|---|
-| **主链** `dfs` | Route developer intent to optimal Defensive Skills. | — | refs×2 |
-| **主链** `dfs-plan` | Draft bite-sized TDD implementation plans from specs. | omni_search, get_code_template | tpl×1 |
-| **主链** `dfs-exec` | Execute TDD plans via isolated subagents with maker-checker. | — | tpl×2 |
-| **主链** `dfs-debug` | Execute 4-step systematic root-cause debugging with repro. | search_vault, save_inbox_draft | tpl×1 |
-| **主链** `dfs-save` | Harvest non-obvious engineering solutions to 99-Inbox. | search_vault, save_inbox_draft | tpl×1 |
-| **主链** `dfs-handoff` | Generate session wrap-up and 1-click continuation cards. | — | tpl×1 |
-| **主链** `dfs-team` | Orchestrate multi-expert subagent reviews with consensus. | — | tpl×1 |
-| `dfs-adr` | Draft and archive numbered Architecture Decision Records. | — | tpl×1 |
-| `dfs-agent-sdk` | Develop with pi-agent SDK and enterprise LLM endpoints. | search_vault | refs×65 |
-| `dfs-bootstrap` | Initialize repos with security git hooks and DFS anchors. | — | tpl×1 |
-| `dfs-grill` | Stress-test architecture via Dual-Lens Socratic inquiry. | omni_search | — |
-| `dfs-inbox-consolidate` | Classify and archive 99-Inbox drafts to DFS destinations. | promote_inbox_draft | — |
-| `dfs-incident` | Triage production incidents and draft blameless postmortems. | — | tpl×1 |
-| `dfs-interview` | Conduct high-rigor 1v1 technical interview defense drills. | — | — |
-| `dfs-migrate` | Plan zero-downtime database schema migrations safely. | — | tpl×1 scripts×1 |
-| `dfs-onboard` | Rapidly orient AI agent to develop on existing codebases. | — | — |
-| `dfs-perf` | Profile multi-language benchmarks, races, and query plans. | — | tpl×1 scripts×1 |
-| `dfs-pipeline` | Execute end-to-end Git Worktree multi-skill pipeline. | — | — |
-| `dfs-refactor` | Execute senior-level refactoring & guard clause flattening. | — | — |
-| `dfs-release` | Draft semantic releases, changelogs, and rollback plans. | — | tpl×2 scripts×1 |
-| `dfs-research` | Research external sources and sink findings into the Vault. | search_vault, omni_search, get_note, get_rule_snippet, save_inbox_draft | tpl×1 |
-| `dfs-review` | Review code diffs against 7-language RFC 2119 DFS rules. | get_rule_snippet, list_standards | tpl×1 |
-| `dfs-spark` | Turn 0-to-1 ideas into specs via Dual-Lens dialogue. | omni_search | tpl×1 |
-| `dfs-tdd` | Enforce strict RED-GREEN-REFACTOR TDD and fake-green guards. | get_code_template | — |
+「前置」这一列是**实测**的，不是分类癖好——`tests/test_readme_skill_table.py` 会重新推导每一行，手改对不上就判红。**—** 装完即用；**需知识库** 要先接上自己的知识库（MCP 或文件级降级）；**需额外资产** 引用了刻意不随包的私有工具，需要自备等价物（见 [`scripts/README.md`](scripts/README.md)）。
+
+> `dfs-agent-sdk`（作者的 pi-agent SDK 文档语料，曾占本仓库 90% 字节、与 DFS 的工程约束论点无关）**不随本仓库发布**，另行发布。
+
+| 技能 | 作用 | 前置 | MCP | 附带资产 |
+|---|---|---|---|---|
+| **主链** `dfs` | Route developer intent to optimal Defensive Skills. | 需知识库 | — | refs×2 |
+| **主链** `dfs-plan` | Draft bite-sized TDD implementation plans from specs. | 需知识库 | omni_search, get_code_template | tpl×1 |
+| **主链** `dfs-exec` | Execute TDD plans via isolated subagents with maker-checker. | 需知识库 | — | tpl×2 |
+| **主链** `dfs-debug` | Execute 4-step systematic root-cause debugging with repro. | 需知识库 | search_vault, save_inbox_draft | tpl×1 |
+| **主链** `dfs-save` | Harvest non-obvious engineering solutions to 99-Inbox. | 需知识库 | search_vault, save_inbox_draft | tpl×1 |
+| **主链** `dfs-handoff` | Generate session wrap-up and 1-click continuation cards. | 需知识库 | — | tpl×1 |
+| **主链** `dfs-team` | Orchestrate multi-expert subagent reviews with consensus. | — | — | tpl×1 |
+| `dfs-adr` | Draft and archive numbered Architecture Decision Records. | 需知识库 | — | tpl×1 |
+| `dfs-bootstrap` | Initialize repos with security git hooks and DFS anchors. | 需知识库 | — | tpl×2 scripts×1 |
+| `dfs-grill` | Stress-test architecture via Dual-Lens Socratic inquiry. | 需知识库 | omni_search | — |
+| `dfs-inbox-consolidate` | Classify and archive 99-Inbox drafts to DFS destinations. | 需额外资产 | promote_inbox_draft | — |
+| `dfs-incident` | Triage production incidents and draft blameless postmortems. | 需知识库 | — | tpl×1 |
+| `dfs-interview` | Conduct high-rigor 1v1 technical interview defense drills. | 需知识库 | — | — |
+| `dfs-migrate` | Plan zero-downtime database schema migrations safely. | — | — | tpl×1 scripts×1 |
+| `dfs-onboard` | Rapidly orient AI agent to develop on existing codebases. | 需知识库 | — | — |
+| `dfs-perf` | Profile multi-language benchmarks, races, and query plans. | — | — | tpl×1 scripts×1 |
+| `dfs-pipeline` | Execute end-to-end Git Worktree multi-skill pipeline. | 需知识库 | — | — |
+| `dfs-refactor` | Execute senior-level refactoring & guard clause flattening. | — | — | — |
+| `dfs-release` | Draft semantic releases, changelogs, and rollback plans. | — | — | tpl×2 scripts×1 |
+| `dfs-research` | Research external sources and sink findings into the Vault. | 需知识库 | search_vault, omni_search, get_note, get_rule_snippet, save_inbox_draft | tpl×1 |
+| `dfs-review` | Review code diffs against 7-language RFC 2119 DFS rules. | 需知识库 | get_rule_snippet, list_standards | tpl×1 |
+| `dfs-spark` | Turn 0-to-1 ideas into specs via Dual-Lens dialogue. | 需知识库 | omni_search | tpl×1 |
+| `dfs-tdd` | Enforce strict RED-GREEN-REFACTOR TDD and fake-green guards. | 需知识库 | get_code_template | — |
 
 ---
 
@@ -120,14 +126,17 @@ python scripts/vault-inbox-consolidate.py --vault-path <知识库根> --dry-run
 **别读这段，直接跑**——全部零依赖，不需要 pytest：
 
 ```bash
-python tests/test_skills_conformance.py    # 12 条规则 × 24 个技能        → exit 0
+python tests/test_skills_conformance.py    # 12 条规则 × 23 个技能        → exit 0
 python tests/mutation_check.py             # 给每条规则注入缺陷，必须被抓 → exit 0
 python tests/test_knowledge_server.py      # MCP 服务真实 stdio 协议      → exit 0
 python tests/test_vendored_scripts.py      # 台账 / 事务化归档 / 回滚     → exit 0
 python tests/test_docs_links.py            # 文档链接不悬空、不指向未随包文件 → exit 0
+python tests/test_bootstrap_script.py      # bootstrap.py：幂等 / 不覆写钩子 / 不泄路径 → exit 0
+python tests/test_readme_skill_table.py    # README 技能表可被树重新导出（含前置分档）→ exit 0
+python tests/test_install.py               # 安装器：分档筛选 / 不覆盖已有 / dry-run → exit 0
 ```
 
-五个门禁在 **Python 3.11.8 与 3.14.7 下结果完全一致**（这条是设计目标：门禁的结论不该取决于你碰巧用哪个解释器调用它——早期版本 `import yaml`，在没有 PyYAML 的解释器下直接跑不起来）。
+八个门禁在 **Python 3.11.8 与 3.14.7 下结果完全一致**（这条是设计目标：门禁的结论不该取决于你碰巧用哪个解释器调用它——早期版本 `import yaml`，在没有 PyYAML 的解释器下直接跑不起来）。
 
 几条刻意的设计，值得单独说：
 
@@ -178,11 +187,11 @@ python tests/test_docs_links.py            # 文档链接不悬空、不指向�
 
 ## ⚠️ 已知边界（不藏）
 
-* **`dfs-bootstrap` Phase 3.5 需要一个跨平台移植。** 它依赖的 `scripts/bootstrap.ps1` 是 Windows-only 的 PowerShell，且读取私有模板树，因此**没有随包**。该技能目前不构成可用发布项，缺口在 `scripts/README.md` 里显式声明。
-* **`vault-healthcheck.py` / `vault-inbox-triage.py` 不随包。** 它们体检的是特定知识库的结构，换成别人的库天生就是错的。
+* **`dfs-bootstrap` Phase 3.5 已完成跨平台移植。** `dfs-bootstrap/scripts/bootstrap.py`（stdlib）一次跑完：校验并补齐 `.gitignore`、安装密钥扫描钩子（**绝不覆写**已有钩子）并设置 `core.hooksPath`、注入规则锚点、下发 `WORKMEMORY/` 四件套；幂等，`--dry-run` 可预览，模板缺失即 **exit 2** 而不是跳过。原先那版 Windows-only PowerShell 不随包（对照见 [`scripts/README.md`](scripts/README.md)）。
+* **`vault-healthcheck.py` / `vault-inbox-triage.py` 不随包。** 它们体检的是特定知识库的结构，换成别人的库天生就是错的——受影响的是 `dfs-inbox-consolidate`（即表格里唯一标为「需额外资产」的技能）。
 * **检索是加权关键词/标签打分，不是 BM25 + 图谱。** 对笔记量级的知识库足够；上万篇就该换真正的排序器（升级点写在 `mcp/knowledge_server.py` 的模块注释里）。
 * **frontmatter 里的 `disable-model-invocation` / `metadata.hermes.*` 是 Hermes 方言。** 映射到其他 harness 的说明待补。
-* 仓库内含 24 个技能；**面向外部的最小可用子集仍在收敛**（哪些技能与某个具体知识库强耦合，正在逐个量化）。
+* 仓库内含 **23 个技能**（`dfs-agent-sdk` 已移出、另行发布）；表格的「前置」列把每个技能的依赖实测标出，最轻的 5 个零前置技能装完即用。
 
 ---
 
@@ -193,6 +202,7 @@ python tests/test_docs_links.py            # 文档链接不悬空、不指向�
 | 知识层 MCP：注册、根契约、无 MCP 降级表 | [`mcp/README.md`](mcp/README.md) |
 | 随包引擎脚本 / 未随包清单 / 移植分歧 | [`scripts/README.md`](scripts/README.md) |
 | 一致性门禁与变异夹具 | [`tests/`](tests/) |
+| 按分档安装到目标 harness | [`install.py`](install.py) |
 | 仓库安全守卫（密钥扫描钩子） | [`.githooks/pre-commit`](.githooks/) |
 | 英文版 README | [`README.en.md`](README.en.md) |
 
