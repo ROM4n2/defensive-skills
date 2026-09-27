@@ -7,7 +7,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Skills-23-4B5563?style=flat-square" alt="Skills" />
   <img src="https://img.shields.io/badge/Conformance-12%20rules-0969DA?style=flat-square" alt="Conformance rules" />
-  <img src="https://img.shields.io/badge/Tests-93%20passed-2EA44F?style=flat-square" alt="Tests" />
+  <img src="https://img.shields.io/badge/Tests-98%20passed-2EA44F?style=flat-square" alt="Tests" />
   <img src="https://img.shields.io/badge/Mutation-14%2F14%20caught-2EA44F?style=flat-square" alt="Mutation harness" />
   <img src="https://img.shields.io/badge/Dependencies-0%20(stdlib)-gray?style=flat-square" alt="Zero dependencies" />
   <img src="https://img.shields.io/badge/Python-3.11%20%7C%203.14-3776AB?style=flat-square" alt="Python" />
@@ -135,9 +135,10 @@ python tests/test_bootstrap_script.py      # bootstrap.py：幂等 / 不覆写�
 python tests/test_readme_skill_table.py    # README 技能表可被树重新导出（含前置分档）→ exit 0
 python tests/test_install.py               # 安装器：分档筛选 / 不覆盖已有 / dry-run → exit 0
 python tests/test_harness_field_mapping.py # frontmatter 字段映射表与树一致 → exit 0
+python tests/test_shipped_assets_tracked.py # 随包资产真被 git 跟踪（否则 clone 跑不起来）→ exit 0
 ```
 
-九个门禁在 **Python 3.11.8 与 3.14.7 下结果完全一致**（这条是设计目标：门禁的结论不该取决于你碰巧用哪个解释器调用它——早期版本 `import yaml`，在没有 PyYAML 的解释器下直接跑不起来）。
+十个门禁在 **Python 3.11.8 与 3.14.7 下结果完全一致**（这条是设计目标：门禁的结论不该取决于你碰巧用哪个解释器调用它——早期版本 `import yaml`，在没有 PyYAML 的解释器下直接跑不起来）。
 
 几条刻意的设计，值得单独说：
 
@@ -146,6 +147,7 @@ python tests/test_harness_field_mapping.py # frontmatter 字段映射表与树�
 * **没有变异测试的绿不算绿。** `mutation_check.py` 往一棵临时拷贝里注入 14 个缺陷（删文件、改 frontmatter、塞悬空指针、塞绝对路径、塞近似拼错……），断言每个都被**对应的那条规则**抓住，同时断言干净树**零失败**。规则从红转绿时必须同时补它自己的变异用例——本仓库刚刚就是这么做的：Rule 8 修好那一刻，夹具立刻报 `BASELINE MOVED`，因为它此前只靠"预期为红"覆盖，从没用例证明过它真能判红。
 * **豁免是声明，不是消音器。** 少数引用指向**故意不随包**的私有工具，它们登记在 `OPTIONAL_SCRIPT_POINTERS` 里；某条豁免一旦不再被任何技能引用，Rule 8 立刻判红——防止豁免表烂成集体消音器。
 * **不许引用只在自己机器上解析得通的东西。** 规则 8/10 明确禁止把 `scripts/...` 借给仓库外的路径、禁止硬编码知识库绝对路径。
+* **本机全绿 ≠ 陌生人 clone 能用。** `test_shipped_assets_tracked.py` 不测磁盘，测**「clone 下来会拿到什么」**：随包路径下不允许有被 `.gitignore` 吞掉的文件（构建缓存除外），也不允许有忘了入库的文件。这道门禁是**补票**——`.gitignore` 里一条没加锚的 `WORKMEMORY/` 在**任意深度**匹配，而 git 在 Windows 上忽略匹配**不区分大小写**，于是静默吞掉了 `dfs-bootstrap/templates/workmemory/` 那 4 个模板，它们**从未进过任何一次 commit**；本机十套门禁全绿（文件就躺在磁盘上），而别人的 clone 里 `dfs-bootstrap` 直接 `exit 2: template(s) missing`。
 
 ### 12 条一致性规则
 

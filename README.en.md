@@ -7,7 +7,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Skills-23-4B5563?style=flat-square" alt="Skills" />
   <img src="https://img.shields.io/badge/Conformance-12%20rules-0969DA?style=flat-square" alt="Conformance rules" />
-  <img src="https://img.shields.io/badge/Tests-93%20passed-2EA44F?style=flat-square" alt="Tests" />
+  <img src="https://img.shields.io/badge/Tests-98%20passed-2EA44F?style=flat-square" alt="Tests" />
   <img src="https://img.shields.io/badge/Mutation-14%2F14%20caught-2EA44F?style=flat-square" alt="Mutation harness" />
   <img src="https://img.shields.io/badge/Dependencies-0%20(stdlib)-gray?style=flat-square" alt="Zero dependencies" />
   <img src="https://img.shields.io/badge/Python-3.11%20%7C%203.14-3776AB?style=flat-square" alt="Python" />
@@ -123,7 +123,7 @@ The "prerequisite" column is **measured**, not decorative — `tests/test_readme
 
 ## 🛡️ How these gates are verified
 
-**Don't take this section's word for it — run them.** All four are zero-dependency; no pytest needed:
+**Don't take this section's word for it — run them.** All ten are zero-dependency; no pytest needed:
 
 ```bash
 python tests/test_skills_conformance.py    # 12 rules × 23 skills                → exit 0
@@ -135,17 +135,19 @@ python tests/test_bootstrap_script.py      # bootstrap.py: idempotent / never cl
 python tests/test_readme_skill_table.py    # the skill table is re-derivable from the tree → exit 0
 python tests/test_install.py               # installer: tier filter / never clobbers / dry-run → exit 0
 python tests/test_harness_field_mapping.py # the harness field map matches the tree → exit 0
+python tests/test_shipped_assets_tracked.py # shipped assets are really tracked (else a clone breaks) → exit 0
 ```
 
-All nine produce **identical results under Python 3.11.8 and 3.14.7**. That is a design goal, not a coincidence: a gate's verdict must not depend on which interpreter you happen to invoke it with. An early version did `import yaml` and simply could not run on an interpreter without PyYAML.
+All ten produce **identical results under Python 3.11.8 and 3.14.7**. That is a design goal, not a coincidence: a gate's verdict must not depend on which interpreter you happen to invoke it with. An early version did `import yaml` and simply could not run on an interpreter without PyYAML.
 
-Four deliberate design choices worth calling out:
+Five deliberate design choices worth calling out:
 
 * **The docs are inside the gate's jurisdiction too.** `test_docs_links.py` rejects dangling links and links to deliberately-untracked state; while preparing this repo's first public commit it caught two real ones (the README still linked `HANDOFF.md` and `WORKMEMORY/`). The gate is mutation-probed itself: 5 injected defects, all caught.
 
 * **A green run without mutation testing is not green.** `mutation_check.py` injects 14 defects into a temporary copy (delete a file, edit frontmatter, plant a dangling pointer, plant an absolute path, plant a near-miss typo, …), asserts each one is caught **by its corresponding rule**, and asserts the clean tree reports zero failures. A rule going from red to green must ship its own mutation case in the same change — this repo just did exactly that: the moment Rule 8 went green, the harness reported `BASELINE MOVED`, because the rule had only ever been covered by "expected to be red" and nothing had ever proven it could actually fail.
 * **Exemptions are declarations, not silencers.** A few references point at private tools that deliberately do not ship; they are registered in `OPTIONAL_SCRIPT_POINTERS`. An exemption that stops matching any reference makes Rule 8 fail immediately — the table cannot rot into a collective mute button.
 * **Referencing something that only resolves on your machine is banned.** Rules 8 and 10 refuse to let `scripts/...` point outside the repo, and refuse hardcoded absolute knowledge-base paths.
+* **Green locally is not the same as a clone that works.** `test_shipped_assets_tracked.py` does not measure the disk; it measures **what a stranger receives**. Nothing under a shipped path may be swallowed by `.gitignore` (build caches excepted), and nothing may be left untracked. It is a back-filled gate: an unanchored `WORKMEMORY/` in `.gitignore` matches at **any depth**, and git's ignore matching is **case-insensitive on Windows**, so it silently swallowed the four `dfs-bootstrap/templates/workmemory/` files — they were never tracked in any commit. Every gate stayed green here, because the files were sitting on disk; a stranger's clone got a `dfs-bootstrap` that exits 2 with `template(s) missing`.
 
 ### The 12 conformance rules
 

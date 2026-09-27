@@ -41,18 +41,33 @@ venv/
 #  local absolute path, so committing them would ship one
 #  machine's layout as if it were everyone's. Regenerate with
 #  dfs-bootstrap instead of tracking them.
+#
+#  The leading "/" is load-bearing, not cosmetics. Unanchored,
+#  `WORKMEMORY/` matches at ANY depth — and git's ignore matching
+#  is case-insensitive on Windows, so it silently swallowed the
+#  shipped `dfs-bootstrap/templates/workmemory/`. A fresh clone
+#  then got a bootstrap.py that exits 2 with "template(s) missing",
+#  while every gate stayed green on the author's machine because
+#  the ignored files were sitting on disk. Keep this block rooted;
+#  tests/test_shipped_assets_tracked.py is the guard.
 # ============================================================
-AGENTS.md
-CLAUDE.md
-.agent-rules.md
-.cursorrules
-WORKMEMORY/
-HANDOFF.md
+/AGENTS.md
+/CLAUDE.md
+/.agent-rules.md
+/.cursorrules
+/WORKMEMORY/
+/HANDOFF.md
 
 # ============================================================
 #  Port-local runtime state
 #  routing.json holds YOUR tag→destination table (scripts/README.md);
 #  the ledger and transaction journal are per-project working state.
+#
+#  These stay UNANCHORED on purpose: the consolidator reads its
+#  personal routing.json from next to itself (ROUTING_DIR =
+#  Path(__file__).parent in scripts/vault-inbox-consolidate.py), so
+#  `routing.json` has to match inside scripts/ — anchoring it to
+#  `/routing.json` would stop ignoring a real personal config file.
 # ============================================================
 routing.json
 .vault-exec-ledger.json

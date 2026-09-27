@@ -35,13 +35,19 @@ def all_links() -> list[tuple[str, pathlib.Path]]:
 
 def unshippable_names() -> set[str]:
     """Bare names `.gitignore` marks as never-published. Wildcards are skipped: a glob is
-    not a name, and guessing which side of it a link falls on is how a silent gate starts."""
+    not a name, and guessing which side of it a link falls on is how a silent gate starts.
+
+    A leading `/` (a root anchor) is stripped along with the trailing `/`: link targets are
+    normalised the same way in test_02, so keeping the anchor would mean `/WORKMEMORY` never
+    equals `WORKMEMORY/work.log` — the gate would stop catching links into ignored state
+    exactly when someone anchors a pattern. `test_04` pins that.
+    """
     names = set()
     for raw in (REPO / ".gitignore").read_text(encoding="utf-8").splitlines():
         line = raw.strip()
         if not line or line.startswith("#") or any(c in line for c in "*?["):
             continue
-        names.add(line.rstrip("/"))
+        names.add(line.strip("/"))
     return names
 
 
@@ -92,6 +98,30 @@ class ShippedDocsResolveTest(unittest.TestCase):
                          "README.md does not link to the English edition")
         self.assertRegex(en, re.compile(r'(\]\(|href=")README\.md'),
                          "README.en.md does not link back to the Chinese edition")
+
+
+    def test_04_anchored_ignore_patterns_still_flag_links_into_them(self):
+        """Anchoring a pattern must not turn this gate into a silent one.
+
+        `.gitignore` anchors its per-machine block with a leading `/` — that anchor is what stops
+        `WORKMEMORY/` from swallowing the shipped `dfs-bootstrap/templates/workmemory/`. The
+        matcher normalises link targets with `.strip("./")`, so the pattern has to be normalised
+        the same way; otherwise `/WORKMEMORY` never equals `WORKMEMORY/work.log` and links into
+        ignored state sail straight through. Checked here rather than trusted.
+        """
+        off_limits = unshippable_names()
+        for name in ("WORKMEMORY", "HANDOFF.md", "AGENTS.md"):
+            with self.subTest(pattern=name):
+                self.assertIn(name, off_limits, "anchored pattern did not survive normalisation")
+
+        def flagged(target: str) -> bool:
+            t = target.split("#")[0].strip("./").rstrip("/")
+            return any(t == n or t.startswith(n + "/") for n in off_limits)
+
+        for target in ("WORKMEMORY/work.log", "WORKMEMORY/", "HANDOFF.md"):
+            with self.subTest(target=target):
+                self.assertTrue(flagged(target), f"a link to {target!r} would no longer be caught")
+        self.assertFalse(flagged("README.md"), "a shipped file must not be flagged")
 
 
 if __name__ == "__main__":
