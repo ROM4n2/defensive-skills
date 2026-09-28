@@ -1,8 +1,8 @@
 ---
 name: dfs-spark
-description: Turn 0-to-1 ideas into specs via Dual-Lens dialogue.
+description: Turn 0-to-1 ideas into specs through Dual-Lens dialogue. Use when the user has a rough idea and wants to shape it into a written spec.
 version: 0.2.0
-author: Defensive Skills contributors
+license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:
@@ -67,3 +67,40 @@ On user approval of the approach:
 Prompt user:
 `Design spec ready and approved. Ready to generate implementation plan via /dfs-plan?`
 Auto-relay to `/dfs-plan` upon confirmation.
+
+## 🧪 Worked example — classification decides the process
+
+Input A: *"Can we cut cold-start below 200 ms?"* -> Phase 1 classifies this a **Spike** (a
+feasibility / cost question): present a 2-3 sentence probe plan, get a nod, investigate, report — no
+spec document.
+
+Input B: *"We want a pluggable storage layer."* -> **Architectural**: full Phase 2-5. Phase 3, Step 1
+trade-off matrix:
+
+| Option | Complexity | Startup cost | Verdict |
+|---|---|---|---|
+| A. Minimalist: stdlib `dbm` only | lowest | none | rejected — no query support |
+| B. Domain-Native: reuse the existing SQLite engine | medium | reuses the existing open path | **chosen** |
+| C. Extensible: pluggable driver registry | highest | none | rejected — YAGNI at one backend |
+
+Chosen **B**: the repo already opens SQLite, and a driver registry would have exactly one member.
+
+Its mirrored output — the approved spec head — is:
+
+```
+# Design Specification: Pluggable Storage Layer
+
+**Date**: 2026-09-28
+**Status**: APPROVED
+**Target Path**: `docs/specs/2026-09-28-storage-layer-design.md`
+
+## 1. Problem Statement & User Value
+- Why build this: one backend today, a second is planned for next quarter.
+- Target Scenario & Persona: the platform engineer wiring storage per environment.
+- Cost of Doing Nothing: each environment keeps a bespoke, untested adapter.
+
+## 2. User Journey & Core Flow
+1. Set `storage.driver` -> the loader resolves the backend
+2. Write a record -> the configured driver persists it
+3. Read it back through the same interface -> value achieved
+```

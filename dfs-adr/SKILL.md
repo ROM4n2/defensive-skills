@@ -1,8 +1,8 @@
 ---
 name: dfs-adr
-description: Draft and archive numbered Architecture Decision Records.
+description: Draft and archive numbered Architecture Decision Records. Use when the user makes an architecture decision or asks to record one.
 version: 0.2.0
-author: Defensive Skills contributors
+license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:
@@ -41,3 +41,42 @@ The ADR document structure comprises 5 core sections:
 ### Phase 3: Dual-Track Archiving
 - Call `save_inbox_draft` MCP to create an entry in `99-Inbox/`, or directly write to `08-Projects/{project}/01-ADR/`.
 - Update the project's `README.md` or `AGENT-CONTEXT.md` with the new ADR reference.
+
+## 🧪 Worked example — ADR-0004
+
+Input: *"We are moving SQLite to WAL mode. Record the decision."*
+Output file: `08-Projects/dfs/01-ADR/0004-sqlite-wal-concurrency.md`
+
+```
+---
+title: "ADR-0004: SQLite WAL Mode for Concurrent Readers"
+created: 2026-09-28
+type: project
+status: stable
+---
+
+# ADR-0004: SQLite WAL Mode for Concurrent Readers
+
+## 1. Context and Problem Statement
+Worker goroutines read while a single writer commits; `journal_mode=DELETE` serialized the whole
+database and produced `SQLITE_BUSY` under load.
+
+## 2. Decision Drivers
+- Maximize read throughput under concurrent workers
+- Zero external daemon dependencies for embedded desktop use
+
+## 3. Considered Options
+- **Option 1: WAL mode** — pros: concurrent readers, one writer; cons: extra `-wal`/`-shm` files
+- **Option 2: single serialized connection** — pros: no new files; cons: throughput collapses
+
+## 4. Decision Outcome
+Chosen **Option 1**, because WAL decouples readers from the writer without adding a daemon.
+
+## 5. Consequences and Trade-offs
+- Positive: readers stop blocking; `SQLITE_BUSY` disappears under the measured load
+- Negative: `-wal`/`-shm` must ship beside the DB; mitigated by a checkpoint on close
+- Guardrail: `PRAGMA journal_mode` is asserted in `tests/test_vendored_scripts.py`
+```
+
+The number `0004` came from counting the existing `[0-9]{4}-*.md` files in that directory, not from
+memory.

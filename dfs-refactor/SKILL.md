@@ -1,8 +1,8 @@
 ---
 name: dfs-refactor
-description: Execute senior-level refactoring & guard clause flattening.
+description: Execute senior-level refactoring with guard-clause flattening. Use when the user asks to clean up, simplify, or restructure existing code.
 version: 0.2.0
-author: Defensive Skills contributors
+license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:

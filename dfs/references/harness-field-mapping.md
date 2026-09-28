@@ -17,7 +17,7 @@ Present on all 23 skills; each harness either reads it or ignores it without har
 | `name` | read; must match the directory name | required | no skills subsystem — see §3 |
 | `description` | read; drives skill selection | required ("only `description` is recommended so Claude knows when to use the skill") | — |
 | `version` | metadata | unknown field → ignored | — |
-| `author` | metadata | unknown field → ignored | — |
+| `license` | not read by the loader; the skill spec's own optional field | unknown field → ignored | — |
 | `platforms` | read; a skill is hidden on a platform it does not list | unknown field → ignored | — |
 | `metadata.hermes.tags` | search/display metadata | ignored | — |
 | `metadata.hermes.related_skills` | read (source); checked by Conformance Rule 7 | ignored | — |

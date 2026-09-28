@@ -1,8 +1,8 @@
 ---
 name: dfs-research
-description: "Research external sources and sink findings into the Vault."
+description: Research external sources and sink findings into the Vault. Use when the user asks to investigate a topic and record what was learned.
 version: 0.1.0
-author: Defensive Skills contributors
+license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:

@@ -1,13 +1,13 @@
 ---
 name: dfs-team
-description: Orchestrate multi-expert subagent reviews with consensus.
+description: Orchestrate multi-expert subagent reviews into a consensus. Use when a design or plan needs several independent expert reviews and a merged verdict.
 version: 0.2.0
-author: Defensive Skills contributors
+license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:
     tags: [multi-agent, team-review, code-review, audit, consensus]
-    related_skills: [dfs-review, dfs-review, dfs-grill, dfs-plan]
+    related_skills: [dfs-review, dfs-grill, dfs-plan]
 ---
 
 # Multi-Expert Swarm Review & Consensus Synthesis
@@ -64,3 +64,23 @@ Key reporting rules:
 - **Verification Badges**: Every P0/P1 finding line MUST carry its **CONFIRMED / PLAUSIBLE** label from Phase 1.5. A P0 verdict MUST NOT rest on a PLAUSIBLE finding alone.
 - **Reuse Ladder Invariant**: Every finding proposing new code or a dependency MUST include a Reuse Ladder check against stdlib and existing modules.
 - **Actionable Patches**: Synthesize concrete, ordered remediation steps into the consensus action plan.
+
+## 🧪 Worked example — synthesis excerpt
+
+Target: a diff touching the inbox consolidator. Seats dispatched: `perf-profiler`, `code-reviewer`.
+Seats skipped (why): `product-ux`, `frontend-architect` — the diff has no UI or client-state surface.
+
+```
+### 🚨 Critical Findings (P0 / P1)
+- **[perf-profiler]** [CONFIRMED]: `scripts/vault-inbox-consolidate.py` walks each draft twice
+  (`:132` and `:188`), so a large inbox pays 2N file reads per run.
+  - *Verification Status*: CONFIRMED via skeptic read — both call sites hit the same directory walk,
+    and neither caches the parsed draft.
+
+### ⚠️ Improvements & Suggestions (P2)
+- **[code-reviewer]** [UNVERIFIED]: the nested `if` in the archive branch could be flattened with a
+  guard clause.
+```
+
+A P0 line that failed the skeptic read would stay in the report labelled **PLAUSIBLE** — visible, but
+unable to carry the blocker verdict on its own.

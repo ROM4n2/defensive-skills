@@ -1,9 +1,9 @@
 ---
 name: dfs-inbox-consolidate
-description: "Classify and archive 99-Inbox drafts to DFS destinations."
+description: Classify and archive 99-Inbox drafts into DFS destinations. Use when the inbox has accumulated drafts and the user asks to file or clean them up.
 disable-model-invocation: true
 version: 0.2.0
-author: Defensive Skills contributors
+license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:

@@ -1,9 +1,9 @@
 ---
 name: dfs-pipeline
-description: Execute end-to-end Git Worktree multi-skill pipeline.
+description: Execute an end-to-end Git Worktree multi-skill pipeline. Use when a task spans several DFS skills and each stage needs an isolated worktree.
 disable-model-invocation: true
 version: 0.2.0
-author: Defensive Skills contributors
+license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:

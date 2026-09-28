@@ -1,9 +1,9 @@
 ---
 name: dfs
-description: "Route developer intent to optimal Defensive Skills."
+description: Route developer intent to the right Defensive Skills workflow. Use when the user asks for a coding task and you must decide which dfs skill to load, or when it is unclear where to start.
 disable-model-invocation: true
 version: 0.2.0
-author: Defensive Skills contributors
+license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:
@@ -51,3 +51,17 @@ Before routing, perform non-invasive environment inspection:
 - User: *"这个报错怎么解决？"* ➔ Run `/dfs-debug`
 - User: *"准备开始写代码执行计划"* ➔ Run `/dfs-exec`
 - User: *"我们要结束今天的开发"* ➔ Run `/dfs-handoff`
+
+## 🧪 Worked example — detection to route
+
+Observed workspace (Step 0): `.git` yes · `.githooks` yes · `.agent-context.md` yes · no `implementation_plan.md`
+
+```
+$ user: CI 打包崩了，报 CFBundleIdentifier missing
+$ <pasted build log>
+
+[dfs] Step 0 case 5 — stack trace / error log
+      bootstrapped (.githooks) and onboarded (.agent-context.md) -> cases 1 and 2 skip
+      a build-time failure, not a live outage                    -> not /dfs-incident
+=> route: /dfs-debug
+```

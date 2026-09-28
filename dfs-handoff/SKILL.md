@@ -1,9 +1,9 @@
 ---
 name: dfs-handoff
-description: "Generate session wrap-up and 1-click continuation cards."
+description: Generate a session wrap-up and a 1-click continuation card. Use when the user wants to pause, hand off, or resume later in a fresh session.
 disable-model-invocation: true
 version: 0.2.0
-author: Defensive Skills contributors
+license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:
@@ -66,3 +66,33 @@ Key required sections in `continuation-card.md`:
 
 ### Phase 4: Output & Exit
 Deliver handoff card to user, confirm every Phase 0 correction has a ledger row, and conclude session gracefully.
+
+## 🧪 Worked example — a filled continuation card
+
+```
+### 1. 📍 Breakpoint & Git State
+- **Branch / Last Commit**: `main` @ `bd75eb8 publish: a template may ship structure, never a stranger's history`
+- **Test Baseline**: 99 passing
+
+### 🧾 Verified Execution Receipts (No Fake Green)
+- **Test Command**: `python tests/test_readme_skill_table.py`
+- **Exit Code**: 0 (physical green confirmed)
+- **Stdout Proof**: `Ran 7 tests in 0.18s / OK`
+
+### 2. ✅ Completed vs ⏳ Remaining
+- ✅ Remove the pre-seeded fake event from the shipped template: `test_13` green
+- ⏳ Refresh the public package snapshot: needs `./release.sh --skip-push`
+
+### 3. 🔁 Unresolved Corrections
+- none
+
+### 4. 🔗 Pointers
+- 账本: `WORKMEMORY/corrections.md`（open 条目先读）
+
+### 5. 🚀 1-Click Continuation Prompt
+> "Resume at 'Refresh the public package snapshot'. Read `WORKMEMORY/INDEX.md`, then
+> `python scripts/vault_exec_state.py resume`."
+```
+
+Every number in the card is copied from a command whose raw output was actually pasted — no
+remembered counts.

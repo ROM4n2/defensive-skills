@@ -8,7 +8,7 @@
   <img src="https://img.shields.io/badge/Skills-23-4B5563?style=flat-square" alt="Skills" />
   <img src="https://img.shields.io/badge/Conformance-12%20rules-0969DA?style=flat-square" alt="Conformance rules" />
   <img src="https://img.shields.io/badge/Tests-99%20passed-2EA44F?style=flat-square" alt="Tests" />
-  <img src="https://img.shields.io/badge/Mutation-14%2F14%20caught-2EA44F?style=flat-square" alt="Mutation harness" />
+  <img src="https://img.shields.io/badge/Mutation-16%2F16%20caught-2EA44F?style=flat-square" alt="Mutation harness" />
   <img src="https://img.shields.io/badge/Dependencies-0%20(stdlib)-gray?style=flat-square" alt="Zero dependencies" />
   <img src="https://img.shields.io/badge/Python-3.11%20%7C%203.14-3776AB?style=flat-square" alt="Python" />
   <img src="https://img.shields.io/badge/License-MIT-gray?style=flat-square" alt="License MIT" />
@@ -95,29 +95,29 @@ The "prerequisite" column is **measured**, not decorative — `tests/test_readme
 
 | Skill | Purpose | Prerequisite | MCP | Bundled |
 |---|---|---|---|---|
-| **chain** `dfs` | Route developer intent to optimal Defensive Skills. | knowledge base | — | refs×3 |
-| **chain** `dfs-plan` | Draft bite-sized TDD implementation plans from specs. | knowledge base | omni_search, get_code_template | tpl×1 |
-| **chain** `dfs-exec` | Execute TDD plans via isolated subagents with maker-checker. | knowledge base | — | tpl×2 |
-| **chain** `dfs-debug` | Execute 4-step systematic root-cause debugging with repro. | knowledge base | search_vault, save_inbox_draft | tpl×1 |
-| **chain** `dfs-save` | Harvest non-obvious engineering solutions to 99-Inbox. | knowledge base | search_vault, save_inbox_draft | tpl×1 |
-| **chain** `dfs-handoff` | Generate session wrap-up and 1-click continuation cards. | knowledge base | — | tpl×1 |
-| **chain** `dfs-team` | Orchestrate multi-expert subagent reviews with consensus. | — | — | tpl×1 |
-| `dfs-adr` | Draft and archive numbered Architecture Decision Records. | knowledge base | — | tpl×1 |
-| `dfs-bootstrap` | Initialize repos with security git hooks and DFS anchors. | knowledge base | — | tpl×2 scripts×1 |
-| `dfs-grill` | Stress-test architecture via Dual-Lens Socratic inquiry. | knowledge base | omni_search | — |
-| `dfs-inbox-consolidate` | Classify and archive 99-Inbox drafts to DFS destinations. | extra assets | promote_inbox_draft | — |
-| `dfs-incident` | Triage production incidents and draft blameless postmortems. | knowledge base | — | tpl×1 |
-| `dfs-interview` | Conduct high-rigor 1v1 technical interview defense drills. | knowledge base | — | — |
-| `dfs-migrate` | Plan zero-downtime database schema migrations safely. | — | — | tpl×1 scripts×1 |
-| `dfs-onboard` | Rapidly orient AI agent to develop on existing codebases. | knowledge base | — | — |
-| `dfs-perf` | Profile multi-language benchmarks, races, and query plans. | — | — | tpl×1 scripts×1 |
-| `dfs-pipeline` | Execute end-to-end Git Worktree multi-skill pipeline. | knowledge base | — | — |
-| `dfs-refactor` | Execute senior-level refactoring & guard clause flattening. | — | — | — |
-| `dfs-release` | Draft semantic releases, changelogs, and rollback plans. | — | — | tpl×2 scripts×1 |
-| `dfs-research` | Research external sources and sink findings into the Vault. | knowledge base | search_vault, omni_search, get_note, get_rule_snippet, save_inbox_draft | tpl×1 |
-| `dfs-review` | Review code diffs against 7-language RFC 2119 DFS rules. | knowledge base | get_rule_snippet, list_standards | tpl×1 |
-| `dfs-spark` | Turn 0-to-1 ideas into specs via Dual-Lens dialogue. | knowledge base | omni_search | tpl×1 |
-| `dfs-tdd` | Enforce strict RED-GREEN-REFACTOR TDD and fake-green guards. | knowledge base | get_code_template | — |
+| **chain** `dfs` | Route developer intent to the right Defensive Skills workflow. Use when the user asks for a coding task and you must decide which dfs skill to load, or when it is unclear where to start. | knowledge base | — | refs×3 |
+| **chain** `dfs-plan` | Draft bite-sized TDD implementation plans from specs. Use when the user asks for an implementation plan, or before writing code for a multi-step feature. | knowledge base | omni_search, get_code_template | tpl×1 |
+| **chain** `dfs-exec` | Execute TDD plans via isolated subagents with maker-checker. Use when an implementation plan exists and the user asks to execute or implement it. | knowledge base | — | tpl×2 |
+| **chain** `dfs-debug` | Execute 4-step systematic root-cause debugging with a reproduction. Use when the user reports a bug, a failing test, or says something is broken. | knowledge base | search_vault, save_inbox_draft | tpl×1 |
+| **chain** `dfs-save` | Harvest non-obvious engineering solutions into 99-Inbox drafts. Use when a debugging session or task just produced a reusable insight worth saving. | knowledge base | search_vault, save_inbox_draft | tpl×1 |
+| **chain** `dfs-handoff` | Generate a session wrap-up and a 1-click continuation card. Use when the user wants to pause, hand off, or resume later in a fresh session. | knowledge base | — | tpl×1 |
+| **chain** `dfs-team` | Orchestrate multi-expert subagent reviews into a consensus. Use when a design or plan needs several independent expert reviews and a merged verdict. | — | — | tpl×1 |
+| `dfs-adr` | Draft and archive numbered Architecture Decision Records. Use when the user makes an architecture decision or asks to record one. | knowledge base | — | tpl×1 |
+| `dfs-bootstrap` | Initialize a repository with security git hooks and DFS rule anchors. Use when starting a new repo or adding DFS guardrails to an existing one. | knowledge base | — | tpl×2 scripts×1 |
+| `dfs-grill` | Stress-test an architecture through Dual-Lens Socratic inquiry. Use when the user wants their design challenged or pressure-tested before building. | knowledge base | omni_search | — |
+| `dfs-inbox-consolidate` | Classify and archive 99-Inbox drafts into DFS destinations. Use when the inbox has accumulated drafts and the user asks to file or clean them up. | extra assets | promote_inbox_draft | — |
+| `dfs-incident` | Triage a production incident and draft a blameless postmortem. Use when a service is down, degraded, or the user asks for an incident review. | knowledge base | — | tpl×1 |
+| `dfs-interview` | Conduct high-rigor 1v1 technical interview defense drills. Use when the user wants to rehearse explaining or defending their own work. | knowledge base | — | — |
+| `dfs-migrate` | Plan zero-downtime database schema migrations safely. Use when a schema change must ship without taking the service offline. | — | — | tpl×1 scripts×1 |
+| `dfs-onboard` | Rapidly orient an AI agent to develop on an existing codebase. Use when entering an unfamiliar repo and you need to map how it works before editing. | knowledge base | — | — |
+| `dfs-perf` | Profile multi-language benchmarks, races, and query plans. Use when the user reports slowness, a performance regression, or asks for a benchmark. | — | — | tpl×1 scripts×1 |
+| `dfs-pipeline` | Execute an end-to-end Git Worktree multi-skill pipeline. Use when a task spans several DFS skills and each stage needs an isolated worktree. | knowledge base | — | — |
+| `dfs-refactor` | Execute senior-level refactoring with guard-clause flattening. Use when the user asks to clean up, simplify, or restructure existing code. | — | — | — |
+| `dfs-release` | Draft semantic releases, changelogs, and rollback plans. Use when the user asks to cut a release, tag a version, or write a changelog. | — | — | tpl×2 scripts×1 |
+| `dfs-research` | Research external sources and sink findings into the Vault. Use when the user asks to investigate a topic and record what was learned. | knowledge base | search_vault, omni_search, get_note, get_rule_snippet, save_inbox_draft | tpl×1 |
+| `dfs-review` | Review a code diff against 7-language RFC 2119 DFS rules. Use when the user asks for a code review, or before merging a change. | knowledge base | get_rule_snippet, list_standards | tpl×1 |
+| `dfs-spark` | Turn 0-to-1 ideas into specs through Dual-Lens dialogue. Use when the user has a rough idea and wants to shape it into a written spec. | knowledge base | omni_search | tpl×1 |
+| `dfs-tdd` | Enforce strict RED-GREEN-REFACTOR TDD and fake-green guards. Use when implementing a feature test-first, or when a green test suite is suspect. | knowledge base | get_code_template | — |
 
 ---
 
@@ -144,7 +144,7 @@ Five deliberate design choices worth calling out:
 
 * **The docs are inside the gate's jurisdiction too.** `test_docs_links.py` rejects dangling links and links to deliberately-untracked state; while preparing this repo's first public commit it caught two real ones (the README still linked `HANDOFF.md` and `WORKMEMORY/`). The gate is mutation-probed itself: 5 injected defects, all caught.
 
-* **A green run without mutation testing is not green.** `mutation_check.py` injects 14 defects into a temporary copy (delete a file, edit frontmatter, plant a dangling pointer, plant an absolute path, plant a near-miss typo, …), asserts each one is caught **by its corresponding rule**, and asserts the clean tree reports zero failures. A rule going from red to green must ship its own mutation case in the same change — this repo just did exactly that: the moment Rule 8 went green, the harness reported `BASELINE MOVED`, because the rule had only ever been covered by "expected to be red" and nothing had ever proven it could actually fail.
+* **A green run without mutation testing is not green.** `mutation_check.py` injects 16 defects into a temporary copy (delete a file, edit frontmatter, plant a dangling pointer, plant an absolute path, plant a near-miss typo, …), asserts each one is caught **by its corresponding rule**, and asserts the clean tree reports zero failures. A rule going from red to green must ship its own mutation case in the same change — this repo just did exactly that: the moment Rule 8 went green, the harness reported `BASELINE MOVED`, because the rule had only ever been covered by "expected to be red" and nothing had ever proven it could actually fail.
 * **Exemptions are declarations, not silencers.** A few references point at private tools that deliberately do not ship; they are registered in `OPTIONAL_SCRIPT_POINTERS`. An exemption that stops matching any reference makes Rule 8 fail immediately — the table cannot rot into a collective mute button.
 * **Referencing something that only resolves on your machine is banned.** Rules 8 and 10 refuse to let `scripts/...` point outside the repo, and refuse hardcoded absolute knowledge-base paths.
 * **Green locally is not the same as a clone that works.** `test_shipped_assets_tracked.py` does not measure the disk; it measures **what a stranger receives**. Nothing under a shipped path may be swallowed by `.gitignore` (build caches excepted), and nothing may be left untracked. It is a back-filled gate: an unanchored `WORKMEMORY/` in `.gitignore` matches at **any depth**, and git's ignore matching is **case-insensitive on Windows**, so it silently swallowed the four `dfs-bootstrap/templates/workmemory/` files — they were never tracked in any commit. Every gate stayed green here, because the files were sitting on disk; a stranger's clone got a `dfs-bootstrap` that exits 2 with `template(s) missing`.
@@ -155,11 +155,11 @@ Five deliberate design choices worth calling out:
 |---|---|
 | 1 | Every skill directory exists and holds a non-empty `SKILL.md` |
 | 2 | Frontmatter parses; `name` / `description` are non-empty |
-| 3 | `description` ≤ 60 chars, ends with a period, no marketing words |
+| 3 | `description` carries an explicit trigger clause (`Use when …`), is ≤ 320 chars, ends with a period, no marketing words |
 | 4 | The router skill `dfs` must set `disable-model-invocation: true` |
 | 5 | Pointers inside `templates/` and `references/` resolve on disk |
 | 6 | No hardcoded `~/.claude/agents/`-style paths without a neutral fallback |
-| 7 | Every `related_skills` entry resolves to a real skill or an allowlisted external one |
+| 7 | Every `related_skills` entry resolves to a real skill or an allowlisted external one, with no entry listed twice |
 | 8 | Every `scripts/<file>` reference actually ships; **never borrowed from outside** |
 | 9 | Declared `mcp_tools` must be canonical tool names |
 | 10 | No hardcoded absolute knowledge-base paths; use `{vault_root}` / env vars |
@@ -199,7 +199,8 @@ Save that as `knowledge.json` in your knowledge-base root to override the defaul
   intent. `metadata.hermes.mcp_tools` is **not** a harness feature at all: it is this suite's own
   declaration, checked by the conformance gate.
 * The repo contains **23 skills** (`dfs-agent-sdk` was moved out because it is third-party material and is not published here); the "prerequisite" column measures what each skill actually depends on, and the 5 with no prerequisite work the moment they are installed.
-* **Language policy: English machine surface, bilingual READMEs, English-first bodies.** Every frontmatter field the agent must load to route (`name` / `description` / `mcp_tools`) is already English. 14 of the 23 `SKILL.md` files are pure English; the remaining **1,854 CJK characters** sit in the tables and examples of 5 skills (`dfs`, `dfs-inbox-consolidate`, `dfs-grill`, `dfs-handoff`, `dfs-interview`) — **kept on purpose, not unfinished work**: they are presentation data, not instructions, so they cost the model nothing to understand, while translating them would cost more to maintain than it returns. Issues and PRs in English are welcome.
+* **Progressive disclosure here is two tiers, not three.** The skill spec recommends three — `description` (always in the index) → SKILL.md body → `references/` + `scripts/` detail. This suite implements the **first two**: all 23 `description` fields carry an explicit trigger clause (tier 1), and the body carries the full procedure (tier 2). Only `dfs` uses the third tier (it ships `references/`×3); the other 22 have no `references/` subdirectory, and no skill uses a nested topic hierarchy. That is deliberate: each skill here is **one stable workflow**, and keeping a body under 500 lines beats inventing levels — split out a third tier when a skill actually needs the depth.
+* **Language policy: English machine surface, bilingual READMEs, English-first bodies.** Every frontmatter field the agent must load to route (`name` / `description` / `mcp_tools`) is already English. 14 of the 23 `SKILL.md` files are pure English; the remaining **1,865 CJK characters** are spread across 9 skills (the largest three: `dfs-inbox-consolidate` 473 / `dfs` 342 / `dfs-grill` 307; the rest are small fragments) — **kept on purpose, not unfinished work**: they are presentation data, not instructions, so they cost the model nothing to understand, while translating them would cost more to maintain than it returns. Issues and PRs in English are welcome.
 
 ---
 

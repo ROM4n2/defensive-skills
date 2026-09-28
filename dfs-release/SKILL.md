@@ -1,8 +1,8 @@
 ---
 name: dfs-release
-description: Draft semantic releases, changelogs, and rollback plans.
+description: Draft semantic releases, changelogs, and rollback plans. Use when the user asks to cut a release, tag a version, or write a changelog.
 version: 0.2.0
-author: Defensive Skills contributors
+license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:

@@ -72,6 +72,18 @@ BANNED_MARKETING_PATTERNS = [
     r"best-in-class",
 ]
 
+# Rule 3a. A description that only says what the skill DOES is the classic failure mode: the skill
+# installs and then never fires, because selection keys off the trigger, not the feature list. So a
+# description must carry an explicit trigger clause, and the cap is 320 (the spec allows 1024) —
+# the always-loaded index stays cheap while leaving room for the clause. Note the deliberately loose
+# marker regex: this asserts the clause is PRESENT and greppable, not that it is well-worded. There
+# is no keyword-matching "trigger eval" here on purpose — that would be a fake-green proxy.
+DESCRIPTION_MAX_CHARS = 320
+TRIGGER_CLAUSE = re.compile(
+    r"use when|use whenever|load when|when the user|when working|when asked|when you need",
+    re.IGNORECASE,
+)
+
 # Rule 9: canonical tool names exposed by the `coding-vault-search` MCP server.
 KNOWN_MCP_TOOLS = [
     "omni_search",
@@ -302,8 +314,12 @@ class TestSkillsConformance(unittest.TestCase):
                 schema_errors.append(f"  - {sdir.name}: missing or invalid 'description' in frontmatter")
         self.assertEqual(schema_errors, [], f"Rule 2 violations ({len(schema_errors)} skills):\n" + "\n".join(schema_errors))
 
-    def test_rule_3_description_length_under_60_chars(self):
-        """Rule 3a: description length <= 60 chars."""
+    def test_rule_3a_description_has_trigger_clause(self):
+        """Rule 3a: description carries an explicit trigger clause and stays <= 320 chars.
+
+        Two independent failure modes are reported separately: a description with no trigger clause
+        (the "installs but never fires" defect), and one over the length cap.
+        """
         offenders = []
         for sdir in self.skill_dirs:
             try:
@@ -311,15 +327,21 @@ class TestSkillsConformance(unittest.TestCase):
             except Exception:
                 continue
             desc = str(fm.get("description", "")).strip()
-            if len(desc) > 60:
+            if not TRIGGER_CLAUSE.search(desc):
                 offenders.append(
-                    f"  - {sdir.name}: length {len(desc)} chars (> 60 limit by {len(desc) - 60})\n"
+                    f"  - {sdir.name}: description has no trigger clause "
+                    f"(expected a marker such as 'Use when ...')\n    Content: {desc!r}"
+                )
+            if len(desc) > DESCRIPTION_MAX_CHARS:
+                offenders.append(
+                    f"  - {sdir.name}: length {len(desc)} chars "
+                    f"(> {DESCRIPTION_MAX_CHARS} limit by {len(desc) - DESCRIPTION_MAX_CHARS})\n"
                     f"    Content: {desc!r}"
                 )
         if offenders:
             self.fail(
-                f"Rule 3a violation: {len(offenders)} skill(s) exceed the 60-character description limit:\n"
-                + "\n".join(offenders)
+                f"Rule 3a violation: {len(offenders)} description(s) missing a trigger clause "
+                f"or over the {DESCRIPTION_MAX_CHARS}-char limit:\n" + "\n".join(offenders)
             )
 
     def test_rule_3_description_period_termination(self):
@@ -423,23 +445,33 @@ class TestSkillsConformance(unittest.TestCase):
             )
 
     def test_rule_7_related_skills_resolve_to_real_skills(self):
-        """Rule 7: every related_skills entry names a real skill or allowlisted external one."""
+        """Rule 7: every related_skills entry names a real skill; no entry is listed twice.
+
+        The duplicate assertion is not cosmetic: a repeated entry is dead weight in the always-loaded
+        index and no other rule would notice it (the list still parses and still resolves).
+        """
         violations = []
         for sdir in self.skill_dirs:
             try:
                 fm, _ = parse_skill_file(sdir)
             except Exception:
                 continue
-            for ref in extract_related_skills(fm):
+            related = extract_related_skills(fm)
+            for ref in related:
                 if ref in KNOWN_SKILL_NAMES or ref in EXTERNAL_SKILL_ALLOWLIST:
                     continue
                 violations.append(
                     f"  - {sdir.name}: related_skills entry '{ref}' resolves to no skill on disk."
                 )
+            dups = sorted({r for r in related if related.count(r) > 1})
+            if dups:
+                violations.append(
+                    f"  - {sdir.name}: related_skills lists {dups} more than once."
+                )
         if violations:
             self.fail(
-                f"Rule 7 violation: {len(violations)} dangling related_skills pointer(s):\n"
-                + "\n".join(violations)
+                f"Rule 7 violation: {len(violations)} dangling or duplicate related_skills "
+                f"pointer(s):\n" + "\n".join(violations)
             )
 
     def test_rule_8_script_pointers_resolve_physically(self):

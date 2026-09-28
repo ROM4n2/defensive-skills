@@ -1,13 +1,13 @@
 ---
 name: dfs-exec
-description: Execute TDD plans via isolated subagents with maker-checker.
+description: Execute TDD plans via isolated subagents with maker-checker. Use when an implementation plan exists and the user asks to execute or implement it.
 version: 0.2.0
-author: Defensive Skills contributors
+license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:
     tags: [execution, subagents, maker-checker, tdd, orchestrator]
-    related_skills: [dfs-plan, dfs-tdd, dfs-review, dfs-review]
+    related_skills: [dfs-plan, dfs-tdd, dfs-review]
 ---
 
 # DFS-EXEC: Multi-Subagent Deterministic Execution Engine

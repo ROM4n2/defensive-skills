@@ -1,8 +1,8 @@
 ---
 name: dfs-grill
-description: Stress-test architecture via Dual-Lens Socratic inquiry.
+description: Stress-test an architecture through Dual-Lens Socratic inquiry. Use when the user wants their design challenged or pressure-tested before building.
 version: 0.2.0
-author: Defensive Skills contributors
+license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:

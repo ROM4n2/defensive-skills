@@ -1,8 +1,8 @@
 ---
 name: dfs-onboard
-description: Rapidly orient AI agent to develop on existing codebases.
+description: Rapidly orient an AI agent to develop on an existing codebase. Use when entering an unfamiliar repo and you need to map how it works before editing.
 version: 0.2.0
-author: Defensive Skills contributors
+license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:

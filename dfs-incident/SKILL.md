@@ -1,9 +1,9 @@
 ---
 name: dfs-incident
-description: Triage production incidents and draft blameless postmortems.
+description: Triage a production incident and draft a blameless postmortem. Use when a service is down, degraded, or the user asks for an incident review.
 disable-model-invocation: true
 version: 0.2.0
-author: Defensive Skills contributors
+license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:

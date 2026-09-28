@@ -1,8 +1,8 @@
 ---
 name: dfs-plan
-description: Draft bite-sized TDD implementation plans from specs.
+description: Draft bite-sized TDD implementation plans from specs. Use when the user asks for an implementation plan, or before writing code for a multi-step feature.
 version: 0.2.0
-author: Defensive Skills contributors
+license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:
@@ -45,3 +45,34 @@ Key required sections in `implementation_plan.md`:
 
 ## Phase 3: Downstream Dispatch
 Prompt user: `Plan generated with subagent prompt scaffolds. Initialize ledger and execute with /dfs-exec?`
+
+## 🧪 Worked example — one task with its exact interface contract
+
+Input spec: *"Add a ledger resume command to the execution engine."* -> `implementation_plan.md` excerpt:
+
+```
+## 🎯 Active Frontier (Unblocked Tasks)
+
+### Task 2: Ledger resume loader [Mode: AFK] [Role: TDD Builder]
+
+**Files:**
+- Modify: `scripts/vault_exec_state.py`
+- Test: `tests/test_vendored_scripts.py`
+
+**Interfaces:**
+- Consumes: `json.loads(ledger_path.read_text())`
+- Produces: `def resume(ledger_path: Path) -> list[str]`
+
+**Subagent Prompt Scaffold (for /dfs-exec):**
+> "Implement Task 2: Ledger resume loader. Steps: write a failing test in
+> `tests/test_vendored_scripts.py` (RED); run `python tests/test_vendored_scripts.py` and verify it
+> fails; add `resume()` (GREEN); return a receipt with the raw exit code."
+
+**Step Breakdown:**
+- [ ] Step 1: Write the failing test (RED)
+- [ ] Step 2: Run it and verify it fails with the expected message
+- [ ] Step 3: Implement the minimal production code (GREEN)
+```
+
+The `Produces:` line is the falsifiable part — `/dfs-exec` must hit that exact signature, or the plan
+and the code have silently diverged.

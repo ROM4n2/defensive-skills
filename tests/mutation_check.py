@@ -38,10 +38,17 @@ MUTATIONS = [
      "dfs-interview/SKILL.md", lambda t: None),
     ("rule_2_frontmatter_schema",
      "dfs-team/SKILL.md", lambda t: t.replace("name: dfs-team", "name: dfs-typo", 1)),
-    ("rule_3_description_length_under_60_chars",
-     "dfs-team/SKILL.md", lambda t: set_description(t, "x" * 70 + ".")),
+    # Rule 3a has two independent failure modes, so it gets two probes: a description with no
+    # trigger clause (the "installs but never fires" defect), and one that HAS the clause but blows
+    # the length cap. Either alone must turn Rule 3a red.
+    ("rule_3a_description_has_trigger_clause",
+     "dfs-team/SKILL.md", lambda t: set_description(t, "Execute TDD plans with no trigger clause at all.")),
+    ("rule_3a_description_has_trigger_clause",
+     "dfs-team/SKILL.md", lambda t: set_description(t, "Use when " + "x" * 330 + ".")),
+    # 3b's probe deliberately keeps a valid trigger clause, so ONLY the period check can fire —
+    # clean attribution instead of a description that trips both 3a and 3b at once.
     ("rule_3_description_period_termination",
-     "dfs-team/SKILL.md", lambda t: set_description(t, "no trailing period here")),
+     "dfs-team/SKILL.md", lambda t: set_description(t, "Use when implementing a feature test-first")),
     ("rule_4_router_disable_model_invocation",
      "dfs/SKILL.md", lambda t: t.replace("disable-model-invocation: true",
                                          "disable-model-invocation: false", 1)),
@@ -58,6 +65,11 @@ MUTATIONS = [
     ("rule_7_related_skills_resolve_to_real_skills",
      "dfs-handoff/SKILL.md", lambda t: re.sub(
          r"(?m)^(\s*related_skills:).*$", r"\1 [dfs-does-not-exist]", t, count=1)),
+    # A repeated entry still RESOLVES, so the dangling check stays silent and only the no-duplicate
+    # assertion can catch it. The appended name is a real skill on purpose.
+    ("rule_7_related_skills_resolve_to_real_skills",
+     "dfs-handoff/SKILL.md", lambda t: re.sub(
+         r"(?m)^(\s*related_skills:\s*\[)([^\]]*)\]", r"\1\2, dfs-save]", t, count=1)),
     ("rule_9_mcp_contract_tools_are_canonical",
      "dfs-adr/SKILL.md", lambda t: t.replace("    related_skills:",
                                              "    mcp_tools: [search_vault, bogus_tool]\n    related_skills:", 1)),

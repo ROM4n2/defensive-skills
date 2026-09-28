@@ -1,8 +1,8 @@
 ---
 name: dfs-review
-description: "Review code diffs against 7-language RFC 2119 DFS rules."
+description: Review a code diff against 7-language RFC 2119 DFS rules. Use when the user asks for a code review, or before merging a change.
 version: 0.2.0
-author: Defensive Skills contributors
+license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:

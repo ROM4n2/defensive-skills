@@ -1,8 +1,8 @@
 ---
 name: dfs-save
-description: "Harvest non-obvious engineering solutions to 99-Inbox."
+description: Harvest non-obvious engineering solutions into 99-Inbox drafts. Use when a debugging session or task just produced a reusable insight worth saving.
 version: 0.2.0
-author: Defensive Skills contributors
+license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:

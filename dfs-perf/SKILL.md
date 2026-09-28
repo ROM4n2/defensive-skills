@@ -1,8 +1,8 @@
 ---
 name: dfs-perf
-description: Profile multi-language benchmarks, races, and query plans.
+description: Profile multi-language benchmarks, races, and query plans. Use when the user reports slowness, a performance regression, or asks for a benchmark.
 version: 0.2.0
-author: Defensive Skills contributors
+license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:
