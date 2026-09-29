@@ -6,9 +6,9 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Skills-23-4B5563?style=flat-square" alt="Skills" />
-  <img src="https://img.shields.io/badge/Conformance-13%20rules-0969DA?style=flat-square" alt="Conformance rules" />
-  <img src="https://img.shields.io/badge/Tests-104%20passed-2EA44F?style=flat-square" alt="Tests" />
-  <img src="https://img.shields.io/badge/Mutation-20%2F20%20caught-2EA44F?style=flat-square" alt="Mutation harness" />
+  <img src="https://img.shields.io/badge/Conformance-14%20rules-0969DA?style=flat-square" alt="Conformance rules" />
+  <img src="https://img.shields.io/badge/Tests-105%20passed-2EA44F?style=flat-square" alt="Tests" />
+  <img src="https://img.shields.io/badge/Mutation-22%2F22%20caught-2EA44F?style=flat-square" alt="Mutation harness" />
   <img src="https://img.shields.io/badge/Dependencies-0%20(stdlib)-gray?style=flat-square" alt="Zero dependencies" />
   <img src="https://img.shields.io/badge/Python-3.11%20%7C%203.14-3776AB?style=flat-square" alt="Python" />
   <img src="https://img.shields.io/badge/License-MIT-gray?style=flat-square" alt="License MIT" />
@@ -126,7 +126,7 @@ The "prerequisite" column is **measured**, not decorative — `tests/test_readme
 **Don't take this section's word for it — run them.** All ten are zero-dependency; no pytest needed:
 
 ```bash
-python tests/test_skills_conformance.py    # 13 rules × 23 skills                → exit 0
+python tests/test_skills_conformance.py    # 14 rules × 23 skills                → exit 0
 python tests/mutation_check.py             # inject a defect per rule; all must land → exit 0
 python tests/test_knowledge_server.py      # MCP server over real stdio JSON-RPC → exit 0
 python tests/test_vendored_scripts.py      # ledger / transactional archival / rollback → exit 0
@@ -144,13 +144,13 @@ Six deliberate design choices worth calling out:
 
 * **The docs are inside the gate's jurisdiction too.** `test_docs_links.py` rejects dangling links and links to deliberately-untracked state; while preparing this repo's first public commit it caught two real ones (the README still linked `HANDOFF.md` and `WORKMEMORY/`). The gate is mutation-probed itself: 5 injected defects, all caught.
 
-* **A green run without mutation testing is not green.** `mutation_check.py` injects 20 defects into a temporary copy (delete a file, edit frontmatter, plant a dangling pointer, plant an absolute path, plant a near-miss typo, …), asserts each one is caught **by its corresponding rule**, and asserts the clean tree reports zero failures. A rule going from red to green must ship its own mutation case in the same change — this repo just did exactly that: the moment Rule 8 went green, the harness reported `BASELINE MOVED`, because the rule had only ever been covered by "expected to be red" and nothing had ever proven it could actually fail.
+* **A green run without mutation testing is not green.** `mutation_check.py` injects 22 defects into a temporary copy (delete a file, edit frontmatter, plant a dangling pointer, plant an absolute path, plant a near-miss typo, …), asserts each one is caught **by its corresponding rule**, and asserts the clean tree reports zero failures. A rule going from red to green must ship its own mutation case in the same change — this repo just did exactly that: the moment Rule 8 went green, the harness reported `BASELINE MOVED`, because the rule had only ever been covered by "expected to be red" and nothing had ever proven it could actually fail.
 * **Exemptions are declarations, not silencers.** A few references point at private tools that deliberately do not ship; they are registered in `OPTIONAL_SCRIPT_POINTERS`. An exemption that stops matching any reference makes Rule 8 fail immediately — the table cannot rot into a collective mute button.
 * **The same relation, asked backwards, is its own gate.** Rules 1-12 all describe what a skill SAYS; none of them can see the opposite defect — a file that ships, costs bytes in every clone, and that no body ever points a reader at. Rule 5 covers exactly half the relation: a pointer finds a file. **Nothing covered whether a file is found.** Measured: drop an unreferenced file into `dfs/references/`, fix the README's `refs×N` count, `git add` it, and all 12 rules stay green. Rule 13 adds the other half. It can be satisfied two ways — point at the file from a body, or declare the program that reads it in `CODE_ROUTED_ASSETS` — and the declaration self-invalidates the same way (routed from a body, or the program stops naming it, and the declaration fails). The four `WORKMEMORY/` templates `bootstrap.py` reads are declared that way: the body routes to the script and the script reads the templates, so the chain is real and demanding a body pointer for each would only manufacture false positives.
 * **Referencing something that only resolves on your machine is banned.** Rules 8 and 10 refuse to let `scripts/...` point outside the repo, and refuse hardcoded absolute knowledge-base paths.
 * **Green locally is not the same as a clone that works.** `test_shipped_assets_tracked.py` does not measure the disk; it measures **what a stranger receives**. Nothing under a shipped path may be swallowed by `.gitignore` (build caches excepted), and nothing may be left untracked. It is a back-filled gate: an unanchored `WORKMEMORY/` in `.gitignore` matches at **any depth**, and git's ignore matching is **case-insensitive on Windows**, so it silently swallowed the four `dfs-bootstrap/templates/workmemory/` files — they were never tracked in any commit. Every gate stayed green here, because the files were sitting on disk; a stranger's clone got a `dfs-bootstrap` that exits 2 with `template(s) missing`.
 
-### The 13 conformance rules
+### The 14 conformance rules
 
 | # | Assertion |
 |---|---|
@@ -167,6 +167,7 @@ Six deliberate design choices worth calling out:
 | 11 | Calling `tool(...)` in the body requires declaring it in `mcp_tools` |
 | 12 | MCP-shaped call sites must be canonical; near-miss typos (`serch_vault`) are rejected |
 | 13 | Every shipped `references/` / `templates/` asset is reachable from a body; one that only a program reads must declare its consumer (the declaration self-invalidates) |
+| 14 | A heading claiming `<N>-Stage\|Step\|Phase>` must enumerate exactly N (the arithmetic only — not the meaning) |
 
 ---
 

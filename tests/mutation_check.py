@@ -105,6 +105,16 @@ MUTATIONS = [
     ("rule_13_on_demand_assets_are_routed_from_a_body",
      "dfs-bootstrap/SKILL.md",
      lambda t: t + "\nRead `templates/workmemory/PROTOCOL.md` before scaffolding.\n"),
+    # Rule 14 checks the one kind of content a gate can check: a heading's claimed count against
+    # the items below it. Two probes, one per direction of that comparison, because either side can
+    # drift -- an author edits the claim, or adds a step and forgets the claim.
+    ("rule_14_claimed_counts_match_the_enumeration",
+     "dfs-tdd/SKILL.md",
+     lambda t: t.replace("## The 5-Step Industrial TDD Lifecycle",
+                         "## The 6-Step Industrial TDD Lifecycle", 1)),
+    ("rule_14_claimed_counts_match_the_enumeration",
+     "dfs-tdd/SKILL.md",
+     lambda t: t + "\n### Step 6: Ship It\n"),
     # A block-style list must fail loudly, not parse as an empty (vacuous-pass) declaration.
     # Attribution note: parse_skill_file RAISES on block lists; Rule 2 owns parse errors, while
     # Rules 9/11 skip unparseable skills (`except Exception: continue`). So the suite goes red via

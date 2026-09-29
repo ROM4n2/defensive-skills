@@ -304,7 +304,7 @@ def extract_context_pointers(text: str) -> set[str]:
 
 
 class TestSkillsConformance(unittest.TestCase):
-    """13 rules across all DFS skills in this repo."""
+    """14 rules across all DFS skills in this repo."""
 
     @classmethod
     def setUpClass(cls):
@@ -808,6 +808,68 @@ class TestSkillsConformance(unittest.TestCase):
             self.fail(
                 f"Rule 13 violation: {len(violations)} unreachable on-demand asset(s):\n"
                 + "\n".join(violations)
+            )
+
+    def test_rule_14_claimed_counts_match_the_enumeration(self):
+        """Rule 14: a heading claiming `<N>-<Stage|Step|Phase>` must enumerate exactly N.
+
+        The first rule here to check **content** rather than structure, and the scope is deliberately
+        the smallest defensible slice of it. Three real defects of this shape shipped past 13 green
+        rules: `dfs-pipeline` headed "8-Stage" over nine stages, `dfs-review` "3-Step" over four, and
+        `dfs-bootstrap` "3-Phase" over four (Phase 1, 2, 3.5, 4). A count in a heading is a claim
+        about the text underneath it, and it is the one kind of claim a gate can check.
+
+        What it CANNOT check, and does not pretend to: whether a description matches its body in
+        meaning. "a design or plan" over a skill that audits code, or "0-to-1" over a skill whose
+        Phase 1 includes a scoped tweak to existing code, are both invisible here. Those need a
+        reader; this rule only catches the arithmetic.
+
+        Deliberately same-noun: a `3-Stage` claim is compared against enumerated `Stage`s, so
+        `dfs-exec` ("3-Stage" over `[Step 1..3]`) is skipped rather than judged — comparing across
+        nouns would make the rule loose enough to miss a real mismatch. A claim with nothing to
+        compare is skipped too (`dfs-migrate/templates/migration-plan-schema.md` says "5-Step" and
+        enumerates none), because firing there would be a false positive on day one.
+
+        Measured before writing it: 15 claims in the tree, 13 verifiable, 0 mismatches, and 0
+        matches from mid-prose lines — so the pattern does not accuse ordinary sentences.
+        """
+        claim = re.compile(r"(?m)^#{1,6}[^\n]*?\b(\d+)[-\s](Stage|Step|Phase)\b", re.IGNORECASE)
+        # An enumeration starts a line: a heading, or a boxed ledger row. Never mid-prose.
+        enumerated = re.compile(
+            r"(?m)^[ \t]*(?:#{1,6}[ \t]*)?(?:[│|][ \t]*)?[-*•]?[ \t]*"
+            r"(Stage|Step|Phase)[ \t]+(\d+(?:\.\d+)?)\b",
+            re.IGNORECASE,
+        )
+
+        violations = []
+        for sdir in self.skill_dirs:
+            texts: dict[str, str] = {}
+            skill_md = sdir / "SKILL.md"
+            if skill_md.is_file():
+                texts["SKILL.md"] = skill_md.read_text(encoding="utf-8", errors="replace")
+            for sub in ("templates", "references"):
+                sub_dir = sdir / sub
+                if sub_dir.is_dir():
+                    for f in sorted(sub_dir.rglob("*.md")):
+                        texts[f"{sub}/{f.relative_to(sub_dir).as_posix()}"] = f.read_text(
+                            encoding="utf-8", errors="replace"
+                        )
+            for origin, text in texts.items():
+                by_kind: dict[str, set[str]] = {}
+                for kind, num in enumerated.findall(text):
+                    by_kind.setdefault(kind.lower(), set()).add(num)
+                for n_str, kind in claim.findall(text):
+                    found = by_kind.get(kind.lower(), set())
+                    if not found or len(found) == int(n_str):
+                        continue  # nothing to compare, or they agree
+                    violations.append(
+                        f"  - {sdir.name}/{origin}: a heading claims {n_str}-{kind} but the file "
+                        f"enumerates {sorted(found)} ({len(found)} of them)."
+                    )
+        if violations:
+            self.fail(
+                f"Rule 14 violation: {len(violations)} heading count(s) that the text "
+                f"contradicts:\n" + "\n".join(violations)
             )
 
 

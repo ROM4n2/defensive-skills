@@ -132,5 +132,5 @@ port. Three marks make every divergence greppable — `grep -rn "DFS-PORT\|ponyt
 ```bash
 python tests/test_vendored_scripts.py      # ledger + transaction + archival + deletion bounds (17)
 python tests/test_bootstrap_script.py      # bootstrap.py against a temp repo: idempotency, no clobber
-python tests/test_skills_conformance.py    # 13 rules over all 23 skills, incl. these pointers
+python tests/test_skills_conformance.py    # 14 rules over all 23 skills, incl. these pointers
 ```
