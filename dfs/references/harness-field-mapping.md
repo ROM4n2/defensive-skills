@@ -48,13 +48,10 @@ top of each file, where an agent that reads only the first screen still sees it:
 grep -l 'Invocation . explicit only' dfs*/SKILL.md      # -> 7 files, one per skill below
 ```
 
-The banner is the *same sentence* in all seven (so it is greppable and gateable), and it names the
-key so a reader knows why it is there:
-
-> **Invocation — explicit only.** `disable-model-invocation: true` is honored by Claude Code and
-> ignored elsewhere, so the same rule is stated here in the file itself: do not auto-select this
-> skill on your own — wait until the user asks for it, or until an already-running DFS skill routes
-> here. (See `dfs/references/harness-field-mapping.md`.)
+The banner's opening sentence — `**Invocation — explicit only.**` — is identical in all seven, which
+is what makes it greppable and gateable, and it names the key so a reader knows why it is there. The
+grep above prints the live wording; this doc deliberately does not keep a second copy of it, because
+a quoted banner is a second place to edit every time the banner changes.
 
 `tests/test_harness_field_mapping.py::test_06` checks this in the direction that matters: if the doc
 claims the banner is applied, every one of the seven files must actually contain it. If you delete a

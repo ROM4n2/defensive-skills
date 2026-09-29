@@ -11,6 +11,10 @@ deliberate divergences from the vault original:
    default `python` on the author machine does not have PyYAML installed at all, so the
    vault copy is not runnable there. Frontmatter is parsed with `re` (see parse_skill_file).
 
+Rule 13 is this repo's own addition (the vault original stops at 12), so it has no upstream
+counterpart: the ported rules above describe what a skill SAYS, and none of them notices an
+on-demand file that no body ever points a reader at.
+
 Rule 8 resolves `scripts/...` against repo-local roots only — never the author's Vault. That is
 intentional: a script reference that only resolves on the author's machine is a publication
 blocker, so it MUST fail here rather than pass by borrowing a path from outside the repo.
@@ -124,6 +128,24 @@ EXTERNAL_SKILL_ALLOWLIST = {"systematic-debugging", "test-driven-development"}
 OPTIONAL_SCRIPT_POINTERS = {
     "scripts/vault-healthcheck.py",
     "scripts/vault-inbox-triage.py",
+}
+
+# Rule 13 declarations — on-demand assets that are reached through a shipped PROGRAM rather than a
+# markdown pointer in a body. Key: `<skill>/<references|templates>/<rel>`; value: the program that
+# must actually name the file, relative to the skills root.
+#
+# The four `WORKMEMORY/` templates are read by `bootstrap.py` when it scaffolds a new repo, and the
+# body routes the reader to that script rather than to the individual files. Requiring a body
+# pointer for each would be a false positive, so each is declared instead.
+#
+# This is a declaration, not a mute, and it self-invalidates three ways (see the rule): the asset
+# becoming body-routed, the asset leaving the tree, or the named program no longer mentioning it —
+# each of those turns the declaration stale and fails Rule 13.
+CODE_ROUTED_ASSETS = {
+    "dfs-bootstrap/templates/workmemory/INDEX.md": "dfs-bootstrap/scripts/bootstrap.py",
+    "dfs-bootstrap/templates/workmemory/PROJECT_OVERVIEW.md": "dfs-bootstrap/scripts/bootstrap.py",
+    "dfs-bootstrap/templates/workmemory/PROTOCOL.md": "dfs-bootstrap/scripts/bootstrap.py",
+    "dfs-bootstrap/templates/workmemory/work.log": "dfs-bootstrap/scripts/bootstrap.py",
 }
 
 
@@ -251,6 +273,22 @@ def parse_skill_file(skill_dir: pathlib.Path) -> tuple[dict, str]:
     return frontmatter, body
 
 
+def resolve_context_pointer(
+    skills_root: pathlib.Path, carrier: pathlib.Path, ptr: str
+) -> pathlib.Path:
+    """Where a `references/...` / `templates/...` pointer points, from the skill that carried it.
+
+    A `dfs-<name>/...`-qualified pointer resolves against the skills root; a bare one resolves
+    against the carrying skill. Rule 5 (does the target exist?) and Rule 13 (does anything point
+    AT it?) must agree on this, so both resolve through here rather than keeping two copies that
+    can drift apart.
+    """
+    if ptr.startswith("dfs/") or ptr.startswith("dfs-"):
+        skill_name, _, subpath = ptr.partition("/")
+        return skills_root / skill_name / subpath
+    return carrier / ptr
+
+
 def extract_context_pointers(text: str) -> set[str]:
     """`templates/<file>` / `references/<file>`, plain or `dfs[-<name>]/` qualified."""
     pattern = r"(?:dfs(?:-[a-z0-9\-]+)?/)?(?:templates|references)/[A-Za-z0-9_\-\./]+"
@@ -266,7 +304,7 @@ def extract_context_pointers(text: str) -> set[str]:
 
 
 class TestSkillsConformance(unittest.TestCase):
-    """12 rules across all DFS skills in this repo."""
+    """13 rules across all DFS skills in this repo."""
 
     @classmethod
     def setUpClass(cls):
@@ -402,11 +440,7 @@ class TestSkillsConformance(unittest.TestCase):
             except Exception:
                 continue
             for ptr in sorted(extract_context_pointers(body)):
-                if ptr.startswith("dfs/") or ptr.startswith("dfs-"):
-                    skill_name, _, subpath = ptr.partition("/")
-                    target = self.skills_root / skill_name / subpath
-                else:
-                    target = sdir / ptr
+                target = resolve_context_pointer(self.skills_root, sdir, ptr)
                 if not target.exists():
                     unresolved.append(
                         f"  - {sdir.name}: references '{ptr}', but '{target}' does not exist on disk."
@@ -418,29 +452,49 @@ class TestSkillsConformance(unittest.TestCase):
             )
 
     def test_rule_6_runtime_neutrality(self):
-        """Rule 6: no ~/.claude/agents/ hardcoding without a neutral fallback."""
+        """Rule 6: no `~/.claude/agents/` hardcoding without a neutral fallback.
+
+        Scope is SKILL.md + `templates/**.md` + `references/**.md`, matching Rules 8/10/11 — a
+        Claude-only route is no safer for being written in a reference file than in the body. Until
+        this was widened, the rule had zero subjects in the tree: the two skills that named the path
+        moved their dispatch prose into `dfs/references/subagent-dispatch.md`, so the rule's stated
+        intent was left unenforced exactly where the paths now live.
+
+        The pairing is checked **per file**, not per skill. A neutral keyword three files away does
+        not rescue a path hardcoded here — and per-file is what makes a probe possible at all, since
+        the one reference that legitimately names the path also names `delegate_task`.
+        """
         violations = []
         for sdir in self.skill_dirs:
-            try:
-                _, body = parse_skill_file(sdir)
-            except Exception:
-                continue
-            if "~/.claude/agents" in body or ".claude/agents" in body:
+            texts: dict[str, str] = {}
+            skill_md = sdir / "SKILL.md"
+            if skill_md.is_file():
+                texts["SKILL.md"] = skill_md.read_text(encoding="utf-8", errors="replace")
+            for sub in ("templates", "references"):
+                sub_dir = sdir / sub
+                if sub_dir.is_dir():
+                    for f in sorted(sub_dir.rglob("*.md")):
+                        texts[f"{sub}/{f.relative_to(sub_dir).as_posix()}"] = f.read_text(
+                            encoding="utf-8", errors="replace"
+                        )
+            for origin, text in texts.items():
+                if "~/.claude/agents" not in text and ".claude/agents" not in text:
+                    continue
                 has_fallback = (
-                    "delegate_task" in body
-                    or "neutral fallback" in body.lower()
-                    or "runtime fallback" in body.lower()
-                    or "runtime-neutral" in body.lower()
-                    or "standard delegate" in body.lower()
+                    "delegate_task" in text
+                    or "neutral fallback" in text.lower()
+                    or "runtime fallback" in text.lower()
+                    or "runtime-neutral" in text.lower()
+                    or "standard delegate" in text.lower()
                 )
                 if not has_fallback:
                     violations.append(
-                        f"  - {sdir.name}: hardcodes Claude agent paths (~/.claude/agents/) "
-                        f"without neutral fallback or standard delegate_task alternatives."
+                        f"  - {sdir.name}/{origin}: hardcodes Claude agent paths (~/.claude/agents/) "
+                        f"without a neutral fallback or standard delegate_task alternatives."
                     )
         if violations:
             self.fail(
-                f"Rule 6 violation: {len(violations)} skill(s) violate runtime neutrality:\n"
+                f"Rule 6 violation: {len(violations)} file(s) violate runtime neutrality:\n"
                 + "\n".join(violations)
             )
 
@@ -654,6 +708,105 @@ class TestSkillsConformance(unittest.TestCase):
         if violations:
             self.fail(
                 f"Rule 12 violation: {len(violations)} non-canonical vault/MCP call site(s):\n"
+                + "\n".join(violations)
+            )
+
+    def test_rule_13_on_demand_assets_are_routed_from_a_body(self):
+        """Rule 13: every shipped `references/` + `templates/` asset is reachable from a body.
+
+        Rules 1-12 all describe what a skill SAYS. None of them notices the opposite defect: a file
+        that ships, costs bytes in the clone, and that no body ever points a reader at. Rule 5 is
+        the same relation read the wrong way round — it checks that a pointer finds a file, never
+        that a file is found by a pointer. Measured, not assumed: planting an unreferenced
+        `dfs/references/orphan.md`, fixing the README's `refs×N` count and `git add`-ing it left
+        all 12 rules green.
+
+        Why `references/` and `templates/` and not `scripts/`: a script has its own reachability
+        semantics (it is invoked, or imported by another script), so a "must be mentioned in prose"
+        requirement would be wrong for a library module. Docs and templates have no such channel —
+        prose is the only way one reaches them.
+
+        Two ways to satisfy this: point at the file from a body, or declare it in
+        `CODE_ROUTED_ASSETS` with the program that reads it. The declaration self-invalidates, so it
+        cannot rot into a blanket mute.
+
+        A skill whose frontmatter does not parse is out of scope for this rule: its body cannot be
+        read, so it is impossible to tell "nothing points at these assets" from "I could not look".
+        Rule 2 owns that failure. Reporting an orphan anyway would be a false allegation — it sends
+        a developer to delete a good declaration — so the assets are skipped, and any declaration
+        they carry is treated as seen rather than stale.
+        """
+        bodies: dict[str, str] = {}
+        unreadable = set()
+        for sdir in self.skill_dirs:
+            try:
+                _, bodies[sdir.name] = parse_skill_file(sdir)
+            except Exception:
+                unreadable.add(sdir.name)
+
+        routed: set[tuple[str, str, str]] = set()
+        for carrier, body in bodies.items():
+            for ptr in extract_context_pointers(body):
+                target = resolve_context_pointer(self.skills_root, self.skills_root / carrier, ptr)
+                try:
+                    rel = target.relative_to(self.skills_root)
+                except ValueError:
+                    continue
+                parts = rel.parts
+                if len(parts) >= 3 and parts[1] in ("references", "templates"):
+                    # parts[0] is the owning skill; a cross-skill `dfs-x/...` pointer lands here too
+                    routed.add((parts[0], parts[1], "/".join(parts[2:])))
+
+        assets = []
+        for sdir in self.skill_dirs:
+            if sdir.name in unreadable:
+                continue
+            for sub in ("references", "templates"):
+                sub_dir = sdir / sub
+                if not sub_dir.is_dir():
+                    continue
+                for f in sorted(sub_dir.rglob("*")):
+                    if f.is_file() and "__pycache__" not in f.parts:
+                        assets.append((sdir.name, sub, "/".join(f.relative_to(sub_dir).parts)))
+
+        violations = []
+        seen_declared = set()
+        for owner, sub, rel in assets:
+            if (owner, sub, rel) in routed:
+                continue
+            key = f"{owner}/{sub}/{rel}"
+            consumer_rel = CODE_ROUTED_ASSETS.get(key)
+            if consumer_rel is None:
+                violations.append(
+                    f"  - {key}: no SKILL.md body points at it. Either reference it from a body, "
+                    f"or declare its consumer in CODE_ROUTED_ASSETS."
+                )
+                continue
+            seen_declared.add(key)
+            consumer = self.skills_root / consumer_rel
+            basename = pathlib.PurePosixPath(rel).name
+            if not consumer.is_file():
+                violations.append(
+                    f"  - {key}: declared as read by '{consumer_rel}', which does not exist."
+                )
+            elif basename not in consumer.read_text(encoding="utf-8", errors="replace"):
+                violations.append(
+                    f"  - {key}: declared as read by '{consumer_rel}', but that program never "
+                    f"mentions '{basename}' — the declaration is stale, remove it."
+                )
+
+        # Declarations belonging to an out-of-scope skill are not judged either way.
+        in_scope = {k for k in CODE_ROUTED_ASSETS if k.split("/", 1)[0] not in unreadable}
+        stale = sorted(in_scope - seen_declared)
+        if stale:
+            violations.append(
+                f"  - stale declaration(s) in CODE_ROUTED_ASSETS: {stale}. Each of these is now "
+                f"body-routed or no longer on disk, so the declaration is dead weight (and a mute "
+                f"waiting to swallow a future orphan). Remove the entry."
+            )
+        if violations:
+            self.fail(
+                f"Rule 13 violation: {len(violations)} unreachable on-demand asset(s):\n"
                 + "\n".join(violations)
             )
 

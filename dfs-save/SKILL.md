@@ -17,7 +17,7 @@ Harvest non-obvious engineering solutions, environment gotchas, and architectura
 
 ## The Ingestion Invariants (MUST)
 1. **Novelty Check (Pre-Save Deduplication)**: Query `search_vault(query="<topic>")` before saving. If a note with >70% similarity exists, propose updating the existing note instead of creating a duplicate draft.
-2. **Quality Gate (A-MAC)**: Reject trivial one-off bug fixes ("fixed typo in line 12"). MUST record: Symptom, Root Cause, Solution, and Defensive Rule.
+2. **Quality Gate (A-MAC)**: Reject trivial one-off bug fixes ("fixed typo in line 12"). The field schema lives in exactly one place — `dfs/references/a-mac-gate.md` — so read it there instead of reconstructing it from memory.
 3. **Structured YAML**: MUST include valid YAML frontmatter with `created`, `type: source-notes`, `status: draft`, `tags`, and `source`.
 
 ---

@@ -3,7 +3,7 @@
 **Date**: {YYYY-MM-DD}  
 **Status**: DRAFT | APPROVED  
 **Author**: {Author / Team}  
-**Target Path**: `docs/specs/{YYYY-MM-DD}-{topic}-design.md` (or `05-Projects/{project}/`)
+**Target Path**: `docs/specs/{YYYY-MM-DD}-{topic}-design.md` (or `08-Projects/{project}/`)
 
 ---
 

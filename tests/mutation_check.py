@@ -62,6 +62,18 @@ MUTATIONS = [
      "dfs-adr/SKILL.md", lambda t: t + "\nSee `templates/does-not-exist.md`.\n"),
     ("rule_6_runtime_neutrality",
      "dfs-adr/SKILL.md", lambda t: t + "\nSpawn from ~/.claude/agents/reviewer.md\n"),
+    # Rule 6's scope was widened from the body to templates/ + references/ because the two skills
+    # that named the Claude path moved their dispatch prose into a reference file, leaving the rule
+    # with zero subjects. Two probes, because the widening covers two directories: probing only the
+    # reference would leave the templates half of the extension unproven. Both targets deliberately
+    # lack every fallback keyword, so the injected path cannot be excused by a keyword elsewhere in
+    # the file — the rule pairs the path with its fallback per file, not per skill.
+    ("rule_6_runtime_neutrality",
+     "dfs/references/a-mac-gate.md",
+     lambda t: t + "\nSpawn every reviewer from `~/.claude/agents/code-reviewer.md`.\n"),
+    ("rule_6_runtime_neutrality",
+     "dfs-adr/templates/adr-template.md",
+     lambda t: t + "\nSpawn the author subagent from `~/.claude/agents/code-reviewer.md`.\n"),
     ("rule_7_related_skills_resolve_to_real_skills",
      "dfs-handoff/SKILL.md", lambda t: re.sub(
          r"(?m)^(\s*related_skills:).*$", r"\1 [dfs-does-not-exist]", t, count=1)),
@@ -81,10 +93,26 @@ MUTATIONS = [
      "dfs-adr/SKILL.md", lambda t: t + "\nCall `search_vault(\"x\")` first.\n"),
     ("rule_12_vault_mcp_call_sites_are_canonical",
      "dfs-adr/SKILL.md", lambda t: t + "\nCall `serch_vault(\"x\")` first.\n"),
+    # Rule 13 has two failure modes, so two probes. The first produces the orphan state — an asset
+    # sits on disk with nothing routing to it — by deleting the only pointer instead of by planting
+    # a file: the end state (and therefore what the rule must catch) is identical. Rule 5 stays
+    # green here on purpose, because no pointer is left to dangle, so any red is Rule 13's own.
+    ("rule_13_on_demand_assets_are_routed_from_a_body",
+     "dfs-adr/SKILL.md", lambda t: t.replace("templates/adr-template.md", "adr-template.md")),
+    # The second exercises the self-invalidation path: route one of the declared code-consumed
+    # templates from a body and the declaration becomes dead weight. The injected pointer resolves
+    # to a real file, so Rule 5 stays green and only the stale-declaration check can fire.
+    ("rule_13_on_demand_assets_are_routed_from_a_body",
+     "dfs-bootstrap/SKILL.md",
+     lambda t: t + "\nRead `templates/workmemory/PROTOCOL.md` before scaffolding.\n"),
     # A block-style list must fail loudly, not parse as an empty (vacuous-pass) declaration.
     # Attribution note: parse_skill_file RAISES on block lists; Rule 2 owns parse errors, while
     # Rules 9/11 skip unparseable skills (`except Exception: continue`). So the suite goes red via
     # rule_2, not rule_9 — the defect is caught, it is just reported by the parse guard.
+    # Rule 13 must NOT appear in this mutation's `also:` list. It reads bodies too, so an earlier
+    # version reported every asset of the broken skill as an orphan — a false allegation that would
+    # have sent someone to delete a good declaration. If `rule_13` shows up here again, that
+    # out-of-scope skip was lost.
     ("rule_2_frontmatter_schema",
      "dfs-adr/SKILL.md", lambda t: t.replace("    related_skills:",
                                              "    mcp_tools:\n      - search_vault\n    related_skills:", 1)),

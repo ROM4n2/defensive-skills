@@ -6,9 +6,9 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Skills-23-4B5563?style=flat-square" alt="Skills" />
-  <img src="https://img.shields.io/badge/Conformance-12%20rules-0969DA?style=flat-square" alt="Conformance rules" />
-  <img src="https://img.shields.io/badge/Tests-99%20passed-2EA44F?style=flat-square" alt="Tests" />
-  <img src="https://img.shields.io/badge/Mutation-16%2F16%20caught-2EA44F?style=flat-square" alt="Mutation harness" />
+  <img src="https://img.shields.io/badge/Conformance-13%20rules-0969DA?style=flat-square" alt="Conformance rules" />
+  <img src="https://img.shields.io/badge/Tests-104%20passed-2EA44F?style=flat-square" alt="Tests" />
+  <img src="https://img.shields.io/badge/Mutation-20%2F20%20caught-2EA44F?style=flat-square" alt="Mutation harness" />
   <img src="https://img.shields.io/badge/Dependencies-0%20(stdlib)-gray?style=flat-square" alt="Zero dependencies" />
   <img src="https://img.shields.io/badge/Python-3.11%20%7C%203.14-3776AB?style=flat-square" alt="Python" />
   <img src="https://img.shields.io/badge/License-MIT-gray?style=flat-square" alt="License MIT" />
@@ -95,13 +95,13 @@ python scripts/vault-inbox-consolidate.py --vault-path <知识库根> --dry-run
 
 | 技能 | 作用 | 前置 | MCP | 附带资产 |
 |---|---|---|---|---|
-| **主链** `dfs` | Route developer intent to the right Defensive Skills workflow. Use when the user asks for a coding task and you must decide which dfs skill to load, or when it is unclear where to start. | 需知识库 | — | refs×3 |
+| **主链** `dfs` | Route developer intent to the right Defensive Skills workflow. Use when the user asks for a coding task and you must decide which dfs skill to load, or when it is unclear where to start. | 需知识库 | — | refs×5 |
 | **主链** `dfs-plan` | Draft bite-sized TDD implementation plans from specs. Use when the user asks for an implementation plan, or before writing code for a multi-step feature. | 需知识库 | omni_search, get_code_template | tpl×1 |
 | **主链** `dfs-exec` | Execute TDD plans via isolated subagents with maker-checker. Use when an implementation plan exists and the user asks to execute or implement it. | 需知识库 | — | tpl×2 |
 | **主链** `dfs-debug` | Execute 4-step systematic root-cause debugging with a reproduction. Use when the user reports a bug, a failing test, or says something is broken. | 需知识库 | search_vault, save_inbox_draft | tpl×1 |
 | **主链** `dfs-save` | Harvest non-obvious engineering solutions into 99-Inbox drafts. Use when a debugging session or task just produced a reusable insight worth saving. | 需知识库 | search_vault, save_inbox_draft | tpl×1 |
 | **主链** `dfs-handoff` | Generate a session wrap-up and a 1-click continuation card. Use when the user wants to pause, hand off, or resume later in a fresh session. | 需知识库 | — | tpl×1 |
-| **主链** `dfs-team` | Orchestrate multi-expert subagent reviews into a consensus. Use when a design or plan needs several independent expert reviews and a merged verdict. | — | — | tpl×1 |
+| **主链** `dfs-team` | Audit code, a design, or a plan with a multi-domain subagent swarm, then collapse the findings into a single consensus report. Use when the target spans two or more specialist domains and needs several independent expert reviews. | — | — | tpl×1 |
 | `dfs-adr` | Draft and archive numbered Architecture Decision Records. Use when the user makes an architecture decision or asks to record one. | 需知识库 | — | tpl×1 |
 | `dfs-bootstrap` | Initialize a repository with security git hooks and DFS rule anchors. Use when starting a new repo or adding DFS guardrails to an existing one. | 需知识库 | — | tpl×2 scripts×1 |
 | `dfs-grill` | Stress-test an architecture through Dual-Lens Socratic inquiry. Use when the user wants their design challenged or pressure-tested before building. | 需知识库 | omni_search | — |
@@ -126,7 +126,7 @@ python scripts/vault-inbox-consolidate.py --vault-path <知识库根> --dry-run
 **别读这段，直接跑**——全部零依赖，不需要 pytest：
 
 ```bash
-python tests/test_skills_conformance.py    # 12 条规则 × 23 个技能        → exit 0
+python tests/test_skills_conformance.py    # 13 条规则 × 23 个技能        → exit 0
 python tests/mutation_check.py             # 给每条规则注入缺陷，必须被抓 → exit 0
 python tests/test_knowledge_server.py      # MCP 服务真实 stdio 协议      → exit 0
 python tests/test_vendored_scripts.py      # 台账 / 事务化归档 / 回滚     → exit 0
@@ -144,12 +144,13 @@ python tests/test_shipped_assets_tracked.py # 随包资产真被 git 跟踪（�
 
 * **文档也在门禁管辖内。** `test_docs_links.py` 拒绝悬空链接，也拒绝指向「刻意不入库」状态的链接；本仓库准备首个公开发布时它当场抓到两处真链接（README 当时还在链 `HANDOFF.md` 与 `WORKMEMORY/`）。这道门禁自己也做了变异验证：注入 5 个缺陷，全部被抓。
 
-* **没有变异测试的绿不算绿。** `mutation_check.py` 往一棵临时拷贝里注入 16 个缺陷（删文件、改 frontmatter、塞悬空指针、塞绝对路径、塞近似拼错……），断言每个都被**对应的那条规则**抓住，同时断言干净树**零失败**。规则从红转绿时必须同时补它自己的变异用例——本仓库刚刚就是这么做的：Rule 8 修好那一刻，夹具立刻报 `BASELINE MOVED`，因为它此前只靠"预期为红"覆盖，从没用例证明过它真能判红。
+* **没有变异测试的绿不算绿。** `mutation_check.py` 往一棵临时拷贝里注入 20 个缺陷（删文件、改 frontmatter、塞悬空指针、塞绝对路径、塞近似拼错……），断言每个都被**对应的那条规则**抓住，同时断言干净树**零失败**。规则从红转绿时必须同时补它自己的变异用例——本仓库刚刚就是这么做的：Rule 8 修好那一刻，夹具立刻报 `BASELINE MOVED`，因为它此前只靠"预期为红"覆盖，从没用例证明过它真能判红。
 * **豁免是声明，不是消音器。** 少数引用指向**故意不随包**的私有工具，它们登记在 `OPTIONAL_SCRIPT_POINTERS` 里；某条豁免一旦不再被任何技能引用，Rule 8 立刻判红——防止豁免表烂成集体消音器。
+* **同一条关系，反过来问也是门禁。** 规则 1–12 都在检查技能「说了什么」，没有一条会发现反面缺陷：一个随包、占着 clone 的字节、却没有任何正文把读者引过去的文件。Rule 5 管的是这条关系的一半——指针找得到文件；**谁也不管文件是否被指针找到**。实测：往 `dfs/references/` 放一个没人引用的文件、把 README 的 `refs×N` 计数改对、再 `git add`，12 条规则可以全绿。Rule 13 补上另一半。它能被满足的方式有两种：正文指过去，或在 `CODE_ROUTED_ASSETS` 里声明读它的那个程序——而声明同样自失效（资产变成正文可达、或程序不再提及它，声明即失效判红）。`bootstrap.py` 读取的 4 个 `WORKMEMORY/` 模板就是这样声明的：正文路由到脚本、脚本再读模板，这条链是真的，硬要求正文逐个指过去只会制造假阳性。
 * **不许引用只在自己机器上解析得通的东西。** 规则 8/10 明确禁止把 `scripts/...` 借给仓库外的路径、禁止硬编码知识库绝对路径。
 * **本机全绿 ≠ 陌生人 clone 能用。** `test_shipped_assets_tracked.py` 不测磁盘，测**「clone 下来会拿到什么」**：随包路径下不允许有被 `.gitignore` 吞掉的文件（构建缓存除外），也不允许有忘了入库的文件。这道门禁是**补票**——`.gitignore` 里一条没加锚的 `WORKMEMORY/` 在**任意深度**匹配，而 git 在 Windows 上忽略匹配**不区分大小写**，于是静默吞掉了 `dfs-bootstrap/templates/workmemory/` 那 4 个模板，它们**从未进过任何一次 commit**；本机十套门禁全绿（文件就躺在磁盘上），而别人的 clone 里 `dfs-bootstrap` 直接 `exit 2: template(s) missing`。
 
-### 12 条一致性规则
+### 13 条一致性规则
 
 | # | 断言 |
 |---|---|
@@ -158,13 +159,14 @@ python tests/test_shipped_assets_tracked.py # 随包资产真被 git 跟踪（�
 | 3 | `description` 含显式触发子句（`Use when …`）、≤ 320 字符、以句点结尾、不含营销词 |
 | 4 | 路由技能 `dfs` 必须 `disable-model-invocation: true` |
 | 5 | `templates/` 与 `references/` 里的指针必须在磁盘上解析得到 |
-| 6 | 不得硬编码 `~/.claude/agents/` 这类路径而不给中性回退 |
+| 6 | 不得硬编码 `~/.claude/agents/` 这类路径而不给中性回退；扫描范围含正文 + `templates/` + `references/`，**逐文件**配对 |
 | 7 | `related_skills` 每项都指向真实技能或白名单内的外部技能，且不得重复列出 |
 | 8 | 每个 `scripts/<file>` 引用必须真实随包；**永不外借** |
 | 9 | 声明的 `mcp_tools` 只能是规范工具名 |
 | 10 | 禁止硬编码知识库绝对路径，改用 `{vault_root}` / 环境变量 |
 | 11 | 正文里调用过 `tool(...)` 就必须在 `mcp_tools` 里声明 |
 | 12 | 形似 MCP 的调用点必须规范；近似拼错（如 `serch_vault`）直接拒绝 |
+| 13 | 随包的 `references/` / `templates/` 资产必须能从某个正文到达；只能被程序读取的，把消费者声明出来（声明会自失效） |
 
 ---
 

@@ -67,7 +67,7 @@ A **shallow module** has a complex interface but weak implementation (many publi
 
 - Reduce the public surface: can callers reach the same outcome with fewer exposed functions/methods?
 - Move orchestration logic inward: if the caller must call A then B then C in order, that sequence belongs inside the module.
-- The goal: a module that is easy to use correctly and hard to use incorrectly.
+- **Done when** you can name, for each public function, the misuse a caller could still make — and a type error or a test catches every one of them. An uncaught misuse means the interface is still too wide.
 
 ### Step 4: Verify Green + Atomic Commit (MUST)
 1. Run the full test suite. **Exact same passing count as Step 0.** If any test broke, revert the last atomic edit and re-examine.

@@ -29,7 +29,7 @@ Classify the task upfront and announce it:
 ---
 
 ## Phase 2: Vault & Codebase Knowledge Grounding
-1. Query `omni_search(query, scope='ladder')` to check if similar problems were already solved in `05-Projects/` or `01-Rules/`.
+1. Query `omni_search(query, scope='ladder')` to check if similar problems were already solved in `08-Projects/` or `01-Rules/`.
 2. Inspect codebase dependencies and standard library capabilities to ground ideation in reality.
 
 ---
@@ -51,7 +51,7 @@ Propose **2 to 3 distinct approaches** with explicit trade-offs:
 
 ## Phase 4: Spec Generation & Self-Review
 On user approval of the approach:
-1. Generate design document: `docs/specs/YYYY-MM-DD-<topic>-design.md` (or `05-Projects/{project}/`).
+1. Generate design document: `docs/specs/YYYY-MM-DD-<topic>-design.md` (or `08-Projects/{project}/`).
 2. Load and follow the design specification schema defined in `templates/spec-template.md` via `read_file(path='templates/spec-template.md')`.
 3. **Required Schema**:
    - `1. Problem Statement & User Value` (Why build this, target scenario)

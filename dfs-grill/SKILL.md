@@ -70,8 +70,7 @@ Interview and stress-test the developer's proposed plan, architecture, or design
 
 ### Stage 1: Dual-Lens Background Inquest (Parallel Fan-out)
 When the proposal is complex enough that background research pays for itself, dispatch the relevant seats concurrently across specialists.
-- **Runtime-neutral dispatch**: In Hermes or standard agent environments, dispatch subagents via `delegate_task` with targeted role goals, scope, and instructions corresponding to the seat.
-- **Claude Code fallback**: In Claude Code environments, dispatch the corresponding subagent seats (`~/.claude/agents/` as optional Claude-specific fallback) using the `subagent_type` values below.
+- **Dispatch one subagent per lens, runtime-neutrally**: `delegate_task` is the portable path; `subagent_type` is the optional Claude Code fallback. The variants and the `subagent_type` rule live in `dfs/references/subagent-dispatch.md`.
 
 | Lens | Subagent Role (`subagent_type`) | Grills on |
 |---|---|---|
@@ -80,6 +79,8 @@ When the proposal is complex enough that background research pays for itself, di
 | Backend & Concurrency | `code-reviewer` | Thread/goroutine lifecycle, lock scope, transaction boundaries, silent errors |
 | Storage & DBA | `dba-optimizer` | Schema shape, index coverage, query cost, lock ordering |
 | SRE & Resilience | `sre-resilience` | Downstream timeouts, retries, failure modes, resource bounds |
+
+**`subagent_type` names the base agent only** — this lens's job is its Grills-on column, and `code-reviewer` here runs a concurrency review, not the Red/Yellow protocol. See `dfs/references/subagent-dispatch.md`.
 
 **Only dispatch the lenses the proposal actually touches.** For a small or purely local design decision, skip Stage 1 entirely and go straight to Stage 3 — a five-agent panel on a two-file change is theatre, and the specialists will manufacture findings to justify their seat.
 
@@ -108,7 +109,7 @@ Synthesize the specialists' findings into tight, numbered questions:
 ➡️ **Recommended**: [Concrete defense strategy]
 ```
 
-Recompute the frontier on each user reply. Move outward until the frontier is completely resolved.
+Recompute the frontier on each user reply. Stop when every frontier point carries a chosen option in the draft: a point that still has an open question and no chosen option *is* the frontier, so the cone is closed only when none remain.
 
 ---
 
@@ -116,8 +117,8 @@ Recompute the frontier on each user reply. Move outward until the frontier is co
 Summarize consensus into a formal **Architecture Decision Record (ADR-000x)**:
 - Context, Decision Drivers (both User & Tech), Considered Options, Pros/Cons, Decision Outcome, and Consequences.
 - Dual-Track Ingestion Gate:
-  - Option 1: Draft in `08-Inbox/`
-  - Option 2: Direct promotion to `05-Projects/{project}/01-ADR/` or `01-Rules/`.
+  - Option 1: Draft in `99-Inbox/`
+  - Option 2: Direct promotion to `08-Projects/{project}/01-ADR/` or `01-Rules/`.
 
 ---
 

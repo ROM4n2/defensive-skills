@@ -1,6 +1,6 @@
 ---
 name: dfs-team
-description: Orchestrate multi-expert subagent reviews into a consensus. Use when a design or plan needs several independent expert reviews and a merged verdict.
+description: Audit code, a design, or a plan with a multi-domain subagent swarm, then collapse the findings into a single consensus report. Use when the target spans two or more specialist domains and needs several independent expert reviews.
 version: 0.2.0
 license: MIT
 platforms: [linux, macos, windows]
@@ -12,25 +12,66 @@ metadata:
 
 # Multi-Expert Swarm Review & Consensus Synthesis
 
-Orchestrate a full-spectrum domain-specialist subagent swarm to audit code in parallel across **User Experience + Architecture + Database + Performance + Security**, synthesizing an actionable verdict.
+Orchestrate a full-spectrum domain-specialist subagent swarm to audit a target — code, a design, or a plan — in parallel across **User Experience + Frontend + Database + Performance + Code Quality + Availability**, synthesizing an actionable verdict.
+
+## 🚪 Entry Gate — this skill, or `/dfs-review`?
+
+Both skills audit. They split on **breadth**, and on **what the output is allowed to do**:
+
+| | `/dfs-review` | this skill |
+|---|---|---|
+| Axes | **one** — code quality and language invariants | **two or more** of the domains tabled below |
+| Input | a **diff / pull request** | any target — a diff, a module, a repo, a design, a plan |
+| Output | a **gate**: a RED CARD halts the commit | a **report**: P0/P1/P2 plus a consensus action plan, no halt |
+
+- **This skill** — the target plausibly touches **two or more** of the domains below.
+- **`/dfs-review`** — a code diff on a single surface: one language, one layer, no schema, UI or
+  availability angle. One adversarial reviewer goes deeper on that one axis, for a fraction of the cost.
+
+**A design or a plan is a valid target here.** Seats are picked by what the target contains, so a
+design with no code yet runs the seats that do not need code (`product-ux`, `sre-resilience`,
+`code-reviewer`) and skips the ones that do (`dba-optimizer`, `perf-profiler`) — record the skips in
+the report. `/dfs-grill` remains the better tool while a design is still being *shaped*; this skill
+reports on a design that already exists.
+
+A swarm costs one fresh context per seat, plus one independent skeptic read per P0/P1 finding.
+
+**The receipt (MUST).** For every seat you skip, name the **artifact class absent from the target** —
+`skipped dba-optimizer: no SQL, migration or data-model file in the diff` — never `not relevant`. A
+reason that would be true of every target is not a reason. For the seats you run, name the domain you
+judged the target to touch. Both belong in the report header, not in prose.
+
+---
 
 ## Phase 1: Swarm Dispatch (Parallel Fan-out)
 Dispatch the relevant specialist seats concurrently:
-- **Runtime-neutral dispatch**: In Hermes or standard multi-agent environments, dispatch subagents using `delegate_task` with targeted role goals, scope, and instructions corresponding to the seat.
-- **Claude Code fallback**: In Claude Code environments, dispatch subagent seats (`~/.claude/agents/` as optional Claude-specific fallback) using the `subagent_type` values below.
+- **Dispatch one subagent per seat, runtime-neutrally**: `delegate_task` is the portable path; `subagent_type` is the optional Claude Code fallback. The runtime variants, the `subagent_type` rule and the **read-scope declaration** each seat owes live in `dfs/references/subagent-dispatch.md`.
 
-| Seat | Subagent Role (`subagent_type`) | Covers |
-|---|---|---|
-| User Experience & Product | `product-ux` | Real need vs imagined, journey friction, error messaging |
-| Frontend & State Systems | `frontend-architect` | Async races, offline/reconnect, render cost, leaks |
-| Database & Storage | `dba-optimizer` | Index coverage, EXPLAIN, locks, transaction scope |
-| Performance & Concurrency | `perf-profiler` | Data races, hot paths, allocation pressure, contention |
-| Code Quality & Standards | `code-reviewer` | Red/Yellow cards, Ladder of Reuse, YAGNI, dead-green tests |
-| SRE & Availability | `sre-resilience` | Timeouts, retries, failure modes, resource bounds, secrets |
-| Codebase recon (optional) | `codebase-researcher` | Pre-flight inventory when the target scope is unclear |
-| Code-structure recon (optional) | `codegraph-explorer` | Call chains and impact pre-recon when the target involves "who calls X / what breaks if W changes" |
+| Seat | Subagent Role (`subagent_type`) | Owns (primary claim) | Cross-checks |
+|---|---|---|---|
+| User Experience & Product | `product-ux` | Real need vs imagined, journey friction, error messaging | — |
+| Frontend & State Systems | `frontend-architect` | Render cost, offline/reconnect, **client-state races**, client-side leaks | — |
+| Database & Storage | `dba-optimizer` | Index coverage, EXPLAIN, transaction scope, **lock scope**, query cost | — |
+| Performance & Concurrency | `perf-profiler` | **memory-level data races**, hot paths, allocation pressure, mutex contention | DB lock contention → `dba-optimizer` |
+| Code Quality & Standards | `code-reviewer` | Red/Yellow cards, Ladder of Reuse, YAGNI, dead-green tests, **hardcoded secret** | — |
+| SRE & Availability | `sre-resilience` | Timeouts, retries, failure modes, resource bounds | runtime secret exposure → `code-reviewer` |
+| Codebase recon (optional) | `codebase-researcher` | Pre-flight inventory when the target scope is unclear | — |
+| Code-structure recon (optional) | `codegraph-explorer` | Call chains and impact pre-recon when the target involves "who calls X / what breaks if W changes" | — |
 
-**Pick seats by what the target actually contains.** A pure-frontend diff does not need `dba-optimizer`; a SQL migration does not need `product-ux`. Dispatching all seats at every target burns tokens and produces filler findings — state which seats you skipped and why (template field, not prose).
+**`subagent_type` names the base agent only** — this seat's job is its Owns column. See `dfs/references/subagent-dispatch.md`.
+
+**Pick seats by what the target actually contains.** A pure-frontend diff does not need `dba-optimizer`; a SQL migration does not need `product-ux`. Dispatching all seats at every target burns tokens and produces filler findings. Record the roster
+and the per-skip evidence in the report header; the required format is in the Entry Gate above.
+
+**One concept, one owner.** A cross-check seat may still report, but its finding is the secondary
+reading, and the collapse rule folds it into the owner's line. Note that two of the four apparent
+overlaps were never one concept: **races split by kind** — client-state races belong to
+`frontend-architect`, memory-level data races to `perf-profiler` — and a *lock* means "transaction
+scope too wide" to `dba-optimizer` while it means "measured contention" to `perf-profiler`. Only the
+second pair is a genuine shared concept, and it now has a declared owner.
+
+A seat reporting **outside** its Owns column is a signal: the target contains something the roster has
+no owner for. Say so, instead of letting the nearest seat absorb it.
 
 If the target scope is vague, run `codebase-researcher` first. If the target involves call-chain or impact questions, run `codegraph-explorer` first (in parallel with `codebase-researcher` when both apply), then fan out the specialists against what the recon found.
 
@@ -58,6 +99,20 @@ Classify all discovered findings into strict severity tiers:
 
 ## Phase 3: Unified Synthesis Report
 Load and follow the Executive Expert Panel Synthesis Card template from `templates/swarm-synthesis-report.md` via `read_file(path='templates/swarm-synthesis-report.md')`.
+
+### Collapse before you synthesize (MUST)
+
+The seat table overlaps by construction. One missing index is at once an index-coverage finding
+(`dba-optimizer`), a hot-path finding (`perf-profiler`), and a timeout risk (`sre-resilience`).
+Printed raw, that reads like a more thorough report while being one defect said three times and
+weighted three times.
+
+- **One underlying defect → one finding.** When several seats report the same defect, merge them into
+  a single line naming **every** proposing seat, and keep the **highest** severity proposed.
+- Keep the most concrete failure scenario and drop the paraphrases of it.
+- **Checkable:** the report's finding count must be **strictly less than** the sum of the seats'
+  finding counts. Both numbers are recorded in the report header. Equal numbers mean no collapse
+  happened — what follows is a concatenation, not a synthesis, and its verdict is not yet trustworthy.
 
 Key reporting rules:
 - **Dispatched vs Skipped**: Explicitly record which seats ran and which seats were skipped and why.

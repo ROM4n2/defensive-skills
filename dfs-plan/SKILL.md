@@ -44,6 +44,8 @@ Key required sections in `implementation_plan.md`:
 ---
 
 ## Phase 3: Downstream Dispatch
+Before dispatching, check the plan is complete: the file exists; every task carries its Files, its Interfaces and its Subagent Prompt Scaffold; and every task left in **Fog of War** names the unknown blocking it.
+
 Prompt user: `Plan generated with subagent prompt scaffolds. Initialize ledger and execute with /dfs-exec?`
 
 ## 🧪 Worked example — one task with its exact interface contract

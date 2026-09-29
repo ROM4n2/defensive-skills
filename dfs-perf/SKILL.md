@@ -19,6 +19,7 @@ Use the bundled profiling runner for automated detection and execution:
 ```bash
 python scripts/benchmark_runner.py --dir . --lang auto --race
 ```
+Take the protocol below that the `--lang auto` verdict selects, and touch only that one.
 
 ---
 
@@ -55,4 +56,4 @@ python scripts/benchmark_runner.py --dir . --lang auto --race
 ---
 
 ## Report Schema Archival
-Load `templates/perf-report-schema.md` via `read_file(path='templates/perf-report-schema.md')` to format the final Before vs After speedup evaluation card.
+Load `templates/perf-report-schema.md` via `read_file(path='templates/perf-report-schema.md')` to format the final Before vs After speedup evaluation card. The card is done when it carries two numbers measured from the same command — before and after. A speedup claim backed by one run is not a result.

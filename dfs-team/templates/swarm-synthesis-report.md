@@ -3,7 +3,9 @@
 **Date**: [YYYY-MM-DD]  
 **Target Scope / PR**: [Component / Diff Path]  
 **Seats Dispatched**: <list of active specialist seats>  
-**Seats Skipped (why)**: <list of skipped seats and rationale>
+**Seats Skipped (MUST — artifact evidence, not "not relevant")**: <seat>: <artifact class absent from the target>
+**Findings**: <M> after collapsing <N> raw seat findings — M must be < N
+**Read scope**: <per seat: files opened + line ranges; mark outside-target reads and give the reason>
 
 ---
 

@@ -40,7 +40,7 @@ The ADR document structure comprises 5 core sections:
 
 ### Phase 3: Dual-Track Archiving
 - Call `save_inbox_draft` MCP to create an entry in `99-Inbox/`, or directly write to `08-Projects/{project}/01-ADR/`.
-- Update the project's `README.md` or `AGENT-CONTEXT.md` with the new ADR reference.
+- Update the project's `README.md` or `.agent-context.md` with the new ADR reference.
 
 ## 🧪 Worked example — ADR-0004
 

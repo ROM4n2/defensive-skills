@@ -25,7 +25,7 @@ loudly instead of failing silently at runtime.
 | `get_rule_snippet` | Pull one section of a rules file (token-cheap JIT slice) | `dfs-review`, `dfs-refactor` |
 | `get_code_template` | Extract a pure production code template by name + language | `dfs-plan`, `dfs-tdd` |
 | `list_standards` | Enumerate available standards, rules, and interview material | `dfs-onboard`, `dfs-plan` |
-| `save_inbox_draft` | Write a draft into `99-Inbox/` (A-MAC admission gate) | `dfs-save`, `dfs-debug` |
+| `save_inbox_draft` | Write a draft into `99-Inbox/` (must satisfy the A-MAC gate — see `dfs/references/a-mac-gate.md`) | `dfs-save`, `dfs-debug` |
 | `promote_inbox_draft` | Promote an `99-Inbox/` draft into its destination directory | `dfs-inbox-consolidate` |
 | `vault_proactive_scan` | Scan a project for unresolved TODOs and debt | `dfs-onboard`, `dfs-research` |
 

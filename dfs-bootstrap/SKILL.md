@@ -16,11 +16,12 @@ metadata:
 > **Invocation — explicit only.** `disable-model-invocation: true` is honored by Claude Code and ignored
 > elsewhere, so the same rule is stated here in the file itself: do not auto-select this skill
 > on your own — wait until the user asks for it, or until an already-running DFS skill routes
-> here. (See `dfs/references/harness-field-mapping.md`.)
+> here. When you need to know which harness actually honors a given frontmatter key — and what
+> to use in its place where one is ignored — read `dfs/references/harness-field-mapping.md`.
 
 Initialize any new or existing repository (`<your projects root>/{project}`) with zero-leak secret detection git hooks and 3-line Defensive Skills knowledge anchors.
 
-## The 3-Phase Bootstrap Protocol
+## The 4-Phase Bootstrap Protocol
 
 ### Phase 1: Security Git Hooks & .gitignore Protection (MUST)
 1. Verify `.gitignore` contains all sensitive patterns (the list MUST stay in sync with `REQUIRED_IGNORES` in `scripts/bootstrap.py` — that script is the single source of truth, and `tests/test_bootstrap_script.py` fails if this repo's own `.gitignore` drifts from it):

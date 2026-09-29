@@ -17,9 +17,23 @@ Conduct thorough, unsparing code review on a git diff or pull request against De
 
 **Core Invariant:** The reviewer reports, the caller fixes. Every finding must have a concrete failure scenario. Anti-sycophancy: zero performative praise.
 
+## 🚪 Before you start — is this the right reviewer?
+
+This skill is the **narrow, deep gate**: one adversarial reviewer, one axis, a diff as input, and a
+verdict allowed to halt the commit.
+
+- Keep it here for a code diff on a **single surface** — one language, one layer, no schema, UI or
+  availability angle.
+- Hand off to **`/dfs-team`** when the target spans **two or more** domains (database + performance +
+  availability …), or is not a diff at all (a module, a repo, a design, a plan). A swarm covers the
+  breadth; it produces a report, not a halt.
+- Hand off to **`/dfs-grill`** while a design is still being shaped.
+
+Two reviewers on one single-surface diff is waste; one reviewer on a six-domain change is a blind spot.
+
 ---
 
-## The 3-Step Review Procedure
+## The 4-Step Review Procedure
 
 ### Step 1 — Capture Git Diff
 Run the inspection using terminal:
@@ -39,7 +53,7 @@ the rules from memory.
 
 ### Step 3 — Dispatch Independent Reviewer Subagent
 Load the reviewer scaffold from `templates/code-reviewer-prompt.md` via `read_file(path='templates/code-reviewer-prompt.md')`.
-Dispatch an isolated subagent via `delegate_task` (Hermes) or `invoke_subagent` (Claude Code / generic):
+Dispatch one isolated subagent (`delegate_task` is the portable path; runtime variants in `dfs/references/subagent-dispatch.md`):
 - Provide ONLY the diff content and the Red/Yellow card protocol;
 - Reviewer runs with read-only permissions (zero source code edits);
 - Reviewer evaluates code strictly against Red Card blockers and Yellow Card polish items.

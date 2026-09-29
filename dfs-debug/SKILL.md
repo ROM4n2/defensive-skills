@@ -48,14 +48,14 @@ Query Defensive Skills for known gotchas and workarounds:
 
 ### Step 3: Root-Cause Fix & Defense
 1. Identify the fundamental flaw (e.g. data race, nil pointer, unhandled encoding, expired context).
-2. Implement surgical fix in production code.
+2. Implement the fix in production code. *Surgical* is the criterion: the diff touches only the lines the root cause from Step 3 names, and the repro from Step 1 is the thing you re-run to judge it.
 3. Run the repro script / failing test and verify it now passes (GREEN).
 
 ### Step 4: Regression Lock & Self-Healing Ingestion (MUST)
 1. **Promote to Permanent Regression Test**: Move reproduction script into permanent unit test suite under `tests/`.
 2. **Automated Self-Healing Loop (A-MAC Gate)**:
    If the bug stems from a non-intuitive root cause (concurrency race condition, unexpected API signature drift, hidden runtime trap, or memory leak):
-   - Automatically compose an A-MAC draft formatted with Symptom, Root Cause, Solution, Defensive Rule, and Execution Receipt.
+   - Automatically compose a draft that satisfies the A-MAC gate (`dfs/references/a-mac-gate.md`), appending the Execution Receipt that this step produces.
    - Dispatch `save_inbox_draft(title=..., content=..., tags=...)` or persist directly to `99-Inbox/YYYY-MM-DD-{kebab-topic}.md`.
    - Announce: `✅ Non-intuitive pitfall self-healed: persisted to 99-Inbox/ with regression proof.`
 

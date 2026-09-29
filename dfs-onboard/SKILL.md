@@ -33,7 +33,7 @@ Quickly orient an AI Agent on an unfamiliar or existing repository (`<your proje
 ### Phase 2: Symbol Topology & Key Path Mapping
 Inspect directory structure and build symbol index:
 1. Locate core entrypoints (`main.go`, `app.py`, `src/index.ts`).
-2. Map data flow: Request ➔ Route ➔ Controller ➔ Service ➔ Repository ➔ DB.
+2. Map data flow: Request ➔ Route ➔ Controller ➔ Service ➔ Repository ➔ DB. Done when every hop in that chain carries a real `file:line` — a hop you cannot locate is an unmapped layer, not an absent one.
 3. Identify existing wheels (The Ladder of Reuse level 1).
 
 ---
