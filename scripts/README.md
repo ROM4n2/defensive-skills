@@ -55,6 +55,37 @@ Three rules make that safe rather than convenient:
   never leave the root. `tests/test_vendored_scripts.py::TestDeletionBounds` pins all three
   behaviors, including the refusal, so the bound cannot be quietly relaxed.
 
+### Archival semantics: a refused draft is never deleted
+
+The consolidator files drafts in one transaction. Two rules decide what survives, and both exist
+because the alternative silently loses content:
+
+- **A target collision is refused, not resolved.** Two drafts whose titles slugify to the same
+  destination (`06-Sources/WINDOWS-GBK-乱码修复.md`) would otherwise queue two writes to one path,
+  and the in-memory plan keeps only the last — the first draft's text disappearing from the inbox
+  *and* from the archive. Such a draft comes back as `action: conflict`, its original stays in the
+  inbox, and the run reports it. Rename one, or merge them by hand.
+  (An *existing* target on disk is still overwritten — that is a re-archive, and the transaction
+  snapshots the old file first. Only same-run collisions are refused.)
+- **The original is deleted only when the archival actually succeeded** (`ok` and not `skip`). A
+  failed or skipped draft keeps its file: otherwise "not archived" silently becomes "content gone".
+
+### Backup retention is explicit
+
+`vault_transaction.py` keeps a durable journal per transaction and a backup directory holding the
+original bytes of every overwritten or deleted file. The journal stays forever (it is the record,
+and holds hashes, not content); **the backup directories grow one full copy per transaction**, so
+cleaning them up is a call you make, not a default:
+
+```python
+from vault_transaction import prune_backups
+prune_backups(vault_root, keep_last=1)   # drop every backup but the newest; journals untouched
+```
+
+It is not automatic because a backup is the only copy of the original content — deleting them by
+default would quietly remove the ability to recover. `rollback()` after a prune fails loudly rather
+than raising a bare `FileNotFoundError`.
+
 ## Optional integrations (deliberately NOT shipped)
 
 These are referenced by skills but are **not** in this repo, because each one inspects a knowledge
@@ -101,5 +132,5 @@ port. Three marks make every divergence greppable — `grep -rn "DFS-PORT\|ponyt
 ```bash
 python tests/test_vendored_scripts.py      # ledger + transaction + archival + deletion bounds (17)
 python tests/test_bootstrap_script.py      # bootstrap.py against a temp repo: idempotency, no clobber
-python tests/test_skills_conformance.py    # 12 rules over all 23 skills, incl. these pointers
+python tests/test_skills_conformance.py    # 13 rules over all 23 skills, incl. these pointers
 ```

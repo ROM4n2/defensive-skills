@@ -538,6 +538,21 @@ def _archive_new_file(vault_root, draft, dry_run,
             "message": f"[DRY-RUN] 将创建 {target_path_rel}{exists_tag}",
         }
 
+    # 同一轮里另一篇草稿已登记同一目标（标题 slug 相同）→ 必须拦，不能静默让后到者赢。
+    # 计划内 stage_write 是后写覆盖前写，而两篇原件都会被登记删除，先到那篇的全文会永久丢失。
+    # 只拦"本轮计划内"的碰撞：磁盘上已存在的目标仍按既有约定覆盖（那是重归档，且原文件已被
+    # 事务快照，语义不同）。
+    if plan is not None and target_path in plan.writes:
+        return {
+            "ok": False,
+            "action": "conflict",
+            "target": target_path_rel,
+            "message": (
+                f"目标冲突：本轮另一篇草稿已登记 {target_path_rel}（标题 slug 相同）。"
+                f"同名草稿不会自动合并——请改标题，或先人工合并成一篇。原文件保留未删。"
+            ),
+        }
+
     # 目录创建在事务外（目录可能已含既有内容，不可事务回滚）；
     # commit 失败仅残留空目录，属可接受残留。
     target_path.parent.mkdir(parents=True, exist_ok=True)
@@ -644,10 +659,14 @@ def consolidate(vault_root: Path, target_file=None, dry_run=True, execute=False,
             print(f"      Target: {a['target']['name']} → {a['target_path']}")
             print(f"      Action: {arch_result['action']} — {arch_result['message']}")
 
-        # 删除原件
-        del_result = _delete_original(Path(vault_root / a["file"]), dry_run, plan)
-        if not as_json and execute:
-            print(f"      Delete: {del_result['message']}")
+        # 删除原件——只在归档真的成立时。归档失败/冲突/跳过还把原件删掉，等于把
+        # "没归档成功"升级成"内容没了"：草稿既不在 Inbox、也不在目标。
+        if arch_result["ok"] and arch_result["action"] != "skip":
+            del_result = _delete_original(Path(vault_root / a["file"]), dry_run, plan)
+            if not as_json and execute:
+                print(f"      Delete: {del_result['message']}")
+        elif not as_json:
+            print(f"      Delete: 跳过（归档未成立：{arch_result['action']}）")
 
         row = {
             "file": a["file"],
@@ -667,7 +686,9 @@ def consolidate(vault_root: Path, target_file=None, dry_run=True, execute=False,
         try:
             _commit_plan(vault_root, plan,
                          extra_root=inbox_dir if not inbox_dir.is_relative_to(vault_root) else None)
-        except TransactionError as exc:
+        except Exception as exc:
+            # 捕获面不能只认 TransactionError：commit 阶段的 OSError（磁盘满/权限/文件被占用）
+            # 同样已由 _finalize 回滚，但此前会以裸 traceback 退出，把"已回滚"读成"崩溃"。
             print(
                 f"❌ 归档事务提交失败，已整体回滚（无半成品写入）: {exc}",
                 file=sys.stderr,

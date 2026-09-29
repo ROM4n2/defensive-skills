@@ -231,6 +231,43 @@ class TestInboxConsolidate(unittest.TestCase):
         self.assertEqual(p.returncode, 0, f"tier 3 was not discovered from cwd: {p.stderr}")
         self.assertIn("2026-09-27-local.md", p.stdout)
 
+    def test_11_a_title_collision_refuses_instead_of_overwriting(self):
+        """Two drafts whose titles slugify to the same target must not silently clobber.
+
+        The create path decided "overwrite?" from `target_path.exists()` on DISK, while the
+        in-memory plan is where the writes actually queue — so two same-titled drafts, neither of
+        which exists on disk yet, both took the create branch and the second `stage_write` replaced
+        the first's content. Both originals were then staged for deletion: the first draft's text
+        was lost from the inbox AND from the archive.
+
+        Order-independent assertions on purpose: `99-Inbox/*.md` comes from a glob, so which draft
+        is processed first is not guaranteed. The property under test is that NEITHER draft's text
+        disappears — not which one won.
+        """
+        collision = DRAFT_BODY.replace("cp936 codec", "ZEBRA marker")
+        (self.root / "99-Inbox" / "2026-09-28-same-title.md").write_text(collision, encoding="utf-8")
+
+        p = self.cli("--execute")
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertIn("冲突", p.stdout, "the collision was not reported")
+
+        archived = sorted((self.root / "06-Sources").glob("*.md"))
+        self.assertEqual(len(archived), 1, f"expected one archived note, got {archived}")
+        archived_text = archived[0].read_text(encoding="utf-8")
+
+        left = sorted((self.root / "99-Inbox").glob("*.md"))
+        self.assertEqual(len(left), 1, f"the refused draft was deleted too: {left}")
+        left_text = left[0].read_text(encoding="utf-8")
+
+        # One marker per side, and they must be different markers: nothing was lost.
+        marker_a, marker_b = "cp936 codec", "ZEBRA marker"
+        self.assertNotEqual(marker_a in archived_text, marker_b in archived_text,
+                            "the archived file carries both drafts merged, or neither")
+        self.assertNotEqual(marker_a in left_text, marker_b in left_text,
+                            "the surviving draft carries both markers, or neither")
+        self.assertNotEqual(marker_a in archived_text, marker_a in left_text,
+                            "the same draft is on both sides — the loser's content is gone")
+
     def test_10_the_drop_box_marker_is_never_treated_as_a_draft(self):
         drop = self.make_dropbox()
         (drop / "README.md").write_text("# DFS draft drop box\n", encoding="utf-8")
@@ -316,6 +353,66 @@ class TestDeletionBounds(unittest.TestCase):
             with self.vt.VaultTransaction(self.root, tx_id="tx-write", extra_roots=[self.elsewhere]) as tx:
                 tx.stage(outside, new_text="nope")
         self.assertFalse(outside.exists(), "the extra root leaked into the write path")
+
+
+class TestBackupRetention(unittest.TestCase):
+    """Backups grow one full copy per transaction; pruning is explicit, and the journals stay.
+
+    Deliberately NOT automatic: a backup holds the only copy of the original content of an
+    overwritten or deleted file (the journal keeps hashes, not bytes). Deleting them by default
+    would quietly remove the ability to recover, so the caller asks.
+    """
+
+    def setUp(self):
+        import vault_transaction as vt
+        self.vt = vt
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = pathlib.Path(self._tmp.name) / "kb"
+        self.root.mkdir()
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _one_tx(self, tx_id: str, marker: str) -> None:
+        target = self.root / f"{tx_id}.md"
+        target.write_text(f"original {tx_id}\n", encoding="utf-8")
+        with self.vt.VaultTransaction(self.root, tx_id=tx_id) as tx:
+            tx.stage(target, new_text=f"{marker}\n")
+
+    def test_prune_keeps_the_newest_and_never_touches_the_journal(self):
+        self._one_tx("tx-old", "first")
+        self._one_tx("tx-new", "second")
+        backups = self.root / ".vault-tx" / "backups"
+        self.assertEqual(sorted(d.name for d in backups.iterdir()), ["tx-new", "tx-old"])
+
+        # Pin the order instead of sleeping: mtime is the sort key, and a coarse filesystem clock
+        # could otherwise hand both dirs the same timestamp and make the test flaky.
+        os.utime(backups / "tx-old", (1_600_000_000, 1_600_000_000))
+        os.utime(backups / "tx-new", (1_700_000_000, 1_700_000_000))
+
+        pruned = self.vt.prune_backups(self.root, keep_last=1)
+        self.assertEqual(pruned, ["tx-old"], "pruned the wrong transaction")
+        self.assertTrue((backups / "tx-new").is_dir(), "the newest backup was pruned")
+        self.assertFalse((backups / "tx-old").exists())
+        for tx_id in ("tx-old", "tx-new"):
+            self.assertTrue((self.root / ".vault-tx" / f"{tx_id}.json").is_file(),
+                            f"the journal for {tx_id} was deleted — it is the durable record")
+
+    def test_prune_on_a_vault_with_no_backups_is_a_no_op(self):
+        self.assertEqual(self.vt.prune_backups(self.root), [])
+
+    def test_a_pruned_backup_makes_rollback_fail_loudly(self):
+        """Not a bare FileNotFoundError: the operator must be told what happened."""
+        target = self.root / "a.md"
+        target.write_text("original\n", encoding="utf-8")
+        tx = self.vt.VaultTransaction(self.root, tx_id="tx-pruned")
+        with tx:
+            tx.stage(target, new_text="replaced\n")
+        self.vt.prune_backups(self.root, keep_last=0)
+        with self.assertRaises(self.vt.TransactionError) as ctx:
+            tx.rollback()
+        self.assertIn("备份", str(ctx.exception))
+        self.assertIn("prune_backups", str(ctx.exception))
 
 
 if __name__ == "__main__":

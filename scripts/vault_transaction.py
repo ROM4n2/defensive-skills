@@ -18,6 +18,16 @@ vault_transaction.py — vault 级事务原语（P1 Task-2）。
   * 确定性回滚：按登记顺序用备份原文恢复（含已 commit 的文件）；
     新文件回滚 = 删除；被删除文件回滚 = 从备份逐字节恢复。
 
+留存与已知取舍（两条都是刻意选择，不是遗漏）:
+
+  * **journal 与 backup 都不自动清理。** journal（``.vault-tx/{tx_id}.json``）是耐久记录，
+    每次运行留一个；backup（``.vault-tx/backups/{tx_id}/``）是被覆盖/被删文件的原文副本。
+    备份会随运行次数无限增长，所以清理是**显式**的: ``prune_backups(vault_root, keep_last)``。
+    不默认删的理由是备份持有恢复所需的原文 —— 静默删掉等于悄悄毁掉恢复能力。
+  * **journal 每个条目重写一次，且不做 fsync。** 换来的是"崩溃后日志与实际状态一致"的
+    简单保证（每步都落日志）。代价是 n 条目的 O(n^2) 写入，且掉电瞬间可能丢最后一次写入。
+    要改成批量写 + fsync 是一个取舍，不是无代价的修复。
+
 纯标准库，零第三方依赖。典型用法::
 
     with VaultTransaction(vault_root, tx_id="tx-20260215-01") as tx:
@@ -40,11 +50,13 @@ if hasattr(sys.stderr, "reconfigure"):
 
 import dataclasses
 import datetime
+import errno
 import hashlib
 import json
 import os
 import pathlib
 import re
+import shutil
 import time
 from types import TracebackType
 
@@ -60,9 +72,19 @@ try:
 except ImportError:  # pragma: no cover - POSIX
     _HAVE_MSVCRT = False
 
-__all__ = ["TransactionError", "VaultTransaction"]
+__all__ = ["TransactionError", "VaultTransaction", "prune_backups"]
 
 _LOCKING_AVAILABLE = _HAVE_FCNTL or _HAVE_MSVCRT
+# errno 里的"资源被占用"族：POSIX flock(LOCK_NB) → EAGAIN/EWOULDBLOCK；Windows
+# msvcrt.locking(LK_NBLCK) → EACCES/EDEADLK。其余 errno 不是争用，必须原样暴露。
+_CONTENTION_ERRNOS = frozenset(
+    e for e in (
+        getattr(errno, "EACCES", None),
+        getattr(errno, "EAGAIN", None),
+        getattr(errno, "EWOULDBLOCK", None),
+        getattr(errno, "EDEADLK", None),
+    ) if e is not None
+)
 _LOCK_POLL_INTERVAL = 0.05
 _TX_DIRNAME = ".vault-tx"
 _TX_ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]+$")
@@ -126,7 +148,13 @@ class VaultTransaction:
     def __enter__(self) -> "VaultTransaction":
         self.tx_dir.mkdir(parents=True, exist_ok=True)
         self._acquire_lock()
-        self._set_status("staged")
+        try:
+            self._set_status("staged")
+        except Exception:
+            # 进入失败时 with 体从未开始，__exit__ 不会被调用——锁会一直握到进程退出，
+            # 之后同进程的任何事务都只能轮询到超时。释放后再抛。
+            self._release_lock()
+            raise
         return self
 
     def __exit__(
@@ -288,6 +316,13 @@ class VaultTransaction:
             )
         for entry in self._entries:
             if entry.backup_path is not None:
+                if not entry.backup_path.is_file():
+                    # prune_backups 可以在事务结束后清掉备份。此时回滚所需的原文已不存在,
+                    # 必须说清楚,而不是抛一个裸 FileNotFoundError 让人去猜。
+                    raise TransactionError(
+                        f"回滚所需的备份已不存在: {entry.backup_path}"
+                        f"（很可能已被 prune_backups 清理）——该事务无法再回滚"
+                    )
                 entry.tmp_path.write_bytes(entry.backup_path.read_bytes())
                 os.replace(entry.tmp_path, entry.path)
             elif entry.path.exists():
@@ -324,45 +359,100 @@ class VaultTransaction:
 
     # ---------- 进程级变更锁 ----------
 
-    def _acquire_lock(self) -> None:
-        fd = os.open(str(self.lock_path), os.O_RDWR | os.O_CREAT)
-        self._lock_fd = fd
-        if not _LOCKING_AVAILABLE:
-            _warn_lock_degraded()
-            return
-        deadline = time.monotonic() + self.lock_timeout
-        while True:
-            try:
-                self._lock_once(fd)
-                return
-            except OSError:
-                if time.monotonic() >= deadline:
-                    os.close(fd)
-                    self._lock_fd = None
-                    raise TransactionError(
-                        f"获取事务锁超时（{self.lock_timeout}s，他事务在写同一 vault？）: {self.lock_path}"
-                    )
-                time.sleep(_LOCK_POLL_INTERVAL)
+    # 加/解锁原语见模块级 _lock_fd_for / _unlock_fd —— prune_backups 也要持同一把锁，
+    # 所以它们不属于某个实例。
 
-    def _lock_once(self, fd: int) -> None:
-        if _HAVE_MSVCRT:
-            os.lseek(fd, 0, os.SEEK_SET)
-            msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
-        elif _HAVE_FCNTL:
-            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    def _acquire_lock(self) -> None:
+        self._lock_fd = _lock_fd_for(self.lock_path, self.lock_timeout)
 
     def _release_lock(self) -> None:
         if self._lock_fd is None:
             return
         fd = self._lock_fd
         self._lock_fd = None
-        if _LOCKING_AVAILABLE:
-            if _HAVE_MSVCRT:
-                os.lseek(fd, 0, os.SEEK_SET)
-                msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
-            elif _HAVE_FCNTL:
-                fcntl.flock(fd, fcntl.LOCK_UN)
-        os.close(fd)
+        _unlock_fd(fd)
+
+
+# ---------------------------------------------------------------------------
+# 进程级锁原语（实例与 prune_backups 共用）
+# ---------------------------------------------------------------------------
+def _lock_once_fd(fd: int) -> None:
+    if _HAVE_MSVCRT:
+        os.lseek(fd, 0, os.SEEK_SET)
+        msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+    elif _HAVE_FCNTL:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+
+def _lock_fd_for(lock_path: pathlib.Path, timeout: float) -> int:
+    """打开并加锁；被占用则轮询到 timeout。返回 fd，调用方负责 ``_unlock_fd``。"""
+    fd = os.open(str(lock_path), os.O_RDWR | os.O_CREAT)
+    if not _LOCKING_AVAILABLE:
+        _warn_lock_degraded()
+        return fd
+    deadline = time.monotonic() + timeout
+    while True:
+        try:
+            _lock_once_fd(fd)
+            return fd
+        except OSError as exc:
+            # 只有"被占用"该被当成争用去轮询。真实错误（EBADF/权限/坏路径）若被读成
+            # "锁被占用"，用户会空等 10s 后收到一句误导性的"他事务在写同一 vault？"。
+            if exc.errno not in _CONTENTION_ERRNOS:
+                os.close(fd)
+                raise TransactionError(
+                    f"获取事务锁失败（errno={exc.errno}，不是争用，是真实错误）: "
+                    f"{lock_path} — {exc}"
+                ) from exc
+            if time.monotonic() >= deadline:
+                os.close(fd)
+                raise TransactionError(
+                    f"获取事务锁超时（{timeout}s，他事务在写同一 vault？）: {lock_path}"
+                )
+            time.sleep(_LOCK_POLL_INTERVAL)
+
+
+def _unlock_fd(fd: int) -> None:
+    if _LOCKING_AVAILABLE:
+        if _HAVE_MSVCRT:
+            os.lseek(fd, 0, os.SEEK_SET)
+            msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+        elif _HAVE_FCNTL:
+            fcntl.flock(fd, fcntl.LOCK_UN)
+    os.close(fd)
+
+
+def prune_backups(vault_root: pathlib.Path, keep_last: int = 1) -> "list[str]":
+    """删除除最近 ``keep_last`` 份之外的事务备份目录；**journal 一律保留**。
+
+    备份目录装的是被覆盖/被删文件的**原文副本**，而 journal 只存 SHA-256 与路径 ——
+    两者是一体的：journal 是耐久记录，备份是暂存工作数据。见模块 docstring 的留存说明。
+
+    为什么必须**显式**调用而不是自动清理：备份是那些文件唯一的原文副本。默认静默删除
+    等于悄悄毁掉恢复能力，所以这个决定交给调用方。
+
+    为什么持锁：备份目录活在 ``.vault-tx/`` 下，删它必须与"正在跑的事务"互斥 ——
+    持同一把 ``.lock`` 即保证不会有进行中的事务被抽掉备份。
+
+    返回被清理的 tx_id 列表（已排序）。``keep_last=0`` 清空全部备份。
+    """
+    if keep_last < 0:
+        raise TransactionError(f"keep_last 不能为负: {keep_last}")
+    root = pathlib.Path(vault_root)
+    backups = root / _TX_DIRNAME / "backups"
+    if not backups.is_dir():
+        return []
+    fd = _lock_fd_for(root / _TX_DIRNAME / ".lock", 10.0)
+    try:
+        dirs = [d for d in backups.iterdir() if d.is_dir()]
+        dirs.sort(key=lambda d: d.stat().st_mtime, reverse=True)
+        pruned = []
+        for d in dirs[keep_last:]:
+            shutil.rmtree(d, ignore_errors=True)
+            pruned.append(d.name)
+        return sorted(pruned)
+    finally:
+        _unlock_fd(fd)
 
 
 if __name__ == "__main__":
