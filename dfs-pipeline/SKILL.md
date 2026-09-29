@@ -27,15 +27,15 @@ Orchestrate the full development lifecycle with Git Worktree branch isolation, m
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │                        Vault End-to-End Delivery Pipeline                              │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│ Stage 1: /dfs-spark    ➔ 0-to-1 需求发散与规格书定型 (Design Spec)                  │
-│ Stage 2: /dfs-grill    ➔ 双镜头极限架构压测与前沿决策树推进                         │
-│ Stage 3: /dfs-adr      ➔ 自动编号与 MADR 标准架构决策记录归档                       │
-│ Stage 4: /dfs-plan     ➔ 任务细粒度拆解与 Subagent Prompt 脚手架生成                │
-│ Stage 5: Git Worktree    ➔ 自动创建独立分支工作区 (.worktrees/feat-{name})            │
-│ Stage 6: /dfs-exec     ➔ 多子智能体 TDD 开发 + Maker-Checker 双人复核流水线         │
-│ Stage 7: /dfs-perf     ➔ 基准压测 (-benchmem)、竞态检测 (-race) 与性能卡片生成      │
-│ Stage 8: /dfs-team     ➔ 6 专家全栈 Swarm 并发终审与 PR 合并门禁                    │
-│ Stage 9: /dfs-save     ➔ Karpathy 对话即沉淀，经验入库 99-Inbox/                    │
+│ Stage 1: /dfs-spark    ➔ 需求发散与规格书定型 (Design Spec)                            │
+│ Stage 2: /dfs-grill    ➔ 双镜头极限架构压测与前沿决策树推进                            │
+│ Stage 3: /dfs-adr      ➔ 自动编号与 MADR 标准架构决策记录归档                          │
+│ Stage 4: /dfs-plan     ➔ 任务细粒度拆解与 Subagent Prompt 脚手架生成                   │
+│ Stage 5: Git Worktree    ➔ 自动创建独立分支工作区 (.worktrees/feat-{name})             │
+│ Stage 6: /dfs-exec     ➔ 多子智能体 TDD 开发 + Maker-Checker 双人复核流水线            │
+│ Stage 7: /dfs-perf     ➔ 基准压测 (-benchmem)、竞态检测 (-race) 与性能卡片生成         │
+│ Stage 8: /dfs-team     ➔ 6 专家全栈 Swarm 并发终审与 PR 合并门禁                       │
+│ Stage 9: /dfs-save     ➔ Karpathy 对话即沉淀，经验入库 99-Inbox/                       │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 

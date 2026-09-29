@@ -104,7 +104,7 @@ The "prerequisite" column is **measured**, not decorative — `tests/test_readme
 | **chain** `dfs-team` | Audit code, a design, or a plan with a multi-domain subagent swarm, then collapse the findings into a single consensus report. Use when the target spans two or more specialist domains and needs several independent expert reviews. | — | — | tpl×1 |
 | `dfs-adr` | Draft and archive numbered Architecture Decision Records. Use when the user makes an architecture decision or asks to record one. | knowledge base | — | tpl×1 |
 | `dfs-bootstrap` | Initialize a repository with security git hooks and DFS rule anchors. Use when starting a new repo or adding DFS guardrails to an existing one. | knowledge base | — | tpl×2 scripts×1 |
-| `dfs-grill` | Stress-test an architecture through Dual-Lens Socratic inquiry. Use when the user wants their design challenged or pressure-tested before building. | knowledge base | omni_search | — |
+| `dfs-grill` | Interrogate a proposal's boundaries and undecided points through Dual-Lens Socratic inquiry, ending in an architecture decision record. Use when the user wants an idea, design, or plan challenged or pressure-tested before building. | knowledge base | omni_search | — |
 | `dfs-inbox-consolidate` | Classify and archive 99-Inbox drafts into DFS destinations. Use when the inbox has accumulated drafts and the user asks to file or clean them up. | extra assets | promote_inbox_draft | — |
 | `dfs-incident` | Triage a production incident and draft a blameless postmortem. Use when a service is down, degraded, or the user asks for an incident review. | knowledge base | — | tpl×1 |
 | `dfs-interview` | Conduct high-rigor 1v1 technical interview defense drills. Use when the user wants to rehearse explaining or defending their own work. | knowledge base | — | — |
@@ -116,7 +116,7 @@ The "prerequisite" column is **measured**, not decorative — `tests/test_readme
 | `dfs-release` | Draft semantic releases, changelogs, and rollback plans. Use when the user asks to cut a release, tag a version, or write a changelog. | — | — | tpl×2 scripts×1 |
 | `dfs-research` | Research external sources and sink findings into the Vault. Use when the user asks to investigate a topic and record what was learned. | knowledge base | search_vault, omni_search, get_note, get_rule_snippet, save_inbox_draft | tpl×1 |
 | `dfs-review` | Review a code diff against 7-language RFC 2119 DFS rules. Use when the user asks for a code review, or before merging a change. | knowledge base | get_rule_snippet, list_standards | tpl×1 |
-| `dfs-spark` | Turn 0-to-1 ideas into specs through Dual-Lens dialogue. Use when the user has a rough idea and wants to shape it into a written spec. | knowledge base | omni_search | tpl×1 |
+| `dfs-spark` | Generate a design specification from a fuzzy need through Dual-Lens dialogue, at a size the idea earns. Use when the user has an idea with no design yet and wants it shaped into a spec, a short design note, or a feasibility answer. | knowledge base | omni_search | tpl×1 |
 | `dfs-tdd` | Enforce strict RED-GREEN-REFACTOR TDD and fake-green guards. Use when implementing a feature test-first, or when a green test suite is suspect. | knowledge base | get_code_template | — |
 
 ---

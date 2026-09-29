@@ -1,22 +1,37 @@
 ---
 name: dfs-spark
-description: Turn 0-to-1 ideas into specs through Dual-Lens dialogue. Use when the user has a rough idea and wants to shape it into a written spec.
+description: Generate a design specification from a fuzzy need through Dual-Lens dialogue, at a size the idea earns. Use when the user has an idea with no design yet and wants it shaped into a spec, a short design note, or a feasibility answer.
 version: 0.2.0
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:
-    tags: [brainstorming, 0-to-1, design-spec, dual-lens, product-ux]
+    tags: [brainstorming, idea-sizing, design-spec, dual-lens, product-ux]
     related_skills: [dfs-plan, dfs-grill, dfs-adr, dfs-exec]
     mcp_tools: [omni_search]
 ---
 
-# DFS-SPARK: 0-to-1 Feature Ideation & Exploratory Design
+# DFS-SPARK: Idea Sizing & Exploratory Design
 
 Turn vague ideas, open-ended feature thoughts, or fuzzy developer needs into structured, knowledge-grounded design specifications through collaborative dialogue across **Dual Lenses: User Problem Validation + Technical Architecture**.
 
 ## The Iron Gate (HARD GATE)
 Do NOT invoke any implementation skill, write production code, or scaffold repositories until presenting the design spec and obtaining explicit human partner approval.
+
+---
+
+## 🚪 This skill, or `/dfs-grill`?
+
+Both start from something vague. They split on **what you are being asked to do**:
+
+| | this skill | `/dfs-grill` |
+|---|---|---|
+| The ask | **generate** — there is no design yet | **interrogate** — a proposal exists and its edges are unclear |
+| Output | a **spec**, sized to the idea (or a feasibility answer / a short design note) | an **ADR**: every undecided point forced to a choice |
+| Feeds | `/dfs-plan` | the decision record |
+
+A design already written, and you want it attacked? That is `/dfs-grill`. Nothing designed yet? Start
+here, and let Phase 1 decide how much process the idea has earned.
 
 ---
 

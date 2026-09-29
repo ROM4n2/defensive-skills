@@ -1,6 +1,6 @@
 ---
 name: dfs-grill
-description: Stress-test an architecture through Dual-Lens Socratic inquiry. Use when the user wants their design challenged or pressure-tested before building.
+description: Interrogate a proposal's boundaries and undecided points through Dual-Lens Socratic inquiry, ending in an architecture decision record. Use when the user wants an idea, design, or plan challenged or pressure-tested before building.
 version: 0.2.0
 license: MIT
 platforms: [linux, macos, windows]
@@ -11,7 +11,22 @@ metadata:
     mcp_tools: [omni_search]
 ---
 
-# DFS-GRILL: Socratic Architecture Stress-Testing & Dual-Lens Panel
+# DFS-GRILL: Socratic Stress-Testing & Dual-Lens Panel
+
+## 🚪 Before you start — is this the right skill?
+
+This skill **interrogates something that already exists** (even if only as a proposal): it finds the
+undecided points and forces a choice on each, ending in an ADR. It is not a design generator.
+
+- A design, plan, or idea is already stated and you want its boundaries and gaps attacked → here.
+- Nothing is designed yet → **`/dfs-spark`** generates the design first, and hands it back here if it
+  needs pressure-testing.
+- The question is about **existing code** rather than a proposal → `/dfs-review` (one axis) or
+  `/dfs-team` (several).
+
+Interrogating an empty page produces theatre; generating a design is a different job.
+
+---
 
 ## ⚡ Scope Detection (MUST — 执行前第一步)
 
