@@ -20,6 +20,12 @@ metadata:
 > here. When you need to know which harness actually honors a given frontmatter key — and what
 > to use in its place where one is ignored — read `dfs/references/harness-field-mapping.md`.
 
+## 🚨 The Transactional Archival Invariant (RFC 2119 MUST)
+> **NO draft shall be deleted from `99-Inbox/` until its target note write is committed and verified.**
+> Always run `--dry-run` before `--execute`. Never guess destinations for ambiguous drafts.
+
+---
+
 ## ⚡ Scope Detection (MUST — 执行前第一步)
 
 **在任何操作前，MUST 先检测当前 Vault 根目录**：
@@ -54,6 +60,8 @@ def detect_vault_root():
 | `topic/linguistics` + `project/delector` | project | `08-Projects/DeLector/{TITLE}.md` |
 | 无匹配 + source-notes | source-article | `06-Sources/Articles/{TITLE}.md` |
 
+---
+
 ## 2. 使用方式
 
 ```bash
@@ -73,6 +81,8 @@ python scripts/vault-inbox-consolidate.py --execute --file "2026-09-06-xxx.md"
 python scripts/vault-inbox-consolidate.py --dry-run --json
 ```
 
+---
+
 ## 2b. 单篇晋级路径 (MCP)
 
 批量归档走上面的脚本；**单篇晋级**或需要在归档前由 Agent 判断目标时，走 MCP：
@@ -82,18 +92,30 @@ python scripts/vault-inbox-consolidate.py --dry-run --json
 Agent 判断目标时可参考上方 `TARGET_ROUTING_MAP`；目标仍有歧义时，向用户确认后再晋级，
 **MUST NOT** 凭猜测写入正式目录。
 
-## 3. 执行流程
+---
+
+## 3. 执行流程与完成判据
 
 ```
-1. 扫描 99-Inbox/*.md（排除 tpl- 前缀）
-2. 解析每个草稿的 YAML frontmatter（tags, status, type）
-3. 按 tags 匹配 TARGET_ROUTING_MAP → 确定目标路径
-4. --dry-run：输出推荐目标 + 执行计划，不修改文件
-5. --execute：
-   a. dual/rule-append 类型 → 追加内容到目标文件
-   b. source-article/project 类型 → 创建新文件（status → stable）
-   c. 删除 99-Inbox/ 中的原件
+  [1. 扫描 99-Inbox/*.md（排除 tpl- 前缀）]
+                     │
+                     ▼
+  [2. 解析 YAML frontmatter (tags, status, type)]
+                     │
+                     ▼
+  [3. 匹配 TARGET_ROUTING_MAP 确定目标路径]
+                     │
+                     ▼
+  [4. 运行 --dry-run 预览计划并确认]
+                     │
+                     ▼
+  [5. 运行 --execute 提交原子事务并清理原件]
 ```
+
+- **Checkable Completion Criterion**: 
+  - 运行 `python scripts/vault-inbox-consolidate.py --execute` 输出 `0 errors`，归档目标物理生成且原件已安全移除。
+
+---
 
 ## 4. Dual-Version CHEATSHEET 同步 (VAULT-STRUCTURE §5)
 
@@ -122,6 +144,8 @@ Agent 判断目标时可参考上方 `TARGET_ROUTING_MAP`；目标仍有歧义�
     ⚠️  03-Languages/Python/PYTHON-CHEATSHEET.md ← 需从 STANDARDS 浓缩
 ```
 
+---
+
 ## 5. 归档后 MUST 验证
 
 执行完毕后 **MUST** 运行健康巡检确认：
@@ -131,6 +155,19 @@ python scripts/vault-healthcheck.py
 ```
 
 确认 Inbox Ingestion Hygiene 为 ✅ CLEAN。
+
+---
+
+## 🚫 Common Rationalizations & Anti-Patterns
+
+| Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
+|---|---|---|
+| *"I'll run `--execute` directly without `--dry-run` to be faster."* | **Silent Data Deletion**: uninspected bulk moves or rule appends into wrong destinations. | Mandatory `--dry-run` preview before `--execute`. |
+| *"The draft has ambiguous tags, but I'll guess an archival path."* | **Knowledge Base Fragmentation**: insights buried under wrong topics or deleted prematurely. | If routing has ambiguity, prompt user for confirmation before promotion. |
+| *"I appended to STANDARDS, so I don't need to check CHEATSHEET."* | **Dual-Version Drift**: human quick-reference cheatsheet diverges from standards. | If `cheatsheet_action == "stale"`, immediately append the condensed section. |
+| *"I'll modify notes in `99-Inbox/` directly without committing the transaction."* | **Broken Ingestion State**: leaving partial writes or unmanaged orphans. | Use transactional tools (`vault-inbox-consolidate.py` or `promote_inbox_draft`). |
+
+---
 
 ## 6. 关联工具
 
