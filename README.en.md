@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Skills-23-4B5563?style=flat-square" alt="Skills" />
+  <img src="https://img.shields.io/badge/Skills-24-4B5563?style=flat-square" alt="Skills" />
   <img src="https://img.shields.io/badge/Conformance-14%20rules-0969DA?style=flat-square" alt="Conformance rules" />
   <img src="https://img.shields.io/badge/Tests-105%20passed-2EA44F?style=flat-square" alt="Tests" />
   <img src="https://img.shields.io/badge/Mutation-22%2F22%20caught-2EA44F?style=flat-square" alt="Mutation harness" />
@@ -48,7 +48,7 @@ A skill is just a directory containing `SKILL.md`. Copy (or symlink) them into y
 | Hermes | `<hermes profile dir>/skills/` |
 
 ```bash
-# all 23, or only the 5 with no prerequisites; links by default, copies on Windows
+# all 24, or only the 6 with no prerequisites; links by default, copies on Windows
 python install.py --target ~/.codex/skills
 python install.py --target ~/.codex/skills --tier A
 ```
@@ -85,7 +85,7 @@ What ships and what deliberately does not: [`scripts/README.md`](scripts/README.
 
 ---
 
-## 🧭 Skill catalogue (23 skills · 7 on the main chain)
+## 🧭 Skill catalogue (24 skills · 7 on the main chain)
 
 The main chain is `dfs` (route) → `dfs-plan` (plan) → `dfs-exec` (TDD execution) → `dfs-debug` (root-cause debugging) → `dfs-save` (harvest) → `dfs-handoff` (handoff), plus `dfs-team` (multi-expert consensus review).
 
@@ -118,6 +118,7 @@ The "prerequisite" column is **measured**, not decorative — `tests/test_readme
 | `dfs-review` | Review a code diff against 7-language RFC 2119 DFS rules. Use when the user asks for a code review, or before merging a change. | knowledge base | get_rule_snippet, list_standards | tpl×1 |
 | `dfs-spark` | Generate a design specification from a fuzzy need through Dual-Lens dialogue, at a size the idea earns. Use when the user has an idea with no design yet and wants it shaped into a spec, a short design note, or a feasibility answer. | knowledge base | omni_search | tpl×1 |
 | `dfs-tdd` | Enforce strict RED-GREEN-REFACTOR TDD and fake-green guards. Use when implementing a feature test-first, or when a green test suite is suspect. | knowledge base | get_code_template | — |
+| `dfs-upgrade` | Assess breaking changes and upgrade risk for a dependency. Use when upgrading a package version and you need to know what will break and in which files. | — | — | tpl×1 |
 
 ---
 
@@ -126,7 +127,7 @@ The "prerequisite" column is **measured**, not decorative — `tests/test_readme
 **Don't take this section's word for it — run them.** All ten are zero-dependency; no pytest needed:
 
 ```bash
-python tests/test_skills_conformance.py    # 14 rules × 23 skills                → exit 0
+python tests/test_skills_conformance.py    # 14 rules × 24 skills                → exit 0
 python tests/mutation_check.py             # inject a defect per rule; all must land → exit 0
 python tests/test_knowledge_server.py      # MCP server over real stdio JSON-RPC → exit 0
 python tests/test_vendored_scripts.py      # ledger / transactional archival / rollback → exit 0
@@ -201,9 +202,9 @@ Save that as `knowledge.json` in your knowledge-base root to override the defaul
   which harness honors which key, and — for the keys it does not — the lever that enforces the same
   intent. `metadata.hermes.mcp_tools` is **not** a harness feature at all: it is this suite's own
   declaration, checked by the conformance gate.
-* The repo contains **23 skills** (`dfs-agent-sdk` was moved out because it is third-party material and is not published here); the "prerequisite" column measures what each skill actually depends on, and the 5 with no prerequisite work the moment they are installed.
-* **Progressive disclosure here is two tiers, not three.** The skill spec recommends three — `description` (always in the index) → SKILL.md body → `references/` + `scripts/` detail. This suite implements the **first two**: all 23 `description` fields carry an explicit trigger clause (tier 1), and the body carries the full procedure (tier 2). Only `dfs` uses the third tier (it ships `references/`×3); the other 22 have no `references/` subdirectory, and no skill uses a nested topic hierarchy. That is deliberate: each skill here is **one stable workflow**, and keeping a body under 500 lines beats inventing levels — split out a third tier when a skill actually needs the depth.
-* **Language policy: English machine surface, bilingual READMEs, English-first bodies.** Every frontmatter field the agent must load to route (`name` / `description` / `mcp_tools`) is already English. 14 of the 23 `SKILL.md` files are pure English; the remaining **1,865 CJK characters** are spread across 9 skills (the largest three: `dfs-inbox-consolidate` 473 / `dfs` 342 / `dfs-grill` 307; the rest are small fragments) — **kept on purpose, not unfinished work**: they are presentation data, not instructions, so they cost the model nothing to understand, while translating them would cost more to maintain than it returns. Issues and PRs in English are welcome.
+* The repo contains **24 skills** (`dfs-agent-sdk` was moved out because it is third-party material and is not published here); the "prerequisite" column measures what each skill actually depends on, and the 6 with no prerequisite work the moment they are installed.
+* **Progressive disclosure here is two tiers, not three.** The skill spec recommends three — `description` (always in the index) → SKILL.md body → `references/` + `scripts/` detail. This suite implements the **first two**: all 24 `description` fields carry an explicit trigger clause (tier 1), and the body carries the full procedure (tier 2). Only `dfs` uses the third tier (it ships `references/`×3); the other 23 have no `references/` subdirectory, and no skill uses a nested topic hierarchy. That is deliberate: each skill here is **one stable workflow**, and keeping a body under 500 lines beats inventing levels — split out a third tier when a skill actually needs the depth.
+* **Language policy: English machine surface, bilingual READMEs, English-first bodies.** Every frontmatter field the agent must load to route (`name` / `description` / `mcp_tools`) is already English. 15 of the 24 `SKILL.md` files are pure English; the remaining **1,865 CJK characters** are spread across 9 skills (the largest three: `dfs-inbox-consolidate` 473 / `dfs` 342 / `dfs-grill` 307; the rest are small fragments) — **kept on purpose, not unfinished work**: they are presentation data, not instructions, so they cost the model nothing to understand, while translating them would cost more to maintain than it returns. Issues and PRs in English are welcome.
 
 ---
 

@@ -38,7 +38,7 @@ import unittest
 
 _REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 
-# The 23 shipped Defensive Skills. Declared, not derived: Rule 1 exists to catch a skill being
+# The 24 shipped Defensive Skills. Declared, not derived: Rule 1 exists to catch a skill being
 # silently added or dropped, which a disk-derived set can never notice.
 # `dfs-agent-sdk` is deliberately NOT here: it vendors a THIRD-PARTY pi-agent SDK doc corpus
 # (the `dg-piagent` skill from github.com/buchidonggua/dg-ai-notes; docs are CC-BY-SA-4.0) —
@@ -68,6 +68,7 @@ SKILL_NAMES = [
     "dfs-spark",
     "dfs-tdd",
     "dfs-team",
+    "dfs-upgrade",
 ]
 
 BANNED_MARKETING_PATTERNS = [

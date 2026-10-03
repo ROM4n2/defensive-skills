@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Skills-23-4B5563?style=flat-square" alt="Skills" />
+  <img src="https://img.shields.io/badge/Skills-24-4B5563?style=flat-square" alt="Skills" />
   <img src="https://img.shields.io/badge/Conformance-14%20rules-0969DA?style=flat-square" alt="Conformance rules" />
   <img src="https://img.shields.io/badge/Tests-105%20passed-2EA44F?style=flat-square" alt="Tests" />
   <img src="https://img.shields.io/badge/Mutation-22%2F22%20caught-2EA44F?style=flat-square" alt="Mutation harness" />
@@ -48,7 +48,7 @@
 | Hermes | `<hermes 配置目录>/skills/` |
 
 ```bash
-# 整包 23 个，或只装「零前置」的 5 个；默认软链，Windows 上自动退回复制
+# 整包 24 个，或只装「零前置」的 6 个；默认软链，Windows 上自动退回复制
 python install.py --target ~/.codex/skills
 python install.py --target ~/.codex/skills --tier A
 ```
@@ -85,7 +85,7 @@ python scripts/vault-inbox-consolidate.py --vault-path <知识库根> --dry-run
 
 ---
 
-## 🧭 技能全览（23 个 · 主链 7 个）
+## 🧭 技能全览（24 个 · 主链 7 个）
 
 主链是 `dfs`（路由）→ `dfs-plan`（计划）→ `dfs-exec`（TDD 执行）→ `dfs-debug`（根因调试）→ `dfs-save`（沉淀）→ `dfs-handoff`（交接），加 `dfs-team`（多专家共识评审）。
 
@@ -118,6 +118,7 @@ python scripts/vault-inbox-consolidate.py --vault-path <知识库根> --dry-run
 | `dfs-review` | Review a code diff against 7-language RFC 2119 DFS rules. Use when the user asks for a code review, or before merging a change. | 需知识库 | get_rule_snippet, list_standards | tpl×1 |
 | `dfs-spark` | Generate a design specification from a fuzzy need through Dual-Lens dialogue, at a size the idea earns. Use when the user has an idea with no design yet and wants it shaped into a spec, a short design note, or a feasibility answer. | 需知识库 | omni_search | tpl×1 |
 | `dfs-tdd` | Enforce strict RED-GREEN-REFACTOR TDD and fake-green guards. Use when implementing a feature test-first, or when a green test suite is suspect. | 需知识库 | get_code_template | — |
+| `dfs-upgrade` | Assess breaking changes and upgrade risk for a dependency. Use when upgrading a package version and you need to know what will break and in which files. | — | — | tpl×1 |
 
 ---
 
@@ -126,7 +127,7 @@ python scripts/vault-inbox-consolidate.py --vault-path <知识库根> --dry-run
 **别读这段，直接跑**——全部零依赖，不需要 pytest：
 
 ```bash
-python tests/test_skills_conformance.py    # 14 条规则 × 23 个技能        → exit 0
+python tests/test_skills_conformance.py    # 14 条规则 × 24 个技能        → exit 0
 python tests/mutation_check.py             # 给每条规则注入缺陷，必须被抓 → exit 0
 python tests/test_knowledge_server.py      # MCP 服务真实 stdio 协议      → exit 0
 python tests/test_vendored_scripts.py      # 台账 / 事务化归档 / 回滚     → exit 0
@@ -200,9 +201,9 @@ python tests/test_shipped_assets_tracked.py # 随包资产真被 git 跟踪（�
 * **检索是加权关键词/标签打分，不是 BM25 + 图谱。** 对笔记量级的知识库足够；上万篇就该换真正的排序器（升级点写在 `mcp/knowledge_server.py` 的模块注释里）。
 * **frontmatter 里的 `disable-model-invocation` / `metadata.hermes.*` 是 Hermes 方言。** 映射表已落地于 [`dfs/references/harness-field-mapping.md`](dfs/references/harness-field-mapping.md)：逐条说明哪个 harness 认哪个键，以及不认的键该用哪个等效杠杆来强制同一意图。注意 `metadata.hermes.mcp_tools` **不是任何 harness 的功能**——它是本套件自己的声明，由一致性门禁校验。
 * **投放箱不是知识库。** 完全没有知识库时草稿能存能列，但**归档（晋级）必须有一个知识库根**——`--execute` 在没有根时会 exit 2，而不是猜一个目标目录。这是刻意的：归档是"删原件 + 写正式目录"，目标都不能猜。
-* 仓库内含 **23 个技能**（`dfs-agent-sdk` 已移出——它是第三方语料，不随本仓库发布）；表格的「前置」列把每个技能的依赖实测标出，最轻的 5 个零前置技能装完即用。
-* **渐进式披露实际是两级，不是三级。** Skill 规范推荐「`description`（始终在索引里）→ SKILL.md 正文 → `references/`＋`scripts/` 详细资料」的三级披露。本套件落实的是**前两级**：23 个技能的 `description` 全部携带显式触发子句（第一级），正文承载完整流程（第二级）。第三级只有 `dfs` 用到了——它带 `references/`×3；其余 22 个技能没有 `references/` 子目录，也没有任何技能用到嵌套主题层级。这是刻意的：这里的每个技能都是**一条稳定工作流**，把正文压到 500 行以内比造层级更划算；等某个技能真的需要纵深再拆第三级。
-* **语言策略：英文机器面、双语 README、正文英文优先。** agent 路由时必然加载的 frontmatter（`name` / `description` / `mcp_tools`）已全英文；`SKILL.md` 正文 14/23 为纯英文，残余 **1,865 个汉字**分布在 9 个技能里（最大三处：`dfs-inbox-consolidate` 473 / `dfs` 342 / `dfs-grill` 307，其余为零星片段）——**刻意保留，不是未完工**：面板数据不参与指令，对模型理解无影响，翻译的收益远小于它带来的维护成本。提 issue / PR 用英文即可。
+* 仓库内含 **24 个技能**（`dfs-agent-sdk` 已移出——它是第三方语料，不随本仓库发布）；表格的「前置」列把每个技能的依赖实测标出，最轻的 6 个零前置技能装完即用。
+* **渐进式披露实际是两级，不是三级。** Skill 规范推荐「`description`（始终在索引里）→ SKILL.md 正文 → `references/`＋`scripts/` 详细资料」的三级披露。本套件落实的是**前两级**：24 个技能的 `description` 全部携带显式触发子句（第一级），正文承载完整流程（第二级）。第三级只有 `dfs` 用到了——它带 `references/`×3；其余 23 个技能没有 `references/` 子目录，也没有任何技能用到嵌套主题层级。这是刻意的：这里的每个技能都是**一条稳定工作流**，把正文压到 500 行以内比造层级更划算；等某个技能真的需要纵深再拆第三级。
+* **语言策略：英文机器面、双语 README、正文英文优先。** agent 路由时必然加载的 frontmatter（`name` / `description` / `mcp_tools`）已全英文；`SKILL.md` 正文 15/24 为纯英文，残余 **1,865 个汉字**分布在 9 个技能里（最大三处：`dfs-inbox-consolidate` 473 / `dfs` 342 / `dfs-grill` 307，其余为零星片段）——**刻意保留，不是未完工**：面板数据不参与指令，对模型理解无影响，翻译的收益远小于它带来的维护成本。提 issue / PR 用英文即可。
 
 ---
 

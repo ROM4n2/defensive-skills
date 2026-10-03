@@ -10,7 +10,7 @@ named in its row — the safety property must be enforced somewhere.**
 
 ## 1. Portable core — every skill carries it, everyone survives it
 
-Present on all 23 skills; each harness either reads it or ignores it without harm.
+Present on all 24 skills; each harness either reads it or ignores it without harm.
 
 | Key | Hermes | Claude Code | Codex CLI / Cursor |
 |---|---|---|---|

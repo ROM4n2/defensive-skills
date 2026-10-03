@@ -34,6 +34,7 @@ venv/
 .worktrees/
 .agent-cache/
 *.local.md
+implementation_plan.md
 
 # ============================================================
 #  Generated per-machine state — kept on disk, never published.
