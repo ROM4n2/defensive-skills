@@ -54,6 +54,7 @@ venv/
 /AGENTS.md
 /CLAUDE.md
 /.agent-rules.md
+/.agent-context.md
 /.cursorrules
 /WORKMEMORY/
 /HANDOFF.md
