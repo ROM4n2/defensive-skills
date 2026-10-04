@@ -175,6 +175,7 @@ class KnowledgeBase:
         self.root = root
         self.layout = layout
         self.degraded = degraded
+        self._cache: Dict[pathlib.Path, Dict[str, Any]] = {}
 
     # -- paths -------------------------------------------------------------
     def layer(self, key: str) -> pathlib.Path:
@@ -235,6 +236,35 @@ class KnowledgeBase:
             return str(fm["title"])
         m = re.search(r"(?m)^#\s+(.+?)\s*$", text)
         return m.group(1).strip() if m else path.stem
+
+    def get_cached_note(self, path: pathlib.Path) -> Dict[str, Any]:
+        mtime_ns = path.stat().st_mtime_ns
+        cached = self._cache.get(path)
+        if cached is not None and cached.get("mtime_ns") == mtime_ns:
+            return cached
+
+        text = self.read(path)
+        fm = self.frontmatter(text)
+        title = self.title_of(path, text)
+        tags = [str(t).lower() for t in fm.get("tags", [])]
+        headings = " ".join(re.findall(r"(?m)^#{1,6}\s+(.+)$", text)).lower()
+        body_s = re.sub(r"```.*?```", " ", text, flags=re.DOTALL).lower()
+        path_s = self.rel(path).lower()
+        neighbours = [w for w in re.findall(r"\[\[([^\]|#]+)", text)][:5]
+
+        note_data: Dict[str, Any] = {
+            "mtime_ns": mtime_ns,
+            "text": text,
+            "frontmatter": fm,
+            "title": title,
+            "tags": tags,
+            "headings": headings,
+            "body_s": body_s,
+            "path_s": path_s,
+            "neighbours": neighbours,
+        }
+        self._cache[path] = note_data
+        return note_data
 
 
 # ---------------------------------------------------------------------------
