@@ -10,6 +10,7 @@ server and the skills' declared `mcp_tools` contracts cannot drift apart unnotic
 """
 
 import json
+import os
 import pathlib
 import shutil
 import subprocess
@@ -20,7 +21,9 @@ import unittest
 _REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 _SERVER = _REPO_ROOT / "mcp" / "knowledge_server.py"
 
+sys.path.insert(0, str(_REPO_ROOT / "mcp"))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from knowledge_server import KnowledgeBase, load_layout  # noqa: E402
 from test_skills_conformance import KNOWN_MCP_TOOLS  # noqa: E402
 
 RULE_NOTE = """---
@@ -418,6 +421,43 @@ class TestDraftsOnlyMode(unittest.TestCase):
                 self.assertIn("01-Rules", text)
             finally:
                 srv2.close()
+
+
+class TestKnowledgeBaseCache(unittest.TestCase):
+    def test_cache_hit_avoids_disk_reread(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = build_root(pathlib.Path(td) / "kb")
+            layout = load_layout(root)
+            kb = KnowledgeBase(root, layout)
+            self.assertEqual(kb._cache, {})
+
+            note_path = root / "01-Rules" / "CODING-UNIVERSAL.md"
+            note1 = kb.get_cached_note(note_path)
+
+            self.assertIn(note_path, kb._cache)
+            self.assertEqual(note1["title"], "Universal coding rules")
+            self.assertEqual(note1["tags"], ["category/rules", "topic/concurrency"])
+            self.assertIn("universal rules", note1["headings"])
+            self.assertIn("GO-STANDARDS", note1["neighbours"])
+            self.assertEqual(note1["path_s"], "01-rules/coding-universal.md")
+            self.assertIn("never swallow an error", note1["body_s"])
+            self.assertIn("Universal rules", note1["text"])
+            self.assertEqual(note1["mtime_ns"], note_path.stat().st_mtime_ns)
+
+            read_calls = []
+            orig_read = kb.read
+            kb.read = lambda p: (read_calls.append(p), orig_read(p))[1]
+
+            note2 = kb.get_cached_note(note_path)
+            self.assertIs(note1, note2)
+            self.assertEqual(len(read_calls), 0, "Cache hit must avoid disk read")
+
+            # Mtime change invalidates cache
+            new_mtime = note1["mtime_ns"] + 10_000_000
+            os.utime(note_path, ns=(new_mtime, new_mtime))
+            note3 = kb.get_cached_note(note_path)
+            self.assertEqual(len(read_calls), 1, "Cache miss on mtime change must call kb.read")
+            self.assertEqual(note3["mtime_ns"], new_mtime)
 
 
 if __name__ == "__main__":
