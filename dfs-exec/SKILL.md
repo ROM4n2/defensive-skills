@@ -14,9 +14,9 @@ metadata:
 
 Execute implementation plans (`implementation_plan.md` or `.vault-exec-ledger.json`) by dispatching fresh, context-isolated subagents for each task.
 
-## 🚨 The Subagent Isolation Invariant (HARD GATE)
-> Always enforce subagent isolation: The Orchestrator main thread focuses strictly on **State Tracking (Ledger), Task Dispatching, Maker-Checker Review Oversight, and Git Commits**.
-> When any production source code edit is needed, dispatch a fresh, context-isolated subagent via `delegate_task` (or runtime equivalent) instead of making direct edits in the orchestrator thread.
+## 🚨 The Subagent Isolation Invariant (RFC 2119 MUST)
+> **The Orchestrator main thread focuses strictly on State Tracking, Task Dispatching, Maker-Checker Review Oversight, and Git Commits.**
+> When any production source code edit is needed, dispatch a fresh, context-isolated subagent via `delegate_task` instead of editing code in the orchestrator thread.
 
 ---
 
@@ -51,6 +51,32 @@ For each Task in the implementation plan, follow this strict loop:
 
 ---
 
+### Step 1: Dispatch Implementer Subagent (TDD Builder)
+1. **Context-Isolated Implementation**:
+   - Dispatch `delegate_task(goal=...)` with the self-contained prompt scaffold generated during `/dfs-plan`.
+   - Implementer loads `templates/tdd-builder-prompt.md` via `read_file(path='templates/tdd-builder-prompt.md')`.
+   - Implementer executes strict RED-GREEN-REFACTOR TDD cycle, producing git diff and test receipts.
+2. **Checkable Completion Criterion**:
+   - Implementer subagent completes with exit receipts showing test suite green and non-empty diff for the targeted task scope.
+
+### Step 2: Dispatch Reviewer Subagent (Maker-Checker)
+1. **Adversarial Read-Only Audit**:
+   - Dispatch `delegate_task(goal=...)` with `templates/reviewer-prompt.md` loaded via `read_file(path='templates/reviewer-prompt.md')`.
+   - Reviewer audits diff against Defensive Skills rules with zero production code edits.
+   - Reviewer issues binary verdict: `PASS` (Clean) or `REVISE` (blocking defects with `file:line` citations).
+2. **Checkable Completion Criterion**:
+   - Reviewer subagent returns unambiguous `PASS` verdict, or `REVISE` defect list with specific line citations requiring re-dispatch.
+
+### Step 3: Atomic Git Commit & State Ledger Update
+1. **Commit & Ledger Persistence**:
+   - Commit changes atomically: `git commit -m "feat(<scope>): complete Task N"`.
+   - Update ledger: `python scripts/vault_exec_state.py complete-task --task-id <id> --reviewer PASS`.
+   - Verify ledger status before advancing to Task N+1.
+2. **Checkable Completion Criterion**:
+   - Git commit SHA verified on current branch; `vault_exec_state.py` reports task status `COMPLETED`.
+
+---
+
 ## Standard Subagent Dispatch Scaffolds
 
 Load dispatch templates via `read_file` prior to triggering subagents:
@@ -70,3 +96,14 @@ Load dispatch templates via `read_file` prior to triggering subagents:
 - Complete Task: `python scripts/vault_exec_state.py complete-task --task-id Task-1 --commit <hash> --reviewer PASS`
 - Resume from Breakpoint: `python scripts/vault_exec_state.py resume`
 - Inspect Pipeline Status: `python scripts/vault_exec_state.py status`
+
+---
+
+## 🚫 Common Rationalizations & Anti-Patterns
+
+| Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
+|---|---|---|
+| *"This task is simple, so I'll edit code directly in the orchestrator thread."* | **Context Bloat & Maker-Checker Collapse**: orchestrator context drowns in diffs; skips independent review. | Orchestrator NEVER writes production code directly. Dispatch subagents for all edits. |
+| *"The implementer self-reported tests pass, so I can skip the reviewer subagent."* | **Hallucination Cascades**: accepting unverified claims allows broken code into commits. | Maker-Checker is mandatory: reviewer subagent MUST inspect diff before commit. |
+| *"Task hit a minor blocker, so I'll skip it and proceed to the next task."* | **Broken Dependency Chain**: partial implementations cause compounding failures downstream. | Stop loop on task failure. Iterate with implementer or escalate to user; never skip. |
+| *"Reviewer found an issue, so the orchestrator will quickly patch it inline."* | **Boundary Violation**: bypasses maker-checker isolation and introduces unreviewed changes. | Send review defects back to implementer subagent to fix; re-verify with reviewer. |

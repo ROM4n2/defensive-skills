@@ -14,9 +14,9 @@ metadata:
 
 Execute senior-level code refactoring focusing on complexity reduction, Guard Clause flattening, stdlib consolidation, and dead code elimination while maintaining 100% Green test coverage.
 
-## 🚨 The Iron Rule (HARD GATE)
+## 🚨 The Behavior Preservation Invariant (RFC 2119 MUST)
 > **DO NOT touch any production code until the full test suite is verified GREEN.**
-> Refactoring = changing internal structure without changing external behavior. If you cannot run the test suite, you are not refactoring — you are guessing.
+> Refactoring changes internal structure without changing external behavior. If you cannot run tests or if test passing count changes, stop immediately.
 
 ---
 
@@ -39,7 +39,10 @@ Execute senior-level code refactoring focusing on complexity reduction, Guard Cl
 ```
 
 ### Step 0: Establish Green Baseline (MUST)
-Run the full test suite **before any edit**. Record the passing count. This is your invariant — every subsequent step must preserve it. If tests are already failing, stop and call `/dfs-debug` first.
+1. Run the full test suite **before any edit**. Record the passing count $N$.
+2. This is your invariant — every subsequent step must preserve it. If tests are failing or missing, stop and call `/dfs-debug` or `/dfs-tdd` first.
+3. **Checkable Completion Criterion**:
+   - Test command executed; terminal output confirms 100% passing tests with exact baseline count $N$ recorded.
 
 ### Step 1: The Deletion Test — Remove Before Reshaping
 Before refactoring code into a "better shape", ask: **can I delete it entirely?**
@@ -50,6 +53,8 @@ Before refactoring code into a "better shape", ask: **can I delete it entirely?*
 - **Duplicate helper**: same logic in two places → keep the better one, delete the other.
 
 The best refactoring is deletion. Every line you delete is a line that can never have a bug.
+- **Checkable Completion Criterion**:
+   - Dead code, unused wrappers, or redundant interfaces removed; test suite re-run with exact $N$ tests passing.
 
 ### Step 2: Flatten & Consolidate
 Apply these in order:
@@ -61,13 +66,17 @@ Apply these in order:
    - Level 2 (Existing deps): Can an already-imported library do this? If yes → delete the custom code.
    - Level 3 (Minimal effective implementation): If you must write it, write the smallest version that passes the tests.
 3. **Extract cohesive helpers**: Break functions > 40 lines into focused pure helpers. Each helper does one thing and returns one thing.
+- **Checkable Completion Criterion**:
+   - Indentation depth <= 2 verified; custom wheels replaced with stdlib/existing dependencies; test suite remains 100% green with $N$ passes.
 
 ### Step 3: Deepen Modules
 A **shallow module** has a complex interface but weak implementation (many public methods, thin bodies). A **deep module** has a minimal interface and high-cohesion internals.
 
 - Reduce the public surface: can callers reach the same outcome with fewer exposed functions/methods?
 - Move orchestration logic inward: if the caller must call A then B then C in order, that sequence belongs inside the module.
-- **Done when** you can name, for each public function, the misuse a caller could still make — and a type error or a test catches every one of them. An uncaught misuse means the interface is still too wide.
+- **Done when** you can name, for each public function, the misuse a caller could still make — and a type error or a test catches every one of them.
+- **Checkable Completion Criterion**:
+   - Public API surface minimized or verified cohesive; no callers broken; full test suite passes with $N$ tests.
 
 ### Step 4: Verify Green + Atomic Commit (MUST)
 1. Run the full test suite. **Exact same passing count as Step 0.** If any test broke, revert the last atomic edit and re-examine.
@@ -78,6 +87,19 @@ A **shallow module** has a complex interface but weak implementation (many publi
    refactor(<scope>): replace custom <X> with stdlib <Y>
    ```
 3. **营地法则 (Campsite Rule)**: Leave the code cleaner than you found it. If you touched a function and noticed unrelated mess, note it — but do not fix it in this commit. Separate commits for separate concerns.
+4. **Checkable Completion Criterion**:
+   - Full test suite exit code 0 with count $N$; atomic git commits created; Quantitative Delta Report rendered.
+
+---
+
+## 🚫 Common Rationalizations & Anti-Patterns
+
+| Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
+|---|---|---|
+| *"There are no tests, but I'll refactor carefully using clean patterns."* | **Undetected Regressions**: restructuring untested code introduces subtle behavioral breakages. | MUST verify a passing test baseline before refactoring. If missing, invoke `/dfs-tdd` first. |
+| *"While cleaning up this function, I also added a helpful new option."* | **Conflated Diff Blast Radius**: mixing refactoring with behavior changes ruins git bisect and auditability. | Refactoring commits MUST contain ZERO behavioral or feature additions. |
+| *"A test failed after flattening, so I updated the assertion to match."* | **Reward Hacking & Test Corruption**: silently changing expected outcomes masks genuine regressions. | NEVER modify existing test assertions during refactoring unless signature changes were pre-approved. |
+| *"I'll batch all cleanups across 10 files into one final commit."* | **Unreviewable Mega-Diffs**: inability to isolate which transformation caused a failure if rolled back. | Commit atomically per refactoring concern (delete, flatten, stdlib, deepen). |
 
 ---
 
