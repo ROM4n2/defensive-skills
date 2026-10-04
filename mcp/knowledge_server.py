@@ -237,7 +237,20 @@ class KnowledgeBase:
         m = re.search(r"(?m)^#\s+(.+?)\s*$", text)
         return m.group(1).strip() if m else path.stem
 
+    def prune_missing(self) -> List[pathlib.Path]:
+        missing = [p for p in list(self._cache.keys()) if not p.is_file()]
+        for p in missing:
+            self._cache.pop(p, None)
+        return missing
+
+    def prune_stale(self) -> List[pathlib.Path]:
+        return self.prune_missing()
+
     def get_cached_note(self, path: pathlib.Path) -> Dict[str, Any]:
+        if not path.is_file():
+            self._cache.pop(path, None)
+            raise FileNotFoundError(f"Note not found: {path}")
+
         mtime_ns = path.stat().st_mtime_ns
         cached = self._cache.get(path)
         if cached is not None and cached.get("mtime_ns") == mtime_ns:
@@ -286,6 +299,7 @@ def tool_search_vault(kb: KnowledgeBase, query: str, tag: Optional[str] = None,
     if not terms:
         return "Search query must not be empty."
 
+    kb.prune_missing()
     hits = []
     for path in kb.iter_notes():
         cached = kb.get_cached_note(path)

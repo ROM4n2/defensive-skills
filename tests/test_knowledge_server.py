@@ -489,6 +489,101 @@ class TestKnowledgeBaseCache(unittest.TestCase):
             self.assertEqual(len(read_calls), 0, "Compact format search must also use cache")
             self.assertIn("CODING-UNIVERSAL.md", compact_out)
 
+    def test_cache_invalidation_on_file_modification_updates_search_results(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = build_root(pathlib.Path(td) / "kb")
+            layout = load_layout(root)
+            kb = KnowledgeBase(root, layout)
+
+            note_path = root / "01-Rules" / "CODING-UNIVERSAL.md"
+            # Initial search populates cache
+            out1 = tool_search_vault(kb, "Universal")
+            self.assertIn("CODING-UNIVERSAL.md", out1)
+            self.assertIn("Universal coding rules", out1)
+
+            # Modify note content and update mtime
+            updated_content = (
+                "---\n"
+                "title: \"Quantum architecture rules\"\n"
+                "status: stable\n"
+                "tags:\n"
+                "  - category/rules\n"
+                "  - topic/quantum\n"
+                "---\n\n"
+                "# Quantum rules\n\n"
+                "## Quantum Teleportation\n"
+                "Always verify quantum entanglement fidelity.\n"
+            )
+            note_path.write_text(updated_content, encoding="utf-8")
+            cached_entry = kb._cache[note_path]
+            new_mtime = cached_entry["mtime_ns"] + 50_000_000
+            os.utime(note_path, ns=(new_mtime, new_mtime))
+
+            # Execute tool_search_vault and assert updated contents/title are immediately returned
+            out2 = tool_search_vault(kb, "Quantum")
+            self.assertIn("CODING-UNIVERSAL.md", out2)
+            self.assertIn("Quantum architecture rules", out2)
+            self.assertIn("Always verify quantum entanglement fidelity", out2)
+
+            # Searching for new body-specific term immediately returns the note
+            out3 = tool_search_vault(kb, "entanglement")
+            self.assertIn("CODING-UNIVERSAL.md", out3)
+            self.assertIn("Quantum architecture rules", out3)
+
+            # Old term should no longer be returned
+            out_old = tool_search_vault(kb, "swallow")
+            self.assertNotIn("CODING-UNIVERSAL.md", out_old)
+
+    def test_cache_pruning_on_deletion(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = build_root(pathlib.Path(td) / "kb")
+            layout = load_layout(root)
+            kb = KnowledgeBase(root, layout)
+
+            note_path = root / "01-Rules" / "CODING-UNIVERSAL.md"
+            # Prime cache
+            cached = kb.get_cached_note(note_path)
+            self.assertIn(note_path, kb._cache)
+
+            # Delete note file
+            note_path.unlink()
+            self.assertFalse(note_path.exists())
+
+            # get_cached_note on deleted file must evict from cache and raise FileNotFoundError
+            with self.assertRaises(FileNotFoundError):
+                kb.get_cached_note(note_path)
+            self.assertNotIn(note_path, kb._cache)
+
+            # Re-create a note to test search_vault pruning
+            temp_path = root / "01-Rules" / "TEMP-DELETION.md"
+            temp_path.write_text("# Temporary deletion test\nUniqueEphemeralContent", encoding="utf-8")
+            kb.get_cached_note(temp_path)
+            self.assertIn(temp_path, kb._cache)
+
+            # Verify it shows in search
+            search_out = tool_search_vault(kb, "UniqueEphemeralContent")
+            self.assertIn("TEMP-DELETION.md", search_out)
+
+            # Now delete temp file
+            temp_path.unlink()
+
+            # Search immediately drops it without error and evicts it from cache
+            search_after = tool_search_vault(kb, "UniqueEphemeralContent")
+            self.assertNotIn("TEMP-DELETION.md", search_after)
+            self.assertNotIn(temp_path, kb._cache)
+
+            # prune_missing and prune_stale methods exist and clean up any remaining stale entries
+            stale_key = root / "01-Rules" / "NON-EXISTENT.md"
+            kb._cache[stale_key] = {"title": "Ghost"}
+            pruned = kb.prune_missing()
+            self.assertIn(stale_key, pruned)
+            self.assertNotIn(stale_key, kb._cache)
+
+            kb._cache[stale_key] = {"title": "Ghost 2"}
+            pruned2 = kb.prune_stale()
+            self.assertIn(stale_key, pruned2)
+            self.assertNotIn(stale_key, kb._cache)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
