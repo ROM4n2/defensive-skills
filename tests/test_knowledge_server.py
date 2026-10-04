@@ -23,7 +23,7 @@ _SERVER = _REPO_ROOT / "mcp" / "knowledge_server.py"
 
 sys.path.insert(0, str(_REPO_ROOT / "mcp"))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from knowledge_server import KnowledgeBase, load_layout  # noqa: E402
+from knowledge_server import KnowledgeBase, load_layout, tool_search_vault  # noqa: E402
 from test_skills_conformance import KNOWN_MCP_TOOLS  # noqa: E402
 
 RULE_NOTE = """---
@@ -458,6 +458,36 @@ class TestKnowledgeBaseCache(unittest.TestCase):
             note3 = kb.get_cached_note(note_path)
             self.assertEqual(len(read_calls), 1, "Cache miss on mtime change must call kb.read")
             self.assertEqual(note3["mtime_ns"], new_mtime)
+
+    def test_search_vault_uses_cache_and_avoids_disk_reread(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = build_root(pathlib.Path(td) / "kb")
+            layout = load_layout(root)
+            kb = KnowledgeBase(root, layout)
+
+            # First search populates cache
+            out1 = tool_search_vault(kb, "rules")
+            self.assertIn("CODING-UNIVERSAL.md", out1)
+            self.assertIn("see-also: GO-STANDARDS", out1)
+
+            # Track read calls on second search
+            read_calls = []
+            orig_read = kb.read
+            kb.read = lambda p: (read_calls.append(p), orig_read(p))[1]
+
+            out2 = tool_search_vault(kb, "rules")
+            self.assertEqual(out1, out2)
+            self.assertEqual(len(read_calls), 0, "Repeated search_vault must hit cache and do zero disk reads")
+
+            # JSON and compact formats also hit cache without reading disk
+            json_out = tool_search_vault(kb, "rules", output_format="json")
+            self.assertEqual(len(read_calls), 0, "JSON format search must also use cache")
+            parsed = json.loads(json_out)
+            self.assertTrue(any("CODING-UNIVERSAL.md" in item["path"] for item in parsed))
+
+            compact_out = tool_search_vault(kb, "rules", output_format="compact")
+            self.assertEqual(len(read_calls), 0, "Compact format search must also use cache")
+            self.assertIn("CODING-UNIVERSAL.md", compact_out)
 
 
 if __name__ == "__main__":

@@ -270,6 +270,16 @@ class KnowledgeBase:
 # ---------------------------------------------------------------------------
 # Tools
 # ---------------------------------------------------------------------------
+def _matching_lines(text: str, terms: List[str]) -> List[str]:
+    lines = []
+    for lineno, line in enumerate(text.splitlines(), 1):
+        low = line.lower()
+        if not line.strip() or not any(term in low for term in terms):
+            continue
+        lines.append(f"    L{lineno}: {line.strip()[:200]}")
+    return lines
+
+
 def tool_search_vault(kb: KnowledgeBase, query: str, tag: Optional[str] = None,
                       top: int = 5, output_format: str = "detailed") -> str:
     terms = [t for t in re.split(r"\s+", query.strip().lower()) if t]
@@ -278,27 +288,28 @@ def tool_search_vault(kb: KnowledgeBase, query: str, tag: Optional[str] = None,
 
     hits = []
     for path in kb.iter_notes():
-        text = kb.read(path)
-        fm = kb.frontmatter(text)
-        tags = [str(t).lower() for t in fm.get("tags", [])]
+        cached = kb.get_cached_note(path)
+        tags = cached["tags"]
         if tag and not any(tag.lower() in t for t in tags):
             continue
 
-        path_s = kb.rel(path).lower()
-        title_s = kb.title_of(path, text).lower()
-        headings = " ".join(re.findall(r"(?m)^#{1,6}\s+(.+)$", text)).lower()
-        body_s = re.sub(r"```.*?```", " ", text, flags=re.DOTALL).lower()
+        path_s = cached["path_s"]
+        title_s = cached["title"].lower()
+        headings = cached["headings"]
+        body_s = cached["body_s"]
+        text = cached["text"]
 
-        score = 0.0
-        for term in terms:
-            score += 6.0 * title_s.count(term)
-            score += 4.0 * sum(1 for t in tags if term in t)
-            score += 3.0 * headings.count(term)
-            score += 2.0 * path_s.count(term)
-            score += 1.0 * body_s.count(term)
+        score = sum(
+            6.0 * title_s.count(term)
+            + 4.0 * sum(1 for t in tags if term in t)
+            + 3.0 * headings.count(term)
+            + 2.0 * path_s.count(term)
+            + 1.0 * body_s.count(term)
+            for term in terms
+        )
         if score <= 0:
             continue
-        hits.append((score, path, text))
+        hits.append((score, path, cached))
 
     if not hits:
         return "No relevant notes found in the knowledge base."
@@ -307,26 +318,22 @@ def tool_search_vault(kb: KnowledgeBase, query: str, tag: Optional[str] = None,
     hits = hits[:max(1, top)]
 
     if output_format == "json":
-        payload = [{"path": kb.rel(p), "title": kb.title_of(p, t), "score": round(s, 2),
-                    "tags": kb.frontmatter(t).get("tags", [])} for s, p, t in hits]
+        payload = [{"path": kb.rel(p), "title": c["title"], "score": round(s, 2),
+                    "tags": c["frontmatter"].get("tags", [])} for s, p, c in hits]
         return json.dumps(payload, ensure_ascii=False, indent=2)
 
     lines = [f"Knowledge base hits for {query!r} ({len(hits)} of {len(hits)}):"]
-    for rank, (score, path, text) in enumerate(hits, 1):
+    for rank, (score, path, cached) in enumerate(hits, 1):
         if output_format == "compact":
-            lines.append(f"[{rank}] {kb.rel(path)} ({round(score, 1)} pts]")
+            lines.append(f"[{rank}] {kb.rel(path)} ({round(score, 1)} pts)")
             continue
-        lines.append(f"\n[{rank}] {kb.rel(path)} ({round(score, 1)} pts]")
-        lines.append(f"    title: {kb.title_of(path, text)}")
-        tags = kb.frontmatter(text).get("tags", [])
+        lines.append(f"\n[{rank}] {kb.rel(path)} ({round(score, 1)} pts)")
+        lines.append(f"    title: {cached['title']}")
+        tags = cached["frontmatter"].get("tags", [])
         if tags:
             lines.append(f"    tags: {', '.join(str(t) for t in tags)}")
-        for lineno, line in enumerate(text.splitlines(), 1):
-            low = line.lower()
-            if any(term in low for term in terms) and line.strip():
-                lines.append(f"    L{lineno}: {line.strip()[:200]}")
-        # 1-hop: wikilinks referenced by this note are the cheapest useful adjacency signal.
-        neighbours = [w for w in re.findall(r"\[\[([^\]|#]+)", text)][:5]
+        lines.extend(_matching_lines(cached["text"], terms))
+        neighbours = cached.get("neighbours", [])
         if neighbours:
             lines.append(f"    see-also: {', '.join(sorted(set(n.strip() for n in neighbours)))}")
     return "\n".join(lines)
