@@ -246,7 +246,18 @@ class KnowledgeBase:
         return missing
 
     def prune_stale(self) -> List[pathlib.Path]:
-        return self.prune_missing()
+        """Evict unlinked files and notes whose on-disk mtime has drifted from cache."""
+        evicted = []
+        for p in list(self._cache.keys()):
+            try:
+                st = p.stat()
+                if not stat.S_ISREG(st.st_mode) or st.st_mtime_ns != self._cache[p].get("mtime_ns"):
+                    self._cache.pop(p, None)
+                    evicted.append(p)
+            except OSError:
+                self._cache.pop(p, None)
+                evicted.append(p)
+        return evicted
 
     def get_cached_note(self, path: pathlib.Path) -> Dict[str, Any]:
         try:
@@ -270,7 +281,7 @@ class KnowledgeBase:
         headings = " ".join(re.findall(r"(?m)^#{1,6}\s+(.+)$", text)).lower()
         body_s = re.sub(r"```.*?```", " ", text, flags=re.DOTALL).lower()
         path_s = self.rel(path).lower()
-        neighbours = [w for w in re.findall(r"\[\[([^\]|#]+)", text)][:5]
+        neighbours = re.findall(r"\[\[([^\]|#]+)", text)[:5]
 
         note_data: Dict[str, Any] = {
             "mtime_ns": mtime_ns,
