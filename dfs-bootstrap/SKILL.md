@@ -81,8 +81,21 @@ Run the mechanical scaffold, then distill the primer:
 
 ---
 
-### Phase 4: Binary Verification & Mechanical Test (HARD GATE)
+### Phase 4: Binary Verification & Mechanical Test (RFC 2119 MUST)
 Verify the pre-commit barrier actually works before claiming success:
 1. Run pre-commit hook directly: `bash .githooks/pre-commit` (or `python scripts/bootstrap.py --dry-run --target .` to confirm the script's own plan first).
 2. Verify exit code is 0.
 3. Announce: `✅ Repository bootstrapped with zero-leakage pre-commit guard and Vault anchors.`
+- **Checkable Completion Criterion**:
+  - `bash .githooks/pre-commit` executed with exit code 0; `git config core.hooksPath` returns `.githooks`; `WORKMEMORY/PROJECT_OVERVIEW.md` populated.
+
+---
+
+## 🚫 Common Rationalizations & Anti-Patterns
+
+| Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
+|---|---|---|
+| *"Git hooks are optional, so I will just write a rule in README instead."* | **Secret Leakage**: Model prompts and README rules do not stop automated git pushes. | Hard Gate: Install physical `.githooks/pre-commit` and verify execution. |
+| *"I'll leave WORKMEMORY/PROJECT_OVERVIEW.md with default template comments."* | **Context Amnesia**: Future agent sessions fail to inherit project positioning and pitfalls. | Mandatory Distillation: Must replace skeleton placeholders with real codebase facts. |
+| *"This repo doesn't have an Obsidian Vault, so I'll skip knowledge anchors."* | **Anchor Fragmentation**: Without local rule anchors, agents hallucinate conventions. | Inject standard fallback anchors using relative project `./.agent/` or local guidelines. |
+| *"I created the hook script, so I assume it works without running it."* | **Silent Hook Failure**: Syntax errors or missing chmod +x render hooks completely ineffective. | Physical Verification: Run `bash .githooks/pre-commit` and assert exit code 0. |

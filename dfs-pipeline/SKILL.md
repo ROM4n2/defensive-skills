@@ -21,6 +21,12 @@ metadata:
 
 Orchestrate the full development lifecycle with Git Worktree branch isolation, multi-subagent task dispatching (`/dfs-exec`), performance profiling, multi-expert review, and automated knowledge harvesting.
 
+## 🚨 The Worktree Isolation Invariant (RFC 2119 MUST)
+> **Never execute multi-stage pipeline delivery directly on the main working tree.**
+> All multi-skill feature implementations MUST take place within an isolated Git Worktree (`.worktrees/feat-{name}`) to ensure zero side-effects on primary work until all quality gates pass.
+
+---
+
 ## The 9-Stage Pipeline Ledger
 
 ```markdown
@@ -31,7 +37,7 @@ Orchestrate the full development lifecycle with Git Worktree branch isolation, m
 │ Stage 2: /dfs-grill    ➔ 双镜头极限架构压测与前沿决策树推进                            │
 │ Stage 3: /dfs-adr      ➔ 自动编号与 MADR 标准架构决策记录归档                          │
 │ Stage 4: /dfs-plan     ➔ 任务细粒度拆解与 Subagent Prompt 脚手架生成                   │
-│ Stage 5: Git Worktree    ➔ 自动创建独立分支工作区 (.worktrees/feat-{name})             │
+│ Stage 5: Git Worktree  ➔ 自动创建独立分支工作区 (.worktrees/feat-{name})               │
 │ Stage 6: /dfs-exec     ➔ 多子智能体 TDD 开发 + Maker-Checker 双人复核流水线            │
 │ Stage 7: /dfs-perf     ➔ 基准压测 (-benchmem)、竞态检测 (-race) 与性能卡片生成         │
 │ Stage 8: /dfs-team     ➔ 6 专家全栈 Swarm 并发终审与 PR 合并门禁                       │
@@ -48,12 +54,29 @@ When starting feature execution, create an isolated git worktree:
 ```bash
 git worktree add -b feat-{feature_name} .worktrees/feat-{feature_name} master
 ```
+- **Checkable Completion Criterion**:
+  - Git worktree created in `.worktrees/`; verified branch pointer isolated from master.
 
 ### Step 2: Autonomous Execution Loop
 Dispatch `/dfs-exec` inside the isolated worktree directory, tracking tasks via `.vault-exec-ledger.json`.
+- **Checkable Completion Criterion**:
+  - `.vault-exec-ledger.json` reports all tasks `COMPLETED`; test suite verified 100% green within worktree.
 
 ### Step 3: Verification & Multi-Expert Gate
 1. Run test suite and benchmarks via `/dfs-perf`.
 2. Run multi-expert audit via `/dfs-team`.
 3. If all P0/P1 issues resolved: Merge worktree branch to master and remove worktree.
 4. Call `/dfs-save` to harvest session learnings.
+- **Checkable Completion Criterion**:
+  - Consensus report from `/dfs-team` free of unresolved P0/P1 blockers; worktree merged and pruned via `git worktree remove`.
+
+---
+
+## 🚫 Common Rationalizations & Anti-Patterns
+
+| Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
+|---|---|---|
+| *"Setting up a worktree takes time, so I'll run the pipeline directly on master."* | **Tainted Workspace & Unsafe States**: Pipeline failures leave dirty uncommitted files on the main working tree. | Mandatory Isolation: Always execute pipeline within `.worktrees/feat-{name}`. |
+| *"Subagents reported green, so I can skip the /dfs-team swarm review."* | **Blind Spot Accumulation**: Maker-Checker per task misses cross-cutting architecture and database flaws. | Swarm Verification: Full pipeline requires multi-expert consensus before merging to master. |
+| *"Merge completed cleanly, so we don't need to harvest learnings via /dfs-save."* | **Sediment Loss**: Non-obvious implementation traps discovered during the run are lost forever. | Mandatory Harvest: Call `/dfs-save` upon pipeline completion to record technical discoveries. |
+| *"I'll leave the worktree around in case we need it later."* | **Disk Bloat & Lock Contention**: Lingering worktrees hold branch locks and confuse git operations. | Always clean up with `git worktree remove` after branch merge. |

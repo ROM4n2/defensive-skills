@@ -21,7 +21,7 @@ metadata:
 
 Coordinate rapid incident containment (mitigation before analysis), build forensic event timelines, uncover systemic root causes with 5-Whys, and archive blameless postmortems to prevent repeat failures.
 
-## 🚨 The Containment-First Iron Rule (HARD GATE)
+## 🚨 The Containment-First Iron Rule (RFC 2119 MUST)
 > **In an active production outage, STOP debugging and prioritize IMMEDIATE CONTAINMENT.**
 > Rollback, shed load, toggle feature flags, or cut traffic first. Perform deep forensic root-cause analysis ONLY after user service is restored.
 
@@ -48,6 +48,8 @@ Coordinate rapid incident containment (mitigation before analysis), build forens
    - **P1**: Significant feature degraded, latency spike > 5x baseline.
    - **P2**: Non-critical subsystem failing, internal admin tool outage.
 2. Freeze deployments and non-essential background jobs immediately.
+3. **Checkable Completion Criterion**:
+   - Severity tier tagged (P0/P1/P2); incident channel opened; freeze order issued.
 
 ### Phase 2: Immediate Containment
 1. Apply the fastest mitigation tactic:
@@ -55,13 +57,30 @@ Coordinate rapid incident containment (mitigation before analysis), build forens
    - Circuit breaker / feature flag toggle to disable faulty codepath.
    - Rate limiting / shed load on upstream gateway.
 2. Confirm metric recovery (latency, error rate, saturation return to SLO baseline).
+3. **Checkable Completion Criterion**:
+   - Error budget drain stopped; user traffic restored to healthy baseline SLO.
 
 ### Phase 3: Forensic Timeline Reconstruction
 1. Capture all relevant error snapshots, telemetry traces, and database logs before log retention windows expire.
 2. Construct minute-by-minute timeline linking deployment actions to anomaly curves.
+3. **Checkable Completion Criterion**:
+   - Timeline assembled with concrete timestamp citations ($T_0, T_{detect}, T_{mitigate}$); log receipts preserved.
 
 ### Phase 4: Blameless Postmortem Archival
 1. Load `templates/postmortem-template.md` via `read_file(path='templates/postmortem-template.md')`.
 2. Conduct 5-Whys causal analysis (focus on systemic flaws and missing guardrails, never on human blame).
 3. Record preventative Action Items with owners and deadlines.
 4. Auto-ingest defensive takeaways into `01-Rules/` or draft to `99-Inbox/` via `dfs-save`.
+5. **Checkable Completion Criterion**:
+   - Postmortem markdown file written to `docs/postmortems/YYYY-MM-DD-<incident>.md`; at least 1 preventative rule draft generated via `dfs-save`.
+
+---
+
+## 🚫 Common Rationalizations & Anti-Patterns
+
+| Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
+|---|---|---|
+| *"Let me attach a debugger or inspect stack traces while users see 500 errors."* | **Prolonged MTTR & Error Budget Drain**: Root-cause hunting during outages wastes precious recovery minutes. | Containment first: rollback or flip feature flags immediately before any forensic code analysis. |
+| *"The incident was caused by developer X forgetting a parameter, so we'll remind the team."* | **Blame Trap & Repeat Outages**: Blaming individuals ignores systemic absence of CI linting/type checks. | Blameless rule: 5-Whys must trace to missing automated tests, gates, or architectural guardrails. |
+| *"Service metrics look okay now, so we can skip the written postmortem."* | **Knowledge Evaporation**: Unrecorded incidents repeat identically in future sprints. | Postmortem archival in `docs/postmortems/` is strictly mandatory for all P0 and P1 events. |
+| *"We will prevent this by being more careful in the future."* | **Zero Defense Invariant**: Good intentions are not engineering controls. | Action items MUST consist of code gates, automated tests, or monitoring alerts with owners. |

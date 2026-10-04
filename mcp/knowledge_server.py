@@ -436,7 +436,7 @@ def tool_get_rule_snippet(kb: KnowledgeBase, rule_name: str, section: Optional[s
         chunks.append("\n".join(current))
 
     if not chunks:
-        headings = "\n".join(f"- {l}" for l in lines if l.startswith("## "))[:1500]
+        headings = "\n".join(f"- {l}" for l in lines if re.match(r"^#{2,4}\s+", l))[:1500]
         return f"No section matching '{section}' in `{rule_name}`.\n\nAvailable sections:\n{headings}"
 
     return f"# [JIT slice: {rule_name} -> {section}]\n\n" + "\n\n---\n\n".join(chunks)

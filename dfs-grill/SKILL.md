@@ -98,14 +98,16 @@ When the proposal is complex enough that background research pays for itself, di
 **`subagent_type` names the base agent only** — this lens's job is its Grills-on column, and `code-reviewer` here runs a concurrency review, not the Red/Yellow protocol. See `dfs/references/subagent-dispatch.md`.
 
 **Only dispatch the lenses the proposal actually touches.** For a small or purely local design decision, skip Stage 1 entirely and go straight to Stage 3 — a five-agent panel on a two-file change is theatre, and the specialists will manufacture findings to justify their seat.
-
-Never block the human on the fan-out: if a seat returns nothing substantive, drop it from the synthesis rather than padding a round with it.
+- **Checkable Completion Criterion**:
+  - Relevant specialist lenses dispatched; seat findings received or explicit skip justified based on proposal scope.
 
 ### Stage 2: Context Ingestion & The Ladder of Reuse
 Query `omni_search(proposal, scope='ladder')` to challenge against **The Ladder of Reuse (RFC 2119 MUST)**:
 - **Level 0 (YAGNI / User Value)**: Does this feature actually solve a real user problem?
 - **Level 1 (Stdlib/Existing Code)**: Does standard library or existing codebase already have a 3-line solution?
 - **Level 2 (Existing Dependencies)**: Can existing libraries satisfy this without adding new dependencies?
+- **Checkable Completion Criterion**:
+  - `omni_search` query executed; Ladder of Reuse evaluation recorded against stdlib and existing modules.
 
 ### Stage 3: Frontier Round Protocol (Tight Socratic Rounds)
 Synthesize the specialists' findings into tight, numbered questions:
@@ -125,8 +127,8 @@ Synthesize the specialists' findings into tight, numbered questions:
 ```
 
 Recompute the frontier on each user reply. Stop when every frontier point carries a chosen option in the draft: a point that still has an open question and no chosen option *is* the frontier, so the cone is closed only when none remain.
-
----
+- **Checkable Completion Criterion**:
+  - Socratic questions formulated with `➡️ Recommended` options; user answers received closing the frontier cone.
 
 ### Stage 4: Consensus & ADR Archiving
 Summarize consensus into a formal **Architecture Decision Record (ADR-000x)**:
@@ -134,6 +136,19 @@ Summarize consensus into a formal **Architecture Decision Record (ADR-000x)**:
 - Dual-Track Ingestion Gate:
   - Option 1: Draft in `99-Inbox/`
   - Option 2: Direct promotion to `08-Projects/{project}/01-ADR/` or `01-Rules/`.
+- **Checkable Completion Criterion**:
+  - ADR document physically written with resolved sequential number; consensus decisions locked.
+
+---
+
+## 🚫 Common Rationalizations & Anti-Patterns
+
+| Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
+|---|---|---|
+| *"I'll dump 10 architectural questions at once to cover everything quickly."* | **Cognitive Overload**: Humans give superficial answers when faced with walls of questions. | Strict Frontier Protocol: 1~2 numbered questions per round. Drive to closure iteratively. |
+| *"The user chose an approach without trade-off analysis, so I'll just accept it."* | **Unvetted Architectural Debt**: Passive agreement leads to fragile systems in production. | Socratic Inquest: Challenge assumptions using Dual-Lens (UX friction vs Systems resilience). |
+| *"I'll skip proposing a recommended option to stay neutral."* | **Decision Paralysis**: Users expect senior engineer opinions, not uncurated option lists. | Always state a concrete recommendation (`➡️ Recommended: Option A`) backed by YAGNI. |
+| *"We can close this grill round without recording an ADR."* | **Decision Evaporation**: Verbal consensus in chat is lost in the next session context. | Mandatory ADR Archival: Every completed grill must produce an ADR markdown artifact. |
 
 ---
 

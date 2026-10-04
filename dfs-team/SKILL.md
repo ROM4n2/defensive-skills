@@ -46,6 +46,7 @@ judged the target to touch. Both belong in the report header, not in prose.
 ## Phase 1: Swarm Dispatch (Parallel Fan-out)
 Dispatch the relevant specialist seats concurrently:
 - **Dispatch one subagent per seat, runtime-neutrally**: `delegate_task` is the portable path; `subagent_type` is the optional Claude Code fallback. The runtime variants, the `subagent_type` rule and the **read-scope declaration** each seat owes live in `dfs/references/subagent-dispatch.md`.
+- **Batch Parallel Invariant (Hermes MUST)**: In Hermes Agent environments, pass all specialist tasks in a single `delegate_task(tasks=[...])` call rather than serializing dispatches across multiple conversation turns. Parallel execution preserves token budget and accelerates consensus.
 
 | Seat | Subagent Role (`subagent_type`) | Owns (primary claim) | Cross-checks |
 |---|---|---|---|
@@ -57,6 +58,20 @@ Dispatch the relevant specialist seats concurrently:
 | SRE & Availability | `sre-resilience` | Timeouts, retries, failure modes, resource bounds | runtime secret exposure → `code-reviewer` |
 | Codebase recon (optional) | `codebase-researcher` | Pre-flight inventory when the target scope is unclear | — |
 | Code-structure recon (optional) | `codegraph-explorer` | Call chains and impact pre-recon when the target involves "who calls X / what breaks if W changes" | — |
+
+**Checkable Completion Criterion**:
+- Active specialist seats dispatched in parallel; receipts collected with line citations and primary domain ownership.
+
+---
+
+## 🚫 Common Rationalizations & Anti-Patterns
+
+| Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
+|---|---|---|
+| *"All seats are important, so I will dispatch all 6 specialists on a 10-line helper diff."* | **Token Waste & Fluff Inflation**: Forcing irrevelant reviewers produces fabricated nitpicks. | Pick seats strictly based on artifact classes present in target. Explicitly justify skips. |
+| *"Seat reported a P0 issue, so I will print it as confirmed without verification."* | **False-Positive Panics**: Subagents frequently hallucinate severity or overlook call-site guards. | Mandatory Phase 1.5 Adversarial Skeptic Read for all P0/P1 findings before synthesis. |
+| *"I'll list findings from every seat individually to show how thorough the audit was."* | **Synthesis Failure & Inflated Count**: Printing duplicate findings uncollapsed distorts priorities. | Strict Collapse Rule: Report findings count MUST be strictly less than raw seat count. |
+| *"The consensus report is done, so the audit finishes without actionable remediation."* | **Passive Documentation**: Audit reports without sequenced patches leave debt unaddressed. | Mandatory Action Plan: Every synthesis MUST output ordered, concrete remediation steps. |
 
 **`subagent_type` names the base agent only** — this seat's job is its Owns column. See `dfs/references/subagent-dispatch.md`.
 

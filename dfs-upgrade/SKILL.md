@@ -1,6 +1,6 @@
 ---
 name: dfs-upgrade
-description: "Assess breaking changes and upgrade risk for a dependency. Use when upgrading a package version and you need to know what will break and in which files."
+description: Assess breaking changes and upgrade risk for a dependency. Use when upgrading a package version and you need to know what will break and in which files.
 version: 0.2.0
 license: MIT
 platforms: [linux, macos, windows]

@@ -15,8 +15,9 @@ metadata:
 
 Turn vague ideas, open-ended feature thoughts, or fuzzy developer needs into structured, knowledge-grounded design specifications through collaborative dialogue across **Dual Lenses: User Problem Validation + Technical Architecture**.
 
-## The Iron Gate (HARD GATE)
-Do NOT invoke any implementation skill, write production code, or scaffold repositories until presenting the design spec and obtaining explicit human partner approval.
+## 🚨 The Spec-First Invariant (RFC 2119 MUST)
+> **Do NOT invoke any implementation skill, write production code, or scaffold repositories until presenting the design spec and obtaining explicit human partner approval.**
+> Jumping into coding from fuzzy requirements without a sized specification violates the Fog of War staged development principle.
 
 ---
 
@@ -35,17 +36,41 @@ here, and let Phase 1 decide how much process the idea has earned.
 
 ---
 
+## The 5-Phase Idea Sizing State Machine
+
+```
+  [Phase 1: Intent Scoping & Three-Path Classification (Spike/Bounded/Arch)]
+                               │
+                               ▼
+  [Phase 2: Vault & Codebase Knowledge Grounding (L1 -> L0)]
+                               │
+                               ▼
+  [Phase 3: Socratic Dialogue & Dual-Lens Trade-Off Matrix (UX vs Tech)]
+                               │
+                               ▼
+  [Phase 4: Spec Generation & Self-Review (Zero TBD Check)]
+                               │
+                               ▼
+  [Phase 5: Handoff Gate (Relay to /dfs-plan)]
+```
+
+---
+
 ## Phase 1: Intent Scoping & Three-Path Classification
 Classify the task upfront and announce it:
 - **Spike** (Feasibility question): "Can we / what is the cost / quick probe". Present probe plan in 2-3 sentences, get nod, investigate, report recommendation. No spec doc.
 - **Bounded** (Scoped tweak to existing code): Clarify questions, present 2-3 paragraph design in chat, get explicit approval, then proceed without plan doc.
 - **Architectural** (New feature / subsystem / restructuring): Full process (Phase 2 to Phase 5).
+- **Checkable Completion Criterion**:
+  - Classification announced with justification; user confirms scope before proceeding.
 
 ---
 
 ## Phase 2: Vault & Codebase Knowledge Grounding
 1. Query `omni_search(query, scope='ladder')` to check if similar problems were already solved in `08-Projects/` or `01-Rules/`.
 2. Inspect codebase dependencies and standard library capabilities to ground ideation in reality.
+3. **Checkable Completion Criterion**:
+   - `omni_search` executed or codebase dependencies checked; prior art or existing patterns cited.
 
 ---
 
@@ -61,6 +86,8 @@ Propose **2 to 3 distinct approaches** with explicit trade-offs:
 - **Option A (Minimalist)**: Lowest complexity, zero-dependency, standard library first.
 - **Option B (Domain-Native)**: Deep integration with existing project engines.
 - **Option C (Extensible)**: Pluggable architecture for future multi-tenant growth.
+- **Checkable Completion Criterion**:
+  - Trade-off matrix rendered comparing A/B/C across complexity, operational cost, and YAGNI risk; user selection recorded.
 
 ---
 
@@ -75,6 +102,8 @@ On user approval of the approach:
    - `4. Edge Cases & Resilience` (Network drops, race conditions, error boundaries)
    - `5. Test Strategy` (Unit tests, integration scenarios)
 4. Spec Self-Review: Check for zero "TODO/TBD" placeholders, contradictions, or scope creep.
+5. **Checkable Completion Criterion**:
+   - Design spec written to disk; zero `TODO`/`TBD` occurrences; all 5 schema sections populated.
 
 ---
 
@@ -82,6 +111,19 @@ On user approval of the approach:
 Prompt user:
 `Design spec ready and approved. Ready to generate implementation plan via /dfs-plan?`
 Auto-relay to `/dfs-plan` upon confirmation.
+- **Checkable Completion Criterion**:
+  - Human partner explicit approval received; target plan file path confirmed for `/dfs-plan`.
+
+---
+
+## 🚫 Common Rationalizations & Anti-Patterns
+
+| Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
+|---|---|---|
+| *"The idea is obvious, so I'll jump straight to scaffolding code."* | **Speculative Architecture & Rework**: Coding without an agreed design wastes time on misaligned assumptions. | Stop at Phase 1/4. Never write production code until spec receives human approval. |
+| *"I'll add flexible abstractions now in case we need Kafka or GraphQL later."* | **Premature Complexity (YAGNI Violation)**: Over-engineered designs introduce maintenance burden for unused features. | Propose Minimalist Option A first; enforce Ladder of Reuse against stdlib. |
+| *"The user asked a simple probe question, so I'll write a full 200-line spec."* | **Process Bureaucracy**: Over-processing small spikes stalls exploration velocity. | Honor the Three-Path Classification: Spikes need 2-3 sentence probe plans, not spec docs. |
+| *"I left some edge cases as TBD in the spec to figure out during coding."* | **Fog of War Trap**: Unresolved architectural questions explode into blocking bugs during execution. | Spec MUST contain zero TODO/TBD markers; resolve or explicitly scope out before handoff. |
 
 ## 🧪 Worked example — classification decides the process
 
