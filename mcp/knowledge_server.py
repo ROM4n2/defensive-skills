@@ -33,6 +33,7 @@ import json
 import os
 import pathlib
 import re
+import stat
 import sys
 import traceback
 from datetime import date
@@ -230,10 +231,11 @@ class KnowledgeBase:
             fm["tags"] = [m.group(1).strip().strip("\"'") for m in re.finditer(r"(?m)^\s*-\s*(.+?)\s*$", block.group(1))] if block else []
         return fm
 
-    def title_of(self, path: pathlib.Path, text: str) -> str:
-        fm = self.frontmatter(text)
+    def title_of(self, path: pathlib.Path, text: str, fm: Optional[Dict[str, Any]] = None) -> str:
+        if fm is None:
+            fm = self.frontmatter(text)
         if fm.get("title"):
-            return str(fm["title"])
+            return str(fm["title"]).strip()
         m = re.search(r"(?m)^#\s+(.+?)\s*$", text)
         return m.group(1).strip() if m else path.stem
 
@@ -247,18 +249,23 @@ class KnowledgeBase:
         return self.prune_missing()
 
     def get_cached_note(self, path: pathlib.Path) -> Dict[str, Any]:
-        if not path.is_file():
+        try:
+            st = path.stat()
+            if not stat.S_ISREG(st.st_mode):
+                self._cache.pop(path, None)
+                raise FileNotFoundError(f"Note not a regular file: {path}")
+        except OSError:
             self._cache.pop(path, None)
             raise FileNotFoundError(f"Note not found: {path}")
 
-        mtime_ns = path.stat().st_mtime_ns
+        mtime_ns = st.st_mtime_ns
         cached = self._cache.get(path)
         if cached is not None and cached.get("mtime_ns") == mtime_ns:
             return cached
 
         text = self.read(path)
         fm = self.frontmatter(text)
-        title = self.title_of(path, text)
+        title = self.title_of(path, text, fm=fm)
         tags = [str(t).lower() for t in fm.get("tags", [])]
         headings = " ".join(re.findall(r"(?m)^#{1,6}\s+(.+)$", text)).lower()
         body_s = re.sub(r"```.*?```", " ", text, flags=re.DOTALL).lower()
@@ -311,7 +318,6 @@ def tool_search_vault(kb: KnowledgeBase, query: str, tag: Optional[str] = None,
         title_s = cached["title"].lower()
         headings = cached["headings"]
         body_s = cached["body_s"]
-        text = cached["text"]
 
         score = sum(
             6.0 * title_s.count(term)
