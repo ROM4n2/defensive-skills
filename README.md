@@ -7,10 +7,10 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Skills-24-4B5563?style=flat-square" alt="Skills" />
   <img src="https://img.shields.io/badge/Conformance-14%20rules-0969DA?style=flat-square" alt="Conformance rules" />
-  <img src="https://img.shields.io/badge/Tests-105%20passed-2EA44F?style=flat-square" alt="Tests" />
+  <img src="https://img.shields.io/badge/Tests-109%20passed-2EA44F?style=flat-square" alt="Tests" />
   <img src="https://img.shields.io/badge/Mutation-22%2F22%20caught-2EA44F?style=flat-square" alt="Mutation harness" />
   <img src="https://img.shields.io/badge/Dependencies-0%20(stdlib)-gray?style=flat-square" alt="Zero dependencies" />
-  <img src="https://img.shields.io/badge/Python-3.11%20%7C%203.14-3776AB?style=flat-square" alt="Python" />
+  <img src="https://img.shields.io/badge/Python-3.11%20%7C%203.12-3776AB?style=flat-square" alt="Python" />
   <img src="https://img.shields.io/badge/License-MIT-gray?style=flat-square" alt="License MIT" />
 </p>
 
@@ -139,7 +139,7 @@ python tests/test_harness_field_mapping.py # frontmatter 字段映射表与树�
 python tests/test_shipped_assets_tracked.py # 随包资产真被 git 跟踪（否则 clone 跑不起来）→ exit 0
 ```
 
-十个门禁在 **Python 3.11.8 与 3.14.7 下结果完全一致**（这条是设计目标：门禁的结论不该取决于你碰巧用哪个解释器调用它——早期版本 `import yaml`，在没有 PyYAML 的解释器下直接跑不起来）。
+十个门禁在 **Python 3.11.8 与 3.12.13 下结果完全一致**（这条是设计目标：门禁的结论不该取决于你碰巧用哪个解释器调用它——早期版本 `import yaml`，在没有 PyYAML 的解释器下直接跑不起来）。
 
 几条刻意的设计，值得单独说：
 

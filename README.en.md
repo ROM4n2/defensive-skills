@@ -7,10 +7,10 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Skills-24-4B5563?style=flat-square" alt="Skills" />
   <img src="https://img.shields.io/badge/Conformance-14%20rules-0969DA?style=flat-square" alt="Conformance rules" />
-  <img src="https://img.shields.io/badge/Tests-105%20passed-2EA44F?style=flat-square" alt="Tests" />
+  <img src="https://img.shields.io/badge/Tests-109%20passed-2EA44F?style=flat-square" alt="Tests" />
   <img src="https://img.shields.io/badge/Mutation-22%2F22%20caught-2EA44F?style=flat-square" alt="Mutation harness" />
   <img src="https://img.shields.io/badge/Dependencies-0%20(stdlib)-gray?style=flat-square" alt="Zero dependencies" />
-  <img src="https://img.shields.io/badge/Python-3.11%20%7C%203.14-3776AB?style=flat-square" alt="Python" />
+  <img src="https://img.shields.io/badge/Python-3.11%20%7C%203.12-3776AB?style=flat-square" alt="Python" />
   <img src="https://img.shields.io/badge/License-MIT-gray?style=flat-square" alt="License MIT" />
 </p>
 
@@ -139,7 +139,7 @@ python tests/test_harness_field_mapping.py # the harness field map matches the t
 python tests/test_shipped_assets_tracked.py # shipped assets are really tracked (else a clone breaks) → exit 0
 ```
 
-All ten produce **identical results under Python 3.11.8 and 3.14.7**. That is a design goal, not a coincidence: a gate's verdict must not depend on which interpreter you happen to invoke it with. An early version did `import yaml` and simply could not run on an interpreter without PyYAML.
+All ten produce **identical results under Python 3.11.8 and 3.12.13**. That is a design goal, not a coincidence: a gate's verdict must not depend on which interpreter you happen to invoke it with. An early version did `import yaml` and simply could not run on an interpreter without PyYAML.
 
 Six deliberate design choices worth calling out:
 
