@@ -59,6 +59,9 @@ implementation_plan.md
 /.cursorrules
 /WORKMEMORY/
 /HANDOFF.md
+# Personal Trae global-config script (hardcoded local MCP/server set);
+# must NOT live under scripts/ — shipped paths allow no untracked files.
+/setup-trae-global.ps1
 
 # ============================================================
 #  Port-local runtime state
