@@ -1,13 +1,22 @@
 ---
 name: dfs-adr
 description: Draft and archive numbered Architecture Decision Records. Use when the user makes an architecture decision or asks to record one.
-version: 0.2.0
 license: MIT
-platforms: [linux, macos, windows]
 metadata:
+  version: 0.2.0
+  platforms: linux, macos, windows
   hermes:
-    tags: [adr, architecture, decision-record, madr, documentation]
-    related_skills: [dfs-grill, dfs-spark, dfs-plan, dfs-save]
+    tags:
+      - adr
+      - architecture
+      - decision-record
+      - madr
+      - documentation
+    related_skills:
+      - dfs-grill
+      - dfs-spark
+      - dfs-plan
+      - dfs-save
 ---
 
 # DFS-ADR: Architecture Decision Record Generator

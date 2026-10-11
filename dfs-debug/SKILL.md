@@ -1,10 +1,10 @@
 ---
 name: dfs-debug
 description: Execute 4-step systematic root-cause debugging with a reproduction. Use when the user reports a bug, a failing test, or says something is broken.
-version: 0.2.0
 license: MIT
-platforms: [linux, macos, windows]
 metadata:
+  version: 0.2.0
+  platforms: linux, macos, windows
   hermes:
     tags: [debugging, root-cause, reproduction, systematic-debugging, troubleshooting]
     related_skills: [dfs-tdd, dfs-save, systematic-debugging]
@@ -15,13 +15,24 @@ metadata:
 
 Resolve bugs, race conditions, memory leaks, and runtime panics with zero guesswork using the 4-step root-cause protocol.
 
-## 🚨 The Reproduction-First Invariant (RFC 2119 MUST)
-> **NO production code changes shall be attempted until Step 1 (Evidence & Minimal Reproduction) produces a verified red failure.**
+## 🔍 Two-Track Debugging Triage (两级排障分流)
+
+Classify the bug immediately before attempting fixes:
+
+| Track | Bug Nature | Protocol | Overhead |
+|---|---|---|:---:|
+| **Track 1: Trivial/Obvious (Fast-Path)** | Syntax errors, typos, missing imports, path formatting, config mismatches, obvious null pointers. | **Surgical Fix + Existing Test Suite**: Fix inline, run existing tests/linter to verify exit 0. **DO NOT** create ad-hoc `scratch/repro.*` scripts or pollute test suites with trivial typo tests. | ~30s |
+| **Track 2: Deep/Systematic (Full Protocol)** | Concurrency races, deadlocks, state machine corruptions, memory leaks, silent data corruptions. | **The Mandatory 4-Step Protocol**: Standalone `scratch/repro.*` reproduction, `search_vault` mapping, surgical remediation, and permanent regression test lock + A-MAC ingestion. | Deep |
+
+---
+
+## 🚨 The Systematic Protocol Invariant (Track 2 MUST)
+> For Track 2 non-intuitive bugs, **NO production code changes shall be attempted until Step 1 produces a verified red failure**.
 > Reproduce the exact failure mode deterministically in an isolated test or repro script to eliminate guesswork before editing source files.
 
 ---
 
-## The 4-Step Root-Cause Protocol
+## The 4-Step Root-Cause Protocol (Track 2)
 
 ```
   [Step 1: Evidence Capture & Minimal Repro (scratch/repro.*)]

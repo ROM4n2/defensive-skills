@@ -223,29 +223,36 @@ def _unquote(value: str) -> str:
     return value
 
 
-def _inline_list(head: str, key: str) -> list[str]:
-    """Parse `key: [a, b]`. A block-style list raises instead of parsing as empty.
+def _list_values(head: str, key: str) -> list[str]:
+    """Parse a list declared either inline (`key: [a, b]`) or as a block (`key:` + `  - a`).
 
-    Silent-empty is the dangerous outcome: an unparsed `mcp_tools` block would make Rule 9
-    pass vacuously. Loud beats silent.
+    Both shapes are real: this repo ships block lists (the open Agent Skills shape — a flow
+    list is rejected by the spec's skills-ref validator), while DFS_SKILLS_DIR may point at a
+    vault-side tree that still uses inline flow lists. Silent-empty is the dangerous outcome:
+    an unparsed declaration would make Rules 7/9/11 pass vacuously. Loud beats silent.
     """
-    match = re.search(rf"(?m)^\s*{re.escape(key)}:\s*\[(.*?)\]\s*$", head)
-    if match:
-        return [s.strip().strip("\"'") for s in match.group(1).split(",") if s.strip()]
-    if re.search(rf"(?m)^\s*{re.escape(key)}:\s*$", head):
-        raise ValueError(
-            f"frontmatter key '{key}' uses a block-style list; this stdlib parser supports "
-            f"only inline flow lists (`{key}: [a, b]`)"
-        )
+    inline = re.search(rf"(?m)^[ \t]*{re.escape(key)}:\s*\[(.*?)\]\s*$", head)
+    if inline:
+        return [s.strip().strip("\"'") for s in inline.group(1).split(",") if s.strip()]
+    block = re.search(
+        rf"(?m)^(?P<ind>[ \t]+){re.escape(key)}:[ \t]*\r?\n"
+        rf"(?P<items>(?:[ \t]+-[ \t]+.+(?:\r?\n|$))+)",
+        head,
+    )
+    if block:
+        return [
+            m.group(1).strip().strip("\"'")
+            for m in re.finditer(r"(?m)^[ \t]+-[ \t]+(.+?)\s*$", block.group("items"))
+        ]
     return []
 
 
 def parse_skill_file(skill_dir: pathlib.Path) -> tuple[dict, str]:
     """Parse SKILL.md into a frontmatter dict and markdown body.
 
-    ponytail: flat-regex parse of the five fields the 12 rules consume. Ceiling: no nested
-    structures, anchors, or block lists beyond what _inline_list raises on. Swap in PyYAML
-    if the frontmatter convention outgrows `key: value` + inline flow lists.
+    ponytail: flat-regex parse of the fields the 14 rules consume. Ceiling: no anchors or
+    arbitrary nesting beyond `metadata.hermes`; lists are inline-flow or block (see
+    _list_values). Swap in PyYAML if the frontmatter convention outgrows that.
     """
     skill_file = skill_dir / "SKILL.md"
     if not skill_file.is_file():
@@ -263,12 +270,14 @@ def parse_skill_file(skill_dir: pathlib.Path) -> tuple[dict, str]:
         match = re.search(rf"(?m)^{re.escape(key)}:\s*(.+?)\s*$", head)
         if match:
             frontmatter[key] = _unquote(match.group(1))
+    # Post-2026-10 the flag lives under `metadata:` (2-space indent) per the Agent Skills
+    # extension slot; the top-level form is still accepted for vault-side trees.
     frontmatter["disable-model-invocation"] = bool(
-        re.search(r"(?m)^disable-model-invocation:\s*true\s*$", head)
+        re.search(r"""(?m)^(?:  )?disable-model-invocation:\s*["']?true["']?\s*$""", head)
     )
     hermes = frontmatter["metadata"]["hermes"]
     for key in ("mcp_tools", "related_skills"):
-        values = _inline_list(head, key)
+        values = _list_values(head, key)
         if values:
             hermes[key] = values
     return frontmatter, body
@@ -423,13 +432,19 @@ class TestSkillsConformance(unittest.TestCase):
             )
 
     def test_rule_4_router_disable_model_invocation(self):
-        """Rule 4: router skill 'dfs' must set 'disable-model-invocation: true'."""
+        """Rule 4: router skill 'dfs' must carry the disable-model-invocation flag.
+
+        Since 2026-10 the flag rides in `metadata` (`disable-model-invocation: "true"`), the
+        Agent Skills extension slot, rather than a non-spec top-level key. The harness-neutral
+        enforcement is the file-top banner pinned by test_harness_field_mapping.test_06.
+        """
         router_dirs = [d for d in self.skill_dirs if d.name == "dfs"]
         self.assertTrue(router_dirs, "Router skill 'dfs' not found among skill directories")
         fm, _ = parse_skill_file(router_dirs[0])
         self.assertIs(
             fm.get("disable-model-invocation"), True,
-            f"Router skill 'dfs' must have 'disable-model-invocation: true', got {fm.get('disable-model-invocation')!r}",
+            "Router skill 'dfs' must carry disable-model-invocation (metadata string \"true\" "
+            f"or the legacy top-level key), got {fm.get('disable-model-invocation')!r}",
         )
 
     def test_rule_5_context_pointers_resolve_physically(self):

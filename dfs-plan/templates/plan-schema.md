@@ -20,8 +20,9 @@ Every generated `implementation_plan.md` MUST adhere strictly to the following s
 
 ## 🎯 Active Frontier (Unblocked Tasks)
 
-### Task 1: [Component Name] [Mode: AFK] [Role: TDD Builder]
-*(Mode: AFK = Fully autonomous subagent loop | Mode: HITL = Human-in-the-loop design/approval gate)*
+### Task 1: [Component Name] [Tier: 1-Light | 2-Standard | 3-Critical] [Mode: AFK | HITL] [Role: ...]
+*(Tier: 1-Light = Solo Fast-Path + physical receipt, no Reviewer subagent | 2-Standard = Full TDD Builder + Reviewer Maker-Checker | 3-Critical = Swarm / HITL gate)*
+*(Mode: AFK = Fully autonomous execution | Mode: HITL = Human-in-the-loop approval gate)*
 
 **Files:**
 - Create: `exact/path/to/file.py`
@@ -76,6 +77,11 @@ Every generated `implementation_plan.md` MUST adhere strictly to the following s
 
 ## Schema Invariants & Rules
 1. **Discrete Task Granularity**: Each task represents one bite-sized action executable within 2~5 minutes.
-2. **Mode Tagging (MUST)**: Every task MUST be tagged either `[Mode: AFK]` (autonomous) or `[Mode: HITL]` (human checkpoint).
-3. **Fog of War Invariant**: Never speculative-plan tasks in detail if prerequisite architecture is unknown. Place them in `## Fog of War` until upstream Frontier tasks graduate them.
-4. **Physical Evidence Gate**: No task is complete without an authentic terminal receipt containing raw exit code, pass counts, and diff stats.
+2. **Adaptive Tiering Tagging (MUST)**: Every task MUST be tagged with its defense tier:
+   - `[Tier: 1-Light]`: Pure docs, YAML metadata, constants, config tweaks, running existing scripts. Uses Solo Fast-Path (single agent or inline execution with physical binary verification receipt like grep/exit 0, skips Reviewer subagent).
+   - `[Tier: 2-Standard]`: Standard feature dev, bugfix, logic refactoring requiring tests. Uses full TDD Red-Green-Refactor + Maker-Checker isolated Reviewer subagent.
+   - `[Tier: 3-Critical]`: Schema migrations, multi-repo writes, core security/gate changes. Mandatory HITL checkpoint + multi-perspective review.
+3. **Batching Syntax for Tier 1**: Consecutive Tier 1 tasks MAY be grouped into a single batch block (e.g. `### Batch 1 [Tier: 1-Light]: Tasks 1-5 [Mode: AFK]`) to execute continuously and commit atomically in one git commit, avoiding fragmented subagent cascades.
+4. **Mode Tagging (MUST)**: Every task MUST be tagged either `[Mode: AFK]` (autonomous) or `[Mode: HITL]` (human checkpoint).
+5. **Fog of War Invariant**: Never speculative-plan tasks in detail if prerequisite architecture is unknown. Place them in `## Fog of War` until upstream Frontier tasks graduate them.
+6. **Physical Evidence Gate**: No task is complete without an authentic terminal receipt containing raw exit code, pass counts, and diff stats. Even Tier 1 tasks require physical binary verification (grep count / exit 0).

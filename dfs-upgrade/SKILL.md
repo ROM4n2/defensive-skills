@@ -1,13 +1,20 @@
 ---
 name: dfs-upgrade
 description: Assess breaking changes and upgrade risk for a dependency. Use when upgrading a package version and you need to know what will break and in which files.
-version: 0.2.0
 license: MIT
-platforms: [linux, macos, windows]
 metadata:
+  version: 0.2.0
+  platforms: linux, macos, windows
   hermes:
-    tags: [dependencies, upgrade, breaking-changes, impact-analysis]
-    related_skills: [dfs-plan, dfs-research, dfs-review]
+    tags:
+      - dependencies
+      - upgrade
+      - breaking-changes
+      - impact-analysis
+    related_skills:
+      - dfs-plan
+      - dfs-research
+      - dfs-review
 ---
 
 # DFS-UPGRADE: Dependency Upgrade Risk & Impact Assessment

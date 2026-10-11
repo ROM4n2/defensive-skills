@@ -1,10 +1,10 @@
 ---
 name: dfs-review
 description: Review a code diff against 7-language RFC 2119 DFS rules. Use when the user asks for a code review, or before merging a change.
-version: 0.2.0
 license: MIT
-platforms: [linux, macos, windows]
 metadata:
+  version: 0.2.0
+  platforms: linux, macos, windows
   hermes:
     tags: [code-review, rfc-2119, red-card, standards, gatekeeper, subagents]
     related_skills: [dfs-team, dfs-refactor, dfs-exec]
@@ -64,14 +64,15 @@ Two reviewers on one single-surface diff is waste; one reviewer on a six-domain 
 2. **Checkable Completion Criterion**:
    - Standard snippets retrieved for every touched file extension and passed to the reviewer scaffold.
 
-### Step 3 — Dispatch Independent Reviewer Subagent
-1. **Maker-Checker Isolation**:
-   - Load the reviewer scaffold from `templates/code-reviewer-prompt.md` via `read_file(path='templates/code-reviewer-prompt.md')`.
-   - Dispatch one isolated subagent (`delegate_task` is the portable path; runtime variants in `dfs/references/subagent-dispatch.md`).
-   - Reviewer runs strictly read-only (zero source code edits).
-   - Reviewer evaluates code strictly against Red Card blockers (RFC 2119 MUST violations) and Yellow Card polish items.
+### Step 3 — Adaptive Review Dispatch (阈值自适应审查)
+1. **Diff Scope Inspection & Adaptive Dispatch**:
+   - **Lightweight Diff (Diff ≤ 20 lines & Docs/Metadata/Constants only)**:
+     Orchestrator performs inline self-review against the Red Card rubric directly in-thread, outputting a concise verdict. Eliminates subagent cold-start latency and avoids 429 rate limits for trivial mechanical edits.
+   - **Production Logic Diff (Diff > 20 lines or touches business/algorithmic code)**:
+     **MANDATORY**: Dispatch independent, context-isolated subagent (`delegate_task` is the portable path; runtime variants in `dfs/references/subagent-dispatch.md`) using `templates/code-reviewer-prompt.md`.
+     Reviewer runs strictly read-only (zero source code edits) and evaluates code strictly against Red Card blockers (RFC 2119 MUST violations) and Yellow Card polish items.
 2. **Checkable Completion Criterion**:
-   - Subagent output returned containing structured verdict (`RED CARD` or `CLEAN PASS`) with zero performative compliments.
+   - Structured verdict (`RED CARD` or `CLEAN PASS`) returned with zero performative compliments.
 
 ### Step 4 — Report Verdict & Remedy
 1. **Process Verdict**:

@@ -1,10 +1,10 @@
 ---
 name: dfs-grill
 description: Interrogate a proposal's boundaries and undecided points through Dual-Lens Socratic inquiry, ending in an architecture decision record. Use when the user wants an idea, design, or plan challenged or pressure-tested before building.
-version: 0.2.0
 license: MIT
-platforms: [linux, macos, windows]
 metadata:
+  version: 0.2.0
+  platforms: linux, macos, windows
   hermes:
     tags: [architecture, socratic-grill, dual-lens, adr, stress-testing]
     related_skills: [dfs-spark, dfs-adr, dfs-plan, dfs-team]
@@ -13,18 +13,17 @@ metadata:
 
 # DFS-GRILL: Socratic Stress-Testing & Dual-Lens Panel
 
-## 🚪 Before you start — is this the right skill?
+## 🚪 Two-Track Grill Triage (两级审讯分流)
 
-This skill **interrogates something that already exists** (even if only as a proposal): it finds the
-undecided points and forces a choice on each, ending in an ADR. It is not a design generator.
+Determine the inquiry scope immediately:
 
-- A design, plan, or idea is already stated and you want its boundaries and gaps attacked → here.
-- Nothing is designed yet → **`/dfs-spark`** generates the design first, and hands it back here if it
-  needs pressure-testing.
-- The question is about **existing code** rather than a proposal → `/dfs-review` (one axis) or
-  `/dfs-team` (several).
+| Track | Proposal Scope | Workflow | Deliverable |
+|---|---|---|---|
+| **Track 1: Lightweight Trade-off (局部权衡)** | Localized parameter tuning, library choice, refactoring approach, simple bugfix direction. | **Single-turn structured Pros vs Cons comparison**: State options, list trade-offs, provide explicit `➡️ <recommended>` choice. Resolve in-chat. | Direct consensus in chat (**NO ADR generated**) |
+| **Track 2: Architectural Watershed (重大架构分水岭)** | Subsystem restructuring, protocol changes, new storage models, multi-agent invariants, irreversible decisions. | **Full Dual-Lens Socratic Inquiry**: User & Product Experience (UX) + Technical & Systems Rigor, tight numbered decision rounds. | Numbered MADR `ADR-000x` Document |
 
-Interrogating an empty page produces theatre; generating a design is a different job.
+- Nothing is designed yet → **`/dfs-spark`** generates the design first.
+- Existing code diff audit → `/dfs-review` (single axis) or `/dfs-team` (swarm).
 
 ---
 

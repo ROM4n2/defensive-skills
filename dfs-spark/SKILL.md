@@ -1,14 +1,24 @@
 ---
 name: dfs-spark
 description: Generate a design specification from a fuzzy need through Dual-Lens dialogue, at a size the idea earns. Use when the user has an idea with no design yet and wants it shaped into a spec, a short design note, or a feasibility answer.
-version: 0.2.0
 license: MIT
-platforms: [linux, macos, windows]
 metadata:
+  version: 0.2.0
+  platforms: linux, macos, windows
   hermes:
-    tags: [brainstorming, idea-sizing, design-spec, dual-lens, product-ux]
-    related_skills: [dfs-plan, dfs-grill, dfs-adr, dfs-exec]
-    mcp_tools: [omni_search]
+    tags:
+      - brainstorming
+      - idea-sizing
+      - design-spec
+      - dual-lens
+      - product-ux
+    related_skills:
+      - dfs-plan
+      - dfs-grill
+      - dfs-adr
+      - dfs-exec
+    mcp_tools:
+      - omni_search
 ---
 
 # DFS-SPARK: Idea Sizing & Exploratory Design

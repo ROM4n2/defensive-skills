@@ -1,14 +1,20 @@
 ---
 name: dfs-handoff
 description: Generate a session wrap-up and a 1-click continuation card. Use when the user wants to pause, hand off, or resume later in a fresh session.
-disable-model-invocation: true
-version: 0.2.0
 license: MIT
-platforms: [linux, macos, windows]
 metadata:
+  version: 0.2.0
+  platforms: linux, macos, windows
+  disable-model-invocation: "true"
   hermes:
-    tags: [handoff, session-end, continuation-card, workmemory]
-    related_skills: [dfs-save, dfs-exec]
+    tags:
+      - handoff
+      - session-end
+      - continuation-card
+      - workmemory
+    related_skills:
+      - dfs-save
+      - dfs-exec
 ---
 
 # DFS-HANDOFF: Session Wrap-up & 1-Click Agent Handoff (v2)
@@ -21,18 +27,18 @@ metadata:
 
 Capture working state at the end of a session, land user corrections before they evaporate, harvest uncommitted learnings to `99-Inbox/`, verify clean git status, and generate a token-budgeted continuation card for the next agent session.
 
-> 协议依据：`CROSS-AGENT-MEMORY.md` §2.5（CORRECTION 事件 + corrections.md 账本）。Phase 0 与 Phase 1 的产出都进 `WORKMEMORY/corrections.md` 与 `work.log`（dfs 宿主 = `11-Agents/corrections.md`）。
+> 捕获依据：ADR-0004 §4.1-7（纠正随 `WORK_END` 可选一行捕获，零额外步骤）；成熟纠正导流 `99-Inbox/`。
 
 ## The 5-Phase Handoff Protocol (v2)
 
-### Phase 0: Corrections Check（必问，先于一切收尾）
-Ask the user, verbatim intent: *「这次会话里，你有没有纠正过我的做法、结论或方向？」*
-- **有纠正 → MUST 三步**：
-  1. 逐条把纠正写入交接卡 `## Corrections` 节（原话 1 行 + 已做/未做）；
-  2. 项目 `WORKMEMORY/corrections.md` 账本追加一行（状态 `open`）+ `work.log` 追加 `CORRECTION` 事件（事件头规范见协议 §2.3）；
-  3. 已在会话中落实的纠正 → 状态 `resolved`；**禁止**为"好看"把未验证的纠正标成 `closed`。
-- **成熟纠正**（非项目特例、可泛化为规则/规范）：导流 `/dfs-save` 或 `save_inbox_draft`，账本「蒸馏去向」回填 `dfs://<路径>` 后置 `closed`。
-- 用户明确说没有 → 记录 "no corrections" 一行即可，不跳过提问本身。
+### Phase 0: Corrections Scan（agent MUST 自扫，先于一切收尾）
+
+agent 自扫本次会话记录，列出候选纠正（做法/结论/方向被用户改过的节点），交用户**确认/否决**——不要求用户回忆。
+- **有纠正 →**：
+  1. `WORK_END` 事件可选附一行 `本次被纠正: <1 行>`（与同事件既有的「推荐做回写检查」同款语气，可选/推荐，非 MUST，零额外步骤）；
+  2. 本会话落不了地的纠正 → 交接卡 `## Corrections` 节逐条 1 行（原话 + 已做/未做）。
+- **成熟纠正**（非项目特例、可泛化为规则/规范）：导流 `/dfs-save` 或 `save_inbox_draft` 沉淀至 `99-Inbox/`。
+- 用户否决全部候选 → 不附该行即可，**不跳过自扫本身**。
 
 ### Phase 1: Karpathy Ingestion Check (Harvest Before Exit)
 Ask: *Did this session discover any non-obvious bugs, workarounds, or reusable patterns?*
@@ -61,39 +67,9 @@ Load the continuation card template via `read_file(path='templates/continuation-
 Key required sections in `continuation-card.md`:
 - **1. Breakpoint & Git State**: Branch, commit hash/message, test passing baseline.
 - **2. Completed vs Remaining**: One-line evidence for done items, one-line next action for pending.
-- **3. Unresolved Corrections**: User feedback, open rows in `WORKMEMORY/corrections.md` (or "none").
-- **4. Pointers**: Path pointers to daily logs, agent audit trails, and corrections ledger.
+- **3. Unresolved Corrections**: Corrections confirmed in Phase 0 but not yet landed in `WORK_END` (or "none").
+- **4. Pointers**: Path pointers to daily logs and agent audit trails.
 - **5. 1-Click Continuation Prompt**: Copy-pasteable shell/agent resumption prompt.
 
 ### Phase 4: Output & Exit
-Deliver handoff card to user, confirm every Phase 0 correction has a ledger row, and conclude session gracefully.
-
-## 🧪 Worked example — a filled continuation card
-
-```
-### 1. 📍 Breakpoint & Git State
-- **Branch / Last Commit**: `main` @ `bd75eb8 publish: a template may ship structure, never a stranger's history`
-- **Test Baseline**: 99 passing
-
-### 🧾 Verified Execution Receipts (No Fake Green)
-- **Test Command**: `python tests/test_readme_skill_table.py`
-- **Exit Code**: 0 (physical green confirmed)
-- **Stdout Proof**: `Ran 7 tests in 0.18s / OK`
-
-### 2. ✅ Completed vs ⏳ Remaining
-- ✅ Remove the pre-seeded fake event from the shipped template: `test_13` green
-- ⏳ Refresh the public package snapshot: needs `./release.sh --skip-push`
-
-### 3. 🔁 Unresolved Corrections
-- none
-
-### 4. 🔗 Pointers
-- 账本: `WORKMEMORY/corrections.md`（open 条目先读）
-
-### 5. 🚀 1-Click Continuation Prompt
-> "Resume at 'Refresh the public package snapshot'. Read `WORKMEMORY/INDEX.md`, then
-> `python scripts/vault_exec_state.py resume`."
-```
-
-Every number in the card is copied from a command whose raw output was actually pasted — no
-remembered counts.
+Deliver handoff card to user, confirm every Phase 0 correction has landed (`WORK_END` 一行 or 交接卡 `## Corrections`), and conclude session gracefully.

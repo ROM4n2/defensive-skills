@@ -50,8 +50,8 @@ MUTATIONS = [
     ("rule_3_description_period_termination",
      "dfs-team/SKILL.md", lambda t: set_description(t, "Use when implementing a feature test-first")),
     ("rule_4_router_disable_model_invocation",
-     "dfs/SKILL.md", lambda t: t.replace("disable-model-invocation: true",
-                                         "disable-model-invocation: false", 1)),
+     "dfs/SKILL.md", lambda t: t.replace('  disable-model-invocation: "true"',
+                                         '  disable-model-invocation: "false"', 1)),
     # Rule 8 needs its own mutation now that the baseline is empty: while B4 was open the gate
     # merely *expected* rule_8 to fail, which proves nothing about the check itself. The injected
     # pointer is deliberately NOT in OPTIONAL_SCRIPT_POINTERS, so it also proves the exemption list
@@ -74,14 +74,19 @@ MUTATIONS = [
     ("rule_6_runtime_neutrality",
      "dfs-adr/templates/adr-template.md",
      lambda t: t + "\nSpawn the author subagent from `~/.claude/agents/code-reviewer.md`.\n"),
+    # related_skills ships as a block list; the probe prepends a dangling item to it.
     ("rule_7_related_skills_resolve_to_real_skills",
      "dfs-handoff/SKILL.md", lambda t: re.sub(
-         r"(?m)^(\s*related_skills:).*$", r"\1 [dfs-does-not-exist]", t, count=1)),
+         r"(?m)^    related_skills:\r?\n",
+         "    related_skills:\n      - dfs-does-not-exist\n", t, count=1)),
     # A repeated entry still RESOLVES, so the dangling check stays silent and only the no-duplicate
-    # assertion can catch it. The appended name is a real skill on purpose.
+    # assertion can catch it. The duplicated entry is a real one already listed, on purpose.
     ("rule_7_related_skills_resolve_to_real_skills",
      "dfs-handoff/SKILL.md", lambda t: re.sub(
-         r"(?m)^(\s*related_skills:\s*\[)([^\]]*)\]", r"\1\2, dfs-save]", t, count=1)),
+         r"(?ms)^(    related_skills:\n)(      - )([^\n]+)",
+         r"\1\2\3\n\2\3", t, count=1)),
+    # Inline flow lists remain a supported shape (vault-side trees), so this probe injects the
+    # bogus tool declaration the old-fashioned way: it must still be parsed, then rejected.
     ("rule_9_mcp_contract_tools_are_canonical",
      "dfs-adr/SKILL.md", lambda t: t.replace("    related_skills:",
                                              "    mcp_tools: [search_vault, bogus_tool]\n    related_skills:", 1)),
@@ -115,17 +120,13 @@ MUTATIONS = [
     ("rule_14_claimed_counts_match_the_enumeration",
      "dfs-tdd/SKILL.md",
      lambda t: t + "\n### Step 6: Ship It\n"),
-    # A block-style list must fail loudly, not parse as an empty (vacuous-pass) declaration.
-    # Attribution note: parse_skill_file RAISES on block lists; Rule 2 owns parse errors, while
-    # Rules 9/11 skip unparseable skills (`except Exception: continue`). So the suite goes red via
-    # rule_2, not rule_9 — the defect is caught, it is just reported by the parse guard.
-    # Rule 13 must NOT appear in this mutation's `also:` list. It reads bodies too, so an earlier
-    # version reported every asset of the broken skill as an orphan — a false allegation that would
-    # have sent someone to delete a good declaration. If `rule_13` shows up here again, that
-    # out-of-scope skip was lost.
+    # Block lists are a SUPPORTED shape since the 2026-10 Agent Skills migration, so the old
+    # "block list must raise" probe retired with the parser that raised. Its replacement: an
+    # empty `name:` — distinct from the dfs-team typo probe (which exercises the directory-match
+    # assertion), this one exercises "missing required field". Rule 13 must NOT show up in this
+    # mutation's `also:` list: it skips skills whose frontmatter fails to parse, on purpose.
     ("rule_2_frontmatter_schema",
-     "dfs-adr/SKILL.md", lambda t: t.replace("    related_skills:",
-                                             "    mcp_tools:\n      - search_vault\n    related_skills:", 1)),
+     "dfs-adr/SKILL.md", lambda t: t.replace("name: dfs-adr", "name:", 1)),
 ]
 
 

@@ -19,7 +19,11 @@ REPO = pathlib.Path(__file__).resolve().parents[1]
 DOC = REPO / "dfs" / "references" / "harness-field-mapping.md"
 SKILLS = sorted(p.name for p in REPO.glob("dfs*") if p.is_dir())
 TOP_KEY = re.compile(r"(?m)^([a-zA-Z][\w-]*):")
-HERMES_KEY = re.compile(r"(?m)^\s{2,}([a-z_]+):")
+# Since the 2026-10 Agent Skills migration every vendor extension rides INSIDE `metadata`:
+# suite-level scalars at 2-space indent (`metadata.version`) and the Hermes namespace at
+# 4-space indent (`metadata.hermes.tags`). The old top-level vendor keys no longer exist.
+META_SCALAR = re.compile(r"(?m)^  ([a-zA-Z][\w-]*):")
+HERMES_LEAF = re.compile(r"(?m)^    ([a-z_]+):")
 
 
 def frontmatter(skill: str) -> str:
@@ -36,8 +40,13 @@ def keys_of(skill: str) -> set[str]:
     keys.discard("metadata")
     if re.search(r"(?m)^metadata:\s*$", head):
         after = head.split("metadata:", 1)[1]
-        keys |= {f"metadata.hermes.{m.group(1)}" for m in HERMES_KEY.finditer(after)
-                 if m.group(1) != "hermes"}
+        for line in after.splitlines():
+            m2 = META_SCALAR.match(line)
+            if m2 and m2.group(1) != "hermes":
+                keys.add(f"metadata.{m2.group(1)}")
+            m4 = HERMES_LEAF.match(line)
+            if m4:
+                keys.add(f"metadata.hermes.{m4.group(1)}")
     return keys
 
 
@@ -91,8 +100,8 @@ class HarnessFieldMappingTest(unittest.TestCase):
 
     def test_03_the_disable_model_invocation_roster_matches_reality(self):
         measured = {s for s, ks in self.per_skill.items()
-                    if "disable-model-invocation" in ks}
-        row = [ln for ln in self.doc.splitlines() if "disable-model-invocation" in ln and ln.startswith("|")]
+                    if "metadata.disable-model-invocation" in ks}
+        row = [ln for ln in self.doc.splitlines() if "metadata.disable-model-invocation" in ln and ln.startswith("|")]
         self.assertEqual(len(row), 1, "expected exactly one table row about disable-model-invocation")
         listed = set(re.findall(r"`(dfs[a-z-]*)`", row[0]))
         self.assertEqual(listed, measured,
@@ -122,7 +131,7 @@ class HarnessFieldMappingTest(unittest.TestCase):
                          "§2.1's claim needs the command that verifies it")
         marker = "**Invocation \u2014 explicit only.**"
         missing = [s for s, ks in self.per_skill.items()
-                   if "disable-model-invocation" in ks
+                   if "metadata.disable-model-invocation" in ks
                    and marker not in (REPO / s / "SKILL.md").read_text(encoding="utf-8")]
         self.assertEqual(missing, [],
                          f"§2.1 claims the banner is applied, but these skills lack it: {missing}")

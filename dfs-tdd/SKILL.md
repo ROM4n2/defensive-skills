@@ -1,10 +1,10 @@
 ---
 name: dfs-tdd
 description: Enforce strict RED-GREEN-REFACTOR TDD and fake-green guards. Use when implementing a feature test-first, or when a green test suite is suspect.
-version: 0.2.0
 license: MIT
-platforms: [linux, macos, windows]
 metadata:
+  version: 0.2.0
+  platforms: linux, macos, windows
   hermes:
     tags: [tdd, red-green-refactor, mutation-testing, fake-green, testing]
     related_skills: [dfs-plan, dfs-exec, dfs-refactor, dfs-debug]
@@ -51,8 +51,12 @@ Execute Test-Driven Development enforcing **The Iron Law**: Zero production code
 - **Verification Rule**: The failure reason MUST match the missing functionality, NOT a compilation typo or missing import.
 - **Checkable Completion Criterion**: Terminal output records non-zero exit code (`exit != 0`) with the expected assertion failure message.
 
-### Step 3: Mutation Verification (Anti-Fake Green Defense) (MUST)
-- **The Mutation Check**: If the test unexpectedly passes on first run, intentionally mutate the target function to return a zero-value or throw an error.
+### Step 3: Mutation Verification (Anti-Fake Green Defense) (Targeted MUST)
+- **Applicability Scope (When to Mutate)**:
+  1. **Mandatory Case**: The test unexpectedly passes on first run (Step 2 passed without code — obvious Fake Green / Tautological Test).
+  2. **High-Risk Invariant Case**: Cryptographic logic, concurrent lock handoffs, and security gatekeeper rules.
+  3. **Exempt Case**: Standard linear functions, simple DTO mappers, or obvious bugfixes that already failed Step 2 with the exact expected error message. Do not perform ritualistic mutation for trivial logic.
+- **The Mutation Check**: Intentionally mutate the target function to return a zero-value or throw an error.
 - Verify the test turns RED. If it stays GREEN, the test is not asserting real behavior (Fake Green) and must be rewritten.
 - **Checkable Completion Criterion**: Mutation produces a verified RED failure, and code is reverted to its original clean state.
 

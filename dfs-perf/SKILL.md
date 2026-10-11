@@ -1,13 +1,22 @@
 ---
 name: dfs-perf
 description: Profile multi-language benchmarks, races, and query plans. Use when the user reports slowness, a performance regression, or asks for a benchmark.
-version: 0.2.0
 license: MIT
-platforms: [linux, macos, windows]
 metadata:
+  version: 0.2.0
+  platforms: linux, macos, windows
   hermes:
-    tags: [performance, profiling, benchmarks, race-detection, pprof, query-plan]
-    related_skills: [dfs-refactor, dfs-review, dfs-pipeline]
+    tags:
+      - performance
+      - profiling
+      - benchmarks
+      - race-detection
+      - pprof
+      - query-plan
+    related_skills:
+      - dfs-refactor
+      - dfs-review
+      - dfs-pipeline
 ---
 
 # DFS-PERF: Multi-Language Performance & Benchmark Profiling

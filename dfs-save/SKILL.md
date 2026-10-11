@@ -1,14 +1,23 @@
 ---
 name: dfs-save
 description: Harvest non-obvious engineering solutions into 99-Inbox drafts. Use when a debugging session or task just produced a reusable insight worth saving.
-version: 0.2.0
 license: MIT
-platforms: [linux, macos, windows]
 metadata:
+  version: 0.2.0
+  platforms: linux, macos, windows
   hermes:
-    tags: [knowledge-harvesting, inbox, a-mac, karpathy-mode, learnings]
-    related_skills: [dfs-inbox-consolidate, dfs-handoff]
-    mcp_tools: [search_vault, save_inbox_draft]
+    tags:
+      - knowledge-harvesting
+      - inbox
+      - a-mac
+      - karpathy-mode
+      - learnings
+    related_skills:
+      - dfs-inbox-consolidate
+      - dfs-handoff
+    mcp_tools:
+      - search_vault
+      - save_inbox_draft
 ---
 
 # DFS-SAVE: Karpathy-Mode Knowledge Harvester & Ingestion Gate

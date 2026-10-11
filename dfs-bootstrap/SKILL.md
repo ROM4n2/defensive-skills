@@ -1,20 +1,30 @@
 ---
 name: dfs-bootstrap
 description: Initialize a repository with security git hooks and DFS rule anchors. Use when starting a new repo or adding DFS guardrails to an existing one.
-disable-model-invocation: true
-version: 0.2.0
 license: MIT
-platforms: [linux, macos, windows]
 metadata:
+  version: 0.2.0
+  platforms: linux, macos, windows
+  disable-model-invocation: "true"
   hermes:
-    tags: [bootstrap, git-hooks, security, pre-commit, repo-init]
-    related_skills: [dfs-onboard, dfs-save, dfs-pipeline]
+    tags:
+      - bootstrap
+      - git-hooks
+      - security
+      - pre-commit
+      - repo-init
+    related_skills:
+      - dfs-onboard
+      - dfs-save
+      - dfs-pipeline
 ---
 
 # DFS-BOOTSTRAP: Repository Security & Knowledge Anchoring
 
-> **Invocation — explicit only.** `disable-model-invocation: true` is honored by Claude Code and ignored
-> elsewhere, so the same rule is stated here in the file itself: do not auto-select this skill
+> **Invocation — explicit only.** This skill carries `disable-model-invocation: "true"` under
+> `metadata`, the Agent Skills extension slot, which no harness enforces as a hard switch
+> (Claude Code honored it only at the old top-level location; Hermes never implemented it), so
+> the same rule is stated here in the file itself: do not auto-select this skill
 > on your own — wait until the user asks for it, or until an already-running DFS skill routes
 > here. When you need to know which harness actually honors a given frontmatter key — and what
 > to use in its place where one is ignored — read `dfs/references/harness-field-mapping.md`.

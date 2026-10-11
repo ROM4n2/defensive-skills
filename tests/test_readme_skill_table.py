@@ -70,7 +70,18 @@ def skill_measurements() -> dict[str, dict]:
             raise AssertionError(f"{d.name}/SKILL.md has no frontmatter")
         head = fm.group(1)
         desc = re.search(r'^description:\s*"?(.*?)"?\s*$', head, re.M)
-        mcp = re.search(r"mcp_tools:\s*\[(.*?)\]", head, re.S)
+        # mcp_tools ships as a block list (Agent Skills shape); inline flow still accepted.
+        mcp_tools: list[str] = []
+        inline = re.search(r"mcp_tools:\s*\[(.*?)\]", head, re.S)
+        if inline:
+            mcp_tools = [t.strip() for t in inline.group(1).split(",") if t.strip()]
+        else:
+            block = re.search(r"(?ms)^[ \t]+mcp_tools:[ \t]*\r?\n((?:[ \t]+-[ \t]+.+(?:\r?\n|$))+)", head)
+            if block:
+                mcp_tools = [
+                    m.group(1).strip()
+                    for m in re.finditer(r"(?m)^[ \t]+-[ \t]+(.+?)\s*$", block.group(1))
+                ]
         priv = {s for s in SCRIPT_REF.findall(blob) if s not in SHIPPED_SCRIPTS}
         assets = {}
         for key, sub in (("tpl", "templates"), ("refs", "references"), ("scripts", "scripts")):
@@ -78,13 +89,13 @@ def skill_measurements() -> dict[str, dict]:
                 assets[key] = len(asset_entries(d / sub))
         if priv:
             tier = "C"
-        elif mcp or any(blob.count(t) for t in TAXONOMY_DIRS) or "{vault_root}" in blob:
+        elif mcp_tools or any(blob.count(t) for t in TAXONOMY_DIRS) or "{vault_root}" in blob:
             tier = "B"
         else:
             tier = "A"
         out[d.name] = {
             "desc": (desc.group(1) if desc else "").strip(),
-            "mcp": [t.strip() for t in (mcp.group(1).split(",") if mcp else []) if t.strip()],
+            "mcp": mcp_tools,
             "tier": tier,
             "assets": assets,
         }

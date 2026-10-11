@@ -1,10 +1,10 @@
 ---
 name: dfs-plan
 description: Draft bite-sized TDD implementation plans from specs. Use when the user asks for an implementation plan, or before writing code for a multi-step feature.
-version: 0.2.0
 license: MIT
-platforms: [linux, macos, windows]
 metadata:
+  version: 0.2.0
+  platforms: linux, macos, windows
   hermes:
     tags: [planning, tdd, architecture, implementation-plan, task-breakdown]
     related_skills: [dfs-exec, dfs-tdd, dfs-spark, dfs-grill]

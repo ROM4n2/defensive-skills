@@ -1,13 +1,21 @@
 ---
 name: dfs-refactor
 description: Execute senior-level refactoring with guard-clause flattening. Use when the user asks to clean up, simplify, or restructure existing code.
-version: 0.2.0
 license: MIT
-platforms: [linux, macos, windows]
 metadata:
+  version: 0.2.0
+  platforms: linux, macos, windows
   hermes:
-    tags: [refactoring, guard-clauses, complexity-reduction, code-quality, yagni]
-    related_skills: [dfs-tdd, dfs-review, dfs-perf]
+    tags:
+      - refactoring
+      - guard-clauses
+      - complexity-reduction
+      - code-quality
+      - yagni
+    related_skills:
+      - dfs-tdd
+      - dfs-review
+      - dfs-perf
 ---
 
 # DFS-REFACTOR: Senior Complexity Reduction & Flattening

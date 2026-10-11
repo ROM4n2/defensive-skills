@@ -1,6 +1,7 @@
 # Line endings are a correctness issue here, not a style preference:
 # `.githooks/pre-commit` is a bash script, and a CRLF shebang line fails on Linux/macOS.
-# The skills declare `platforms: [linux, macos, windows]`, so the repo must deliver LF.
+# The skills declare all three platforms (`metadata.platforms: linux, macos, windows`) and ship
+# bash hooks, so LF-pinned types must deliver LF.
 * text=auto
 *.sh      text eol=lf
 *.py      text eol=lf

@@ -97,7 +97,7 @@ python scripts/vault-inbox-consolidate.py --vault-path <知识库根> --dry-run
 |---|---|---|---|---|
 | **主链** `dfs` | Route developer intent to the right Defensive Skills workflow. Use when the user asks for a coding task and you must decide which dfs skill to load, or when it is unclear where to start. | 需知识库 | — | refs×5 |
 | **主链** `dfs-plan` | Draft bite-sized TDD implementation plans from specs. Use when the user asks for an implementation plan, or before writing code for a multi-step feature. | 需知识库 | omni_search, get_code_template | tpl×1 |
-| **主链** `dfs-exec` | Execute TDD plans via isolated subagents with maker-checker. Use when an implementation plan exists and the user asks to execute or implement it. | 需知识库 | — | tpl×2 |
+| **主链** `dfs-exec` | Execute TDD plans via adaptive gear-shifting (Tier 1 Solo-Light, Tier 2 Maker-Checker, Tier 3 Critical-Swarm). Use when an implementation plan exists and the user asks to execute or implement it. | 需知识库 | — | tpl×2 |
 | **主链** `dfs-debug` | Execute 4-step systematic root-cause debugging with a reproduction. Use when the user reports a bug, a failing test, or says something is broken. | 需知识库 | search_vault, save_inbox_draft | tpl×1 |
 | **主链** `dfs-save` | Harvest non-obvious engineering solutions into 99-Inbox drafts. Use when a debugging session or task just produced a reusable insight worth saving. | 需知识库 | search_vault, save_inbox_draft | tpl×1 |
 | **主链** `dfs-handoff` | Generate a session wrap-up and a 1-click continuation card. Use when the user wants to pause, hand off, or resume later in a fresh session. | 需知识库 | — | tpl×1 |
@@ -158,7 +158,7 @@ python tests/test_shipped_assets_tracked.py # 随包资产真被 git 跟踪（�
 | 1 | 每个技能目录存在且含非空 `SKILL.md` |
 | 2 | frontmatter 可解析，`name` / `description` 非空 |
 | 3 | `description` 含显式触发子句（`Use when …`）、≤ 320 字符、以句点结尾、不含营销词 |
-| 4 | 路由技能 `dfs` 必须 `disable-model-invocation: true` |
+| 4 | 路由技能 `dfs` 必须在 `metadata` 带 `disable-model-invocation: "true"` 标记（文件顶部横幅在所有 harness 兜底） |
 | 5 | `templates/` 与 `references/` 里的指针必须在磁盘上解析得到 |
 | 6 | 不得硬编码 `~/.claude/agents/` 这类路径而不给中性回退；扫描范围含正文 + `templates/` + `references/`，**逐文件**配对 |
 | 7 | `related_skills` 每项都指向真实技能或白名单内的外部技能，且不得重复列出 |
@@ -199,7 +199,7 @@ python tests/test_shipped_assets_tracked.py # 随包资产真被 git 跟踪（�
 * **`dfs-bootstrap` Phase 3.5 已完成跨平台移植。** `dfs-bootstrap/scripts/bootstrap.py`（stdlib）一次跑完：校验并补齐 `.gitignore`、安装密钥扫描钩子（**绝不覆写**已有钩子）并设置 `core.hooksPath`、注入规则锚点、下发 `WORKMEMORY/` 四件套；幂等，`--dry-run` 可预览，模板缺失即 **exit 2** 而不是跳过。原先那版 Windows-only PowerShell 不随包（对照见 [`scripts/README.md`](scripts/README.md)）。
 * **`vault-healthcheck.py` / `vault-inbox-triage.py` 不随包。** 它们体检的是特定知识库的结构，换成别人的库天生就是错的——受影响的是 `dfs-inbox-consolidate`（即表格里唯一标为「需额外资产」的技能）。
 * **检索是加权关键词/标签打分，不是 BM25 + 图谱。** 对笔记量级的知识库足够；上万篇就该换真正的排序器（升级点写在 `mcp/knowledge_server.py` 的模块注释里）。
-* **frontmatter 里的 `disable-model-invocation` / `metadata.hermes.*` 是 Hermes 方言。** 映射表已落地于 [`dfs/references/harness-field-mapping.md`](dfs/references/harness-field-mapping.md)：逐条说明哪个 harness 认哪个键，以及不认的键该用哪个等效杠杆来强制同一意图。注意 `metadata.hermes.mcp_tools` **不是任何 harness 的功能**——它是本套件自己的声明，由一致性门禁校验。
+* **frontmatter 遵循 Agent Skills 开放标准：官方 `skills-ref validate` 对 24 个技能 24/24 通过。** 顶层只有规范字段，厂商扩展全部收进 `metadata` 扩展槽（字符串值，列表用 block YAML）。代价也写明：`metadata.disable-model-invocation` 不再被任何 harness 当硬开关执行——7 个技能的安全意图靠文件顶部的统一横幅 + Claude Code `skillOverrides` 兜底；`metadata.platforms` 对 Hermes 的平台过滤失效（当前 24 个技能都声明全平台，零实际影响）。逐条映射见 [`dfs/references/harness-field-mapping.md`](dfs/references/harness-field-mapping.md)：哪个 harness 认哪个键、不认时用什么等效杠杆。注意 `metadata.hermes.mcp_tools` **不是任何 harness 的功能**——它是本套件自己的声明，由一致性门禁校验。
 * **投放箱不是知识库。** 完全没有知识库时草稿能存能列，但**归档（晋级）必须有一个知识库根**——`--execute` 在没有根时会 exit 2，而不是猜一个目标目录。这是刻意的：归档是"删原件 + 写正式目录"，目标都不能猜。
 * 仓库内含 **24 个技能**（`dfs-agent-sdk` 已移出——它是第三方语料，不随本仓库发布）；表格的「前置」列把每个技能的依赖实测标出，最轻的 6 个零前置技能装完即用。
 * **渐进式披露实际是两级，不是三级。** Skill 规范推荐「`description`（始终在索引里）→ SKILL.md 正文 → `references/`＋`scripts/` 详细资料」的三级披露。本套件落实的是**前两级**：24 个技能的 `description` 全部携带显式触发子句（第一级），正文承载完整流程（第二级）。第三级只有 `dfs` 用到了——它带 `references/`×3；其余 23 个技能没有 `references/` 子目录，也没有任何技能用到嵌套主题层级。这是刻意的：这里的每个技能都是**一条稳定工作流**，把正文压到 500 行以内比造层级更划算；等某个技能真的需要纵深再拆第三级。

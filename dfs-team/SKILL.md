@@ -1,10 +1,10 @@
 ---
 name: dfs-team
 description: Audit code, a design, or a plan with a multi-domain subagent swarm, then collapse the findings into a single consensus report. Use when the target spans two or more specialist domains and needs several independent expert reviews.
-version: 0.2.0
 license: MIT
-platforms: [linux, macos, windows]
 metadata:
+  version: 0.2.0
+  platforms: linux, macos, windows
   hermes:
     tags: [multi-agent, team-review, code-review, audit, consensus]
     related_skills: [dfs-review, dfs-grill, dfs-plan]
@@ -43,9 +43,15 @@ judged the target to touch. Both belong in the report header, not in prose.
 
 ---
 
-## Phase 1: Swarm Dispatch (Parallel Fan-out)
-Dispatch the relevant specialist seats concurrently:
-- **Dispatch one subagent per seat, runtime-neutrally**: `delegate_task` is the portable path; `subagent_type` is the optional Claude Code fallback. The runtime variants, the `subagent_type` rule and the **read-scope declaration** each seat owes live in `dfs/references/subagent-dispatch.md`.
+## Phase 1: Swarm Dispatch (Dynamic Seat Pruning & Parallel Fan-out)
+Dispatch the relevant specialist seats concurrently with **Strict Dynamic Pruning (硬性席位裁剪)**:
+- **Maximum 2~3 Active Seats per Swarm (Anti-429 Rate Limit Guard)**: Never fan out all 6 seats blindly. Scan the target files first and prune irrelevant seats before dispatch:
+  * No SQL, migrations, or database schema files in diff -> **SKIP `dba-optimizer`** (zero database surface).
+  * No frontend components, DOM, CSS, or client state -> **SKIP `frontend-architect`** (zero UI surface).
+  * No hot loops, memory pools, or lock-level concurrency -> **SKIP `perf-profiler`** (zero allocation surface).
+  * No user-facing APIs, CLI flags, or UX journey shifts -> **SKIP `product-ux`** (zero product journey surface).
+  * No infrastructure, timeouts, retry loops, or network boundaries -> **SKIP `sre-resilience`** (zero resilience surface).
+- **Dispatch one subagent per active seat, runtime-neutrally**: `delegate_task` is the portable path; `subagent_type` is the optional Claude Code fallback (see `dfs/references/subagent-dispatch.md`).
 - **Batch Parallel Invariant (Hermes MUST)**: In Hermes Agent environments, pass all specialist tasks in a single `delegate_task(tasks=[...])` call rather than serializing dispatches across multiple conversation turns. Parallel execution preserves token budget and accelerates consensus.
 
 | Seat | Subagent Role (`subagent_type`) | Owns (primary claim) | Cross-checks |

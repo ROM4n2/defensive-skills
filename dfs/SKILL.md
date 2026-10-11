@@ -1,20 +1,30 @@
 ---
 name: dfs
 description: Route developer intent to the right Defensive Skills workflow. Use when the user asks for a coding task and you must decide which dfs skill to load, or when it is unclear where to start.
-disable-model-invocation: true
-version: 0.2.0
 license: MIT
-platforms: [linux, macos, windows]
 metadata:
+  version: 0.2.0
+  platforms: linux, macos, windows
+  disable-model-invocation: "true"
   hermes:
-    tags: [router, navigation, workflow, dfs]
-    related_skills: [dfs-plan, dfs-exec, dfs-save, dfs-handoff]
+    tags:
+      - router
+      - navigation
+      - workflow
+      - dfs
+    related_skills:
+      - dfs-plan
+      - dfs-exec
+      - dfs-save
+      - dfs-handoff
 ---
 
 # Defensive Skills Master Router & Environment Detector
 
-> **Invocation — explicit only.** `disable-model-invocation: true` is honored by Claude Code and ignored
-> elsewhere, so the same rule is stated here in the file itself: do not auto-select this skill
+> **Invocation — explicit only.** This skill carries `disable-model-invocation: "true"` under
+> `metadata`, the Agent Skills extension slot, which no harness enforces as a hard switch
+> (Claude Code honored it only at the old top-level location; Hermes never implemented it), so
+> the same rule is stated here in the file itself: do not auto-select this skill
 > on your own — wait until the user asks for it, or until an already-running DFS skill routes
 > here. When you need to know which harness actually honors a given frontmatter key — and what
 > to use in its place where one is ignored — read `dfs/references/harness-field-mapping.md`.

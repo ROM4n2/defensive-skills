@@ -1,13 +1,20 @@
 ---
 name: dfs-onboard
 description: Rapidly orient an AI agent to develop on an existing codebase. Use when entering an unfamiliar repo and you need to map how it works before editing.
-version: 0.2.0
 license: MIT
-platforms: [linux, macos, windows]
 metadata:
+  version: 0.2.0
+  platforms: linux, macos, windows
   hermes:
-    tags: [onboarding, codebase-discovery, architecture-mapping, baseline-testing]
-    related_skills: [dfs-bootstrap, dfs-tdd, dfs-plan]
+    tags:
+      - onboarding
+      - codebase-discovery
+      - architecture-mapping
+      - baseline-testing
+    related_skills:
+      - dfs-bootstrap
+      - dfs-tdd
+      - dfs-plan
 ---
 
 # DFS-ONBOARD: Codebase Takeover & Context Anchor

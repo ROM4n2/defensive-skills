@@ -15,14 +15,14 @@
 - ⏳ {next_task}: {one-line next action}
 
 ### 3. 🔁 Unresolved Corrections
-- {用户原话} → 已做: {…} / 未做: {原因}（账本行已 open）
+- {用户原话} → 已做: {…} / 未做: {原因}
 - none
 
 ### 4. 🔗 Pointers（细节不内联，只给指针）
 - 测试输出: `10-Daily/{YYYY-MM-DD}.md#L{n}`
 - 审计明细: `11-Agents/logs/{YYYY-MM}.md`
-- 账本: `WORKMEMORY/corrections.md`（open 条目 MUST 先读）
+- 纠正记录: `WORKMEMORY/work.log` 尾 50 行（`WORK_END` 的「本次被纠正」行）
 
 ### 5. 🚀 1-Click Continuation Prompt
 > "Resume `{project_name}` at `{next_task}`. Read `WORKMEMORY/INDEX.md`,
-> `corrections.md` (open rows first), then `python scripts/vault_exec_state.py resume`."
+> `work.log` tail 50, then `python scripts/vault_exec_state.py resume`."
