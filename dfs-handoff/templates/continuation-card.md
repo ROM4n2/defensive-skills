@@ -22,6 +22,7 @@
 - 测试输出: `10-Daily/{YYYY-MM-DD}.md#L{n}`
 - 审计明细: `11-Agents/logs/{YYYY-MM}.md`
 - 纠正记录: `WORKMEMORY/work.log` 尾 50 行（`WORK_END` 的「本次被纠正」行）
+- 交接包: `WORKMEMORY/handoff_<topic>.md`（**仅当 Phase 0.5 探测到项目约定时**；卡的其余节只给指针，不复制包内容）
 
 ### 5. 🚀 1-Click Continuation Prompt
 > "Resume `{project_name}` at `{next_task}`. Read `WORKMEMORY/INDEX.md`,

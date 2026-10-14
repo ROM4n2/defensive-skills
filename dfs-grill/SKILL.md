@@ -147,7 +147,7 @@ Summarize consensus into a formal **Architecture Decision Record (ADR-000x)**:
 | *"I'll dump 10 architectural questions at once to cover everything quickly."* | **Cognitive Overload**: Humans give superficial answers when faced with walls of questions. | Strict Frontier Protocol: 1~2 numbered questions per round. Drive to closure iteratively. |
 | *"The user chose an approach without trade-off analysis, so I'll just accept it."* | **Unvetted Architectural Debt**: Passive agreement leads to fragile systems in production. | Socratic Inquest: Challenge assumptions using Dual-Lens (UX friction vs Systems resilience). |
 | *"I'll skip proposing a recommended option to stay neutral."* | **Decision Paralysis**: Users expect senior engineer opinions, not uncurated option lists. | Always state a concrete recommendation (`➡️ Recommended: Option A`) backed by YAGNI. |
-| *"We can close this grill round without recording an ADR."* | **Decision Evaporation**: Verbal consensus in chat is lost in the next session context. | Mandatory ADR Archival: Every completed grill must produce an ADR markdown artifact. |
+| *"We can close this grill round without recording an ADR."* | **Decision Evaporation**: Verbal consensus in chat is lost in the next session context. | **Track 2 (architectural) grills MUST archive an ADR markdown artifact** — no exceptions. Track 1 (lightweight trade-off) resolves in-chat by design; its outcome MUST still be recorded as an explicit `➡️ <recommended>` choice in the conversation, otherwise it evaporates just the same. |
 
 ---
 

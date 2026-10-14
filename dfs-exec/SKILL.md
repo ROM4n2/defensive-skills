@@ -71,11 +71,14 @@ Read the `[Tier]` tag from the task header in `implementation_plan.md`:
 
 ---
 
-## 🚨 Subagent Isolation & Anti-Degradation Guardrails (HARD GATES)
+## 🚨 Isolation & Anti-Degradation Guardrails (HARD GATES)
+
+> **Two axes of isolation** — subagent isolation (which *thread* may edit) **and** VCS isolation (which *branch* the work lands on). Guarding one axis only lets the other leak.
 
 1. **Anti-Degradation Invariant**: Tier 2 and Tier 3 tasks **MUST NOT** be edited in the orchestrator thread without independent reviewer dispatch.
-2. **Hard Escalation Trigger**: If a task tagged `[Tier: 1-Light]` touches production business logic, core test gate files (e.g. `vault-healthcheck.py`), or writes out-of-repo files, `/dfs-exec` **MUST automatically escalate it to Tier 2 or Tier 3**.
+2. **Hard Escalation Trigger**: If a task tagged `[Tier: 1-Light]` touches production source code (any file inside the shipped package / application source tree), core test-gate or CI definition files (linters, quality gates, workflow definitions), or writes out-of-repo files, `/dfs-exec` **MUST automatically escalate it to Tier 2 or Tier 3**.
 3. **Physical Receipt Invariant**: Even in Tier 1 Solo Fast-Path, zero code shall be committed without authentic terminal proof (Exit 0 + assertion output).
+4. **VCS Isolation Invariant**: **Before Task 1**, `/dfs-exec` **MUST** run `git branch --show-current`. Implementation work MUST NOT be committed on `main`/`master`: create an isolated branch (`git checkout -b <type>/<slug>`) or route the run through `/dfs-pipeline` (isolated worktree). **Only two exceptions** may go straight to the main branch, both requiring explicit user authorization: **release** operations (version bump / tag / release notes) and **bookkeeping** (append-only `WORKMEMORY` events — no code, gate or test changes). The batch landing **MUST** end in a PR, never a direct push. *Why this gate exists*: a 9-commit implementation batch (production source + CI definitions) once shipped straight to `master` because the isolation rule lived **only** in `/dfs-pipeline` — a skill that run never invoked, so nothing on the executed path ever asked the question. **A rule that is not on the executed path does not exist.**
 
 ---
 

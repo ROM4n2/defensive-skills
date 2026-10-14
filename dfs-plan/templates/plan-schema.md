@@ -9,6 +9,7 @@ Every generated `implementation_plan.md` MUST adhere strictly to the following s
 > **Tech Stack**: [Go 1.24+ / C++20 / Python 3.11 / C11]
 > **Spec Reference**: [Link to Design Spec or ADR]
 > **Global Constraints**: [Version floors, no-leak regex, UTF-8 stdout, guard clauses]
+> **Branch**: `<type>/<slug>` — opened from `main`/`master` before Task 1, landed via PR. A plan MAY instead declare the whole run as `release` (bump / tag / release notes) or `bookkeeping` (append-only `WORKMEMORY` events) to go straight to the main branch, but that MUST be stated here explicitly. **Missing this line makes the plan non-conforming** (see `/dfs-exec` HARD GATE 4).
 
 ---
 
@@ -58,7 +59,7 @@ Every generated `implementation_plan.md` MUST adhere strictly to the following s
 - [ ] **Step 4: Run tests and verify all green**
 - [ ] **Step 5: Refactor & Flatten with guard clauses (REFACTOR)**
 - [ ] **Step 6: Physical Evidence Gate**: Capture raw terminal execution receipt (Command + Exit code: 0 + test pass count + git diff)
-- [ ] **Step 7: Git atomic commit**
+- [ ] **Step 7: Git atomic commit** (on the isolated branch declared in the header; the batch lands via **PR** — never a direct push to `main`/`master`, unless this plan explicitly declared the `release` / `bookkeeping` exception)
 
 ---
 
@@ -85,3 +86,4 @@ Every generated `implementation_plan.md` MUST adhere strictly to the following s
 4. **Mode Tagging (MUST)**: Every task MUST be tagged either `[Mode: AFK]` (autonomous) or `[Mode: HITL]` (human checkpoint).
 5. **Fog of War Invariant**: Never speculative-plan tasks in detail if prerequisite architecture is unknown. Place them in `## Fog of War` until upstream Frontier tasks graduate them.
 6. **Physical Evidence Gate**: No task is complete without an authentic terminal receipt containing raw exit code, pass counts, and diff stats. Even Tier 1 tasks require physical binary verification (grep count / exit 0).
+7. **Branch Isolation (MUST)**: Every plan MUST declare its branch in `> **Branch**:` — or explicitly declare the `release` / `bookkeeping` exception. Implementation work is executed **on that isolated branch** and lands via **PR**, never a direct push to `main`/`master`. Rationale, the two exceptions, and the incident that motivated this rule: `/dfs-exec` **HARD GATE 4**.
