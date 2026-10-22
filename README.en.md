@@ -37,6 +37,11 @@ When `vault-inbox-consolidate.py` was ported, its `<script>/../..` fallback happ
 
 ## 🚀 Quick start
 
+```bash
+git clone https://github.com/ROM4n2/defensive-skills.git && cd defensive-skills
+python3 -m pytest tests/ -q        # 108 passed, 1 skipped — prove the gates are green on your machine first
+```
+
 ### 1) Install the skills
 
 A skill is just a directory containing `SKILL.md`. Copy (or symlink) them into your harness's skills directory. The paths below were verified to exist on a real machine:

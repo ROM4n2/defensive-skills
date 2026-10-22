@@ -37,6 +37,11 @@
 
 ## 🚀 快速开始
 
+```bash
+git clone https://github.com/ROM4n2/defensive-skills.git && cd defensive-skills
+python3 -m pytest tests/ -q        # 108 passed, 1 skipped —— 先自证门禁在你这台机器上也是绿的
+```
+
 ### 1) 装技能
 
 技能就是含 `SKILL.md` 的普通目录，拷进（或软链到）你的 harness 的技能目录即可。以下路径已在本机实测存在：
