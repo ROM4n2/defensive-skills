@@ -75,14 +75,18 @@ MUTATIONS = [
      "dfs-adr/templates/adr-template.md",
      lambda t: t + "\nSpawn the author subagent from `~/.claude/agents/code-reviewer.md`.\n"),
     # related_skills ships as a block list; the probe prepends a dangling item to it.
+    # Target MUST be a skill that actually carries the BLOCK shape: dfs-handoff carries the inline
+    # `[a, b]` form, where a `^    related_skills:\n` regex matches nothing and the probe silently
+    # mutated nothing — two vacuous probes that reported the rule as unenforced. `main()` now
+    # rejects a transform that returns its input unchanged, so this class cannot come back quietly.
     ("rule_7_related_skills_resolve_to_real_skills",
-     "dfs-handoff/SKILL.md", lambda t: re.sub(
+     "dfs-adr/SKILL.md", lambda t: re.sub(
          r"(?m)^    related_skills:\r?\n",
          "    related_skills:\n      - dfs-does-not-exist\n", t, count=1)),
     # A repeated entry still RESOLVES, so the dangling check stays silent and only the no-duplicate
     # assertion can catch it. The duplicated entry is a real one already listed, on purpose.
     ("rule_7_related_skills_resolve_to_real_skills",
-     "dfs-handoff/SKILL.md", lambda t: re.sub(
+     "dfs-adr/SKILL.md", lambda t: re.sub(
          r"(?ms)^(    related_skills:\n)(      - )([^\n]+)",
          r"\1\2\3\n\2\3", t, count=1)),
     # Inline flow lists remain a supported shape (vault-side trees), so this probe injects the
@@ -159,10 +163,19 @@ def main() -> int:
         for i, (expected, relpath, transform) in enumerate(MUTATIONS):
             copy = fresh_copy(tmp, f"mut{i}")
             target = copy / relpath
-            if transform(target.read_text(encoding="utf-8")) is None:
+            original = target.read_text(encoding="utf-8")
+            mutated = transform(original)
+            if mutated is None:
                 target.unlink()  # delete-the-file mutation
+            elif mutated == original:
+                # A transform that produces identical text injected NOTHING, so the gate cannot go
+                # red for it and "caught" would be a lie. Report the vacuous probe as a miss.
+                print(f"  [NO-OP] {expected} ({relpath}) — transform changed nothing")
+                missed.append((expected, relpath))
+                shutil.rmtree(copy, ignore_errors=True)
+                continue
             else:
-                target.write_text(transform(target.read_text(encoding="utf-8")), encoding="utf-8")
+                target.write_text(mutated, encoding="utf-8")
 
             failed = failing_tests(copy)
             caught = expected in failed
