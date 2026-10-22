@@ -6,7 +6,7 @@ metadata:
   version: 0.3.0
   platforms: linux, macos, windows
   disable-model-invocation: 'true'
-  author: Haoyu
+  author: Defensive Skills contributors
   hermes:
     tags: [handoff, session-end, continuation-card, workmemory]
     related_skills: [dfs-save, dfs-exec]
