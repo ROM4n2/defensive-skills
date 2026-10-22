@@ -3,7 +3,7 @@
 > protocol-version: 1
 
 > 本文件是协议本体，所有能读写文件的 AI agent（Claude Code / Codex / OpenCode / Antigravity / Gemini CLI / CodeBuddy / …）一律遵守。
-> 协议铁律的规范层见 vault：`{{VAULT_ROOT}}/01-Rules/CROSS-AGENT-MEMORY.md`。
+> 协议铁律规范层：优先解析 $WIKI_PATH/01-Rules/CROSS-AGENT-MEMORY.md；无外部知识库时以本文件为自包含真源。
 
 ---
 
