@@ -6,29 +6,15 @@ metadata:
   version: 0.1.0
   platforms: linux, macos, windows
   hermes:
-    tags:
-      - research
-      - retrieval
-      - web-search
-      - evidence-grading
-      - citation
-    related_skills:
-      - dfs-inbox-consolidate
-      - dfs-spark
-      - dfs-grill
-    mcp_tools:
-      - search_vault
-      - omni_search
-      - get_note
-      - get_rule_snippet
-      - save_inbox_draft
+    tags: [research, retrieval, web-search, evidence-grading, citation]
+    related_skills: [dfs-inbox-consolidate, dfs-spark, dfs-grill]
+    mcp_tools: [search_vault, omni_search, get_note, get_rule_snippet, save_inbox_draft]
 ---
-
 # DFS-Research: Evidence-Graded External Retrieval
 
 Turn an open question into a graded, cited knowledge artifact, then sink it into the Vault.
 
-## 🚨 The Anti-Fabrication Invariant (RFC 2119 MUST)
+## [MUST] The Anti-Fabrication Invariant (RFC 2119 MUST)
 > **Every claim in the research deliverable MUST carry a verifiable source tier (A/B/C) and a resolvable locator (URL, file:line, or RFC citation), or it is explicitly marked `UNVERIFIED`.**
 > When a fact cannot be retrieved, write `UNVERIFIED` and describe the blocker — NEVER fill the gap with plausible-looking hallucinated claims.
 
@@ -105,7 +91,7 @@ Compose the finding with `templates/research-brief.md`, then hand it to the inge
 
 ---
 
-## 🚫 Common Rationalizations & Anti-Patterns
+## [ANTI] Common Rationalizations & Anti-Patterns
 
 | Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
 |---|---|---|

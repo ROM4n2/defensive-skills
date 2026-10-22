@@ -7,27 +7,27 @@ only the last N summaries), treat the generator's output as *input* and edit by 
 ```markdown
 ## [v{version}] - {YYYY-MM-DD}
 
-### 🚀 Features & Enhancements
+### [NOTE] Features & Enhancements
 - **{scope}**: {feat commit description} ([{commit_hash}]({commit_url}))
 
-### 🐛 Bug Fixes & Hotfixes
+### [NOTE] Bug Fixes & Hotfixes
 - **{scope}**: {fix commit description} ([{commit_hash}]({commit_url}))
 
-### ⚡ Performance & Refactoring
+### [NOTE] Performance & Refactoring
 - **{scope}**: {perf/refactor description} ([{commit_hash}]({commit_url}))
 
-### 🛡️ Security & Vulnerability Fixes
+### [NOTE] Security & Vulnerability Fixes
 - **{scope}**: {security fix description} ([{commit_hash}]({commit_url}))
 
-### ⚠️ Breaking Changes
+### [NOTE] Breaking Changes
 - **{component}**: {breaking change + upgrade path, or "无" if none}
 
-### ⚠️ Known Limitations
+### [NOTE] Known Limitations
 - {what this release does NOT fix} — especially anything a user could mistake for a defect or a
   speed-up. {If a metric moved for a non-obvious reason, say what it means (and what it does NOT
   mean) — otherwise the number gets quoted back as a promise.}
 
-### 🔄 Rollback Procedure
+### [NOTE] Rollback Procedure
 Separate the axes — a single "revert the commit" is not a rollback plan:
 
 1. **Artifact / code**: replace with `{previous_version}` package; note whether users *can*

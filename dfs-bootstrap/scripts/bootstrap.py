@@ -9,7 +9,7 @@ Idempotent. Everything it writes is UTF-8 without BOM, LF endings.
                    gatekeeper script)
   3. anchors     — injects the 3-line knowledge-base anchor into CLAUDE.md / .agent-rules.md /
                    .cursorrules (creating them if absent)
-  4. WORKMEMORY  — scaffolds the 4-piece shared working memory from `templates/workmemory/` and
+  4. WORKMEMORY  — scaffolds the 5-piece shared working memory from `templates/workmemory/` and
                    injects its anchor into the project's agent files
   5. baseline    — prints the language-defense reminders for whatever the target actually uses
 
@@ -69,7 +69,7 @@ REQUIRED_IGNORES = [
 ]
 IGNORE_HEADER = "# Sensitive credentials & secrets"
 
-WORKMEMORY_FILES = ["PROTOCOL.md", "INDEX.md", "PROJECT_OVERVIEW.md", "work.log"]
+WORKMEMORY_FILES = ["PROTOCOL.md", "INDEX.md", "INDEX-topics.md", "PROJECT_OVERVIEW.md", "work.log"]
 # AGENTS.md is first on purpose: the anchor's own text says the knowledge base root resolves by
 # searching upward for AGENTS.md — writing one without the other leaves the two mechanisms
 # disagreeing about what this file is for. (The PowerShell original skipped it here.)

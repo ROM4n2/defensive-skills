@@ -1,8 +1,14 @@
+
 # WORKMEMORY INDEX — {{PROJECT_NAME}}
+
+> **本文件是 HOT 索引，MUST 保持极小**——只放：配置 / 文件清单 / Active handoffs / 已归档 handoffs。
+> 主题索引与蒸馏登记**不在这里** ⇒ 见 `INDEX-topics.md`（WARM 层，`grep` 命中才加载）。
+> 理由：热层每个会话都要读，主题表会随 WARM 分片持续膨胀；把它留在热层等于让每个新会话
+> 为历史买单（2026-10-17 从 DeLector 实例回写：热层 65 行 → 28 行）。
 
 ## Configuration
 
-- HOT_RETENTION_EVENTS: 50    # work.log 热层保留事件数；轮转阈值 = 本值 × 1.5
+- HOT_RETENTION_EVENTS: 50 # work.log 热层保留事件数；轮转阈值 = 本值 × 1.5
 
 ## 文件清单
 
@@ -11,21 +17,16 @@
 | `PROTOCOL.md` | 协议本体（读一次即可，之后按本索引工作） |
 | `PROJECT_OVERVIEW.md` | 60 秒项目 primer（新 agent 第二读） |
 | `work.log` | HOT 事件流（append-only，第三读） |
-| `archive/` | WARM 层（按日分片，只按下方索引按需加载） |
-| `cold/` | COLD 层（按月 digest，仅显式要求时生成） |
-| `handoff_*.md` | 跨 agent 交接包 |
-
-## 主题索引（archive/digest 内容导航）
-
-（随首次轮转生成）
+| `INDEX-topics.md` | **WARM 索引**：主题索引（archive/digest 导航）+ 蒸馏登记（→ vault）；按需加载 |
+| `archive/` | WARM 层事件分片（按日 `work-YYYY-MM-DD.log`，只按 `INDEX-topics.md` 索引加载） |
+| `notes/` | 超限事件正文（`NOTES-<日期>-<时间>-<slug>.md`，事件 >4KB 时外置；首次使用时创建） |
+| `cold/` | COLD 层（按月 digest，仅用户显式要求时生成） |
+| `handoff_*.md` | 跨 agent 交接包：活跃的放顶层，closed 的 MUST 移入 `archive/` |
 
 ## Active handoffs
 
 （无）
 
-## 蒸馏登记（WORKMEMORY → vault）
+## 已归档 handoffs
 
-| 日期 | 主题 | vault 归属 |
-| --- | --- | --- |
-
-（初始为空；`/vault-save` 沉淀后回写此表，vault 侧引用用 `vault://` 前缀）
+（closed 的交接包移入 `archive/` 后在此登记一行，注明关闭日期与最终去向）

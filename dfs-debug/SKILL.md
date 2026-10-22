@@ -7,15 +7,14 @@ metadata:
   platforms: linux, macos, windows
   hermes:
     tags: [debugging, root-cause, reproduction, systematic-debugging, troubleshooting]
-    related_skills: [dfs-tdd, dfs-save, systematic-debugging]
+    related_skills: [dfs-tdd, dfs-save, systematic-debugging, dfs-gate, dfs-verify]
     mcp_tools: [search_vault, save_inbox_draft]
 ---
-
 # DFS-DEBUG: 4-Step Systematic Root-Cause Debugging
 
 Resolve bugs, race conditions, memory leaks, and runtime panics with zero guesswork using the 4-step root-cause protocol.
 
-## 🔍 Two-Track Debugging Triage (两级排障分流)
+## [NOTE] Two-Track Debugging Triage (两级排障分流)
 
 Classify the bug immediately before attempting fixes:
 
@@ -26,7 +25,7 @@ Classify the bug immediately before attempting fixes:
 
 ---
 
-## 🚨 The Systematic Protocol Invariant (Track 2 MUST)
+## [MUST] The Systematic Protocol Invariant (Track 2 MUST)
 > For Track 2 non-intuitive bugs, **NO production code changes shall be attempted until Step 1 produces a verified red failure**.
 > Reproduce the exact failure mode deterministically in an isolated test or repro script to eliminate guesswork before editing source files.
 
@@ -74,13 +73,15 @@ Classify the bug immediately before attempting fixes:
    If the bug stems from a non-intuitive root cause (concurrency race condition, unexpected API signature drift, hidden runtime trap, or memory leak):
    - Automatically compose a draft that satisfies the A-MAC gate (`dfs/references/a-mac-gate.md`), appending the Execution Receipt that this step produces.
    - Dispatch `save_inbox_draft(title=..., content=..., tags=...)` or persist directly to `99-Inbox/YYYY-MM-DD-{kebab-topic}.md`.
-   - Announce: `✅ Non-intuitive pitfall self-healed: persisted to 99-Inbox/ with regression proof.`
-3. **Checkable Completion Criterion**:
+   - Announce: `[PASS] Non-intuitive pitfall self-healed: persisted to 99-Inbox/ with regression proof.`
+3. **Recurring Defect Mechanical Gate (Zero Repeat Bugs)**:
+   If the root cause stems from a recurring defect pattern across the codebase (e.g. unchecked error returns, missing context timeouts, missing locks, anti-pattern file mutations), invoke `/dfs-gate` to convert the rule into an automated pre-commit or CI mechanical gate with mutation proof.
+4. **Checkable Completion Criterion**:
    - Regression test permanently committed in test suite; if A-MAC eligible, `save_inbox_draft` returns success receipt with saved note path.
 
 ---
 
-## 🚫 Common Rationalizations & Anti-Patterns
+## [ANTI] Common Rationalizations & Anti-Patterns
 
 | Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
 |---|---|---|

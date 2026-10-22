@@ -3,7 +3,7 @@
 Use this document template to conduct systematic, blameless root-cause analysis and action item tracking following any production outage or degradation.
 
 ```markdown
-# 🚨 Postmortem: [Incident Summary Title]
+# [NOTE] Postmortem: [Incident Summary Title]
 
 > **Date of Incident**: YYYY-MM-DD
 > **Severity Tier**: [P0 - Outage / P1 - Major Degradation / P2 - Minor Impact]

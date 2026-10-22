@@ -60,8 +60,8 @@ MUTATIONS = [
     ("rule_3_description_period_termination",
      "dfs-team/SKILL.md", lambda t: set_description(t, "Use when implementing a feature test-first")),
     ("rule_4_router_disable_model_invocation",
-     "dfs/SKILL.md", lambda t: t.replace('  disable-model-invocation: "true"',
-                                         '  disable-model-invocation: "false"', 1)),
+     "dfs/SKILL.md", lambda t: re.sub(r"^  disable-model-invocation: [\"']?true[\"']?$",
+                                      "  disable-model-invocation: 'false'", t, count=1, flags=re.M)),
     # Rule 8 needs its own mutation now that the baseline is empty: while B4 was open the gate
     # merely *expected* rule_8 to fail, which proves nothing about the check itself. The injected
     # pointer is deliberately NOT in OPTIONAL_SCRIPT_POINTERS, so it also proves the exemption list
@@ -91,14 +91,18 @@ MUTATIONS = [
     # rejects a transform that returns its input unchanged, so this class cannot come back quietly.
     ("rule_7_related_skills_resolve_to_real_skills",
      "dfs-adr/SKILL.md", lambda t: re.sub(
-         r"(?m)^    related_skills:\r?\n",
-         "    related_skills:\n      - dfs-does-not-exist\n", t, count=1)),
+         r"(?m)^(    related_skills: \[)(?=.)", r"\1dfs-does-not-exist, ", t, count=1)
+     or re.sub(r"(?m)^    related_skills:\r?\n",
+               "    related_skills:\n      - dfs-does-not-exist\n", t, count=1)),
     # A repeated entry still RESOLVES, so the dangling check stays silent and only the no-duplicate
     # assertion can catch it. The duplicated entry is a real one already listed, on purpose.
+    # Both shapes are probed: the published tree writes flow lists, other trees write block lists, and
+    # a shape-blind probe silently mutating nothing is exactly what `main()` now refuses to accept.
     ("rule_7_related_skills_resolve_to_real_skills",
      "dfs-adr/SKILL.md", lambda t: re.sub(
-         r"(?ms)^(    related_skills:\n)(      - )([^\n]+)",
-         r"\1\2\3\n\2\3", t, count=1)),
+         r"(?m)^(    related_skills: \[)([^,\]]+)", r"\1\2, \2", t, count=1)
+     or re.sub(r"(?ms)^(    related_skills:\n)(      - )([^\n]+)",
+               r"\1\2\3\n\2\3", t, count=1)),
     # Inline flow lists remain a supported shape (vault-side trees), so this probe injects the
     # bogus tool declaration the old-fashioned way: it must still be parsed, then rejected.
     ("rule_9_mcp_contract_tools_are_canonical",

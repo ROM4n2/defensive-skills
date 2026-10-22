@@ -5,10 +5,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Skills-24-4B5563?style=flat-square" alt="Skills" />
+  <img src="https://img.shields.io/badge/Skills-28-4B5563?style=flat-square" alt="Skills" />
   <img src="https://img.shields.io/badge/Conformance-14%20rules-0969DA?style=flat-square" alt="Conformance rules" />
   <img src="https://img.shields.io/badge/Tests-109%20passed-2EA44F?style=flat-square" alt="Tests" />
-  <img src="https://img.shields.io/badge/Mutation-22%2F22%20caught-2EA44F?style=flat-square" alt="Mutation harness" />
+  <img src="https://img.shields.io/badge/Mutation-26%2F26%20caught-2EA44F?style=flat-square" alt="Mutation harness" />
   <img src="https://img.shields.io/badge/Dependencies-0%20(stdlib)-gray?style=flat-square" alt="Zero dependencies" />
   <img src="https://img.shields.io/badge/Python-3.11%20%7C%203.12-3776AB?style=flat-square" alt="Python" />
   <img src="https://img.shields.io/badge/License-MIT-gray?style=flat-square" alt="License MIT" />
@@ -53,7 +53,7 @@ python3 -m pytest tests/ -q        # 108 passed, 1 skipped —— 先自证门�
 | Hermes | `<hermes 配置目录>/skills/` |
 
 ```bash
-# 整包 24 个，或只装「零前置」的 6 个；默认软链，Windows 上自动退回复制
+# 整包 28 个，或只装「零前置」的 6 个；默认软链，Windows 上自动退回复制
 python install.py --target ~/.codex/skills
 python install.py --target ~/.codex/skills --tier A
 ```
@@ -90,7 +90,7 @@ python scripts/vault-inbox-consolidate.py --vault-path <知识库根> --dry-run
 
 ---
 
-## 🧭 技能全览（24 个 · 主链 7 个）
+## 🧭 技能全览（28 个 · 主链 7 个）
 
 主链是 `dfs`（路由）→ `dfs-plan`（计划）→ `dfs-exec`（TDD 执行）→ `dfs-debug`（根因调试）→ `dfs-save`（沉淀）→ `dfs-handoff`（交接），加 `dfs-team`（多专家共识评审）。
 
@@ -100,7 +100,7 @@ python scripts/vault-inbox-consolidate.py --vault-path <知识库根> --dry-run
 
 | 技能 | 作用 | 前置 | MCP | 附带资产 |
 |---|---|---|---|---|
-| **主链** `dfs` | Route developer intent to the right Defensive Skills workflow. Use when the user asks for a coding task and you must decide which dfs skill to load, or when it is unclear where to start. | 需知识库 | — | refs×5 |
+| **主链** `dfs` | Route developer intent to the right Defensive Skills workflow. Use when the user asks for a coding task and you must decide which dfs skill to load, or when it is unclear where to start. | 需知识库 | — | refs×6 |
 | **主链** `dfs-plan` | Draft bite-sized TDD implementation plans from specs. Use when the user asks for an implementation plan, or before writing code for a multi-step feature. | 需知识库 | omni_search, get_code_template | tpl×1 |
 | **主链** `dfs-exec` | Execute TDD plans via adaptive gear-shifting (Tier 1 Solo-Light, Tier 2 Maker-Checker, Tier 3 Critical-Swarm). Use when an implementation plan exists and the user asks to execute or implement it. | 需知识库 | — | tpl×2 |
 | **主链** `dfs-debug` | Execute 4-step systematic root-cause debugging with a reproduction. Use when the user reports a bug, a failing test, or says something is broken. | 需知识库 | search_vault, save_inbox_draft | tpl×1 |
@@ -109,8 +109,12 @@ python scripts/vault-inbox-consolidate.py --vault-path <知识库根> --dry-run
 | **主链** `dfs-team` | Audit code, a design, or a plan with a multi-domain subagent swarm, then collapse the findings into a single consensus report. Use when the target spans two or more specialist domains and needs several independent expert reviews. | — | — | tpl×1 |
 | `dfs-adr` | Draft and archive numbered Architecture Decision Records. Use when the user makes an architecture decision or asks to record one. | 需知识库 | — | tpl×1 |
 | `dfs-bootstrap` | Initialize a repository with security git hooks and DFS rule anchors. Use when starting a new repo or adding DFS guardrails to an existing one. | 需知识库 | — | tpl×2 scripts×1 |
+| `dfs-gate` | Author mechanical gates for recurring defect classes. Use when a defect class has recurred, or an audit finding needs a permanent mechanical check instead of a note. | 需知识库 | — | — |
+| `dfs-maintain` | Maintain repo hygiene, prune worktrees, and sync context. Use when a repo has stale worktrees, drifted context files, or needs a scheduled hygiene pass. | — | — | — |
+| `dfs-orchestrate` | Dispatch and verify subagents with file-occupancy guards. Use when several subagents must work in one repo without colliding, or a batch needs a granularity call. | — | — | tpl×1 |
+| `dfs-verify` | Verify unverified audit claims with physical evidence. Use when a report or audit asserts something no probe has confirmed, before anyone acts on it. | — | — | — |
 | `dfs-grill` | Interrogate a proposal's boundaries and undecided points through Dual-Lens Socratic inquiry, ending in an architecture decision record. Use when the user wants an idea, design, or plan challenged or pressure-tested before building. | 需知识库 | omni_search | — |
-| `dfs-inbox-consolidate` | Classify and archive 99-Inbox drafts into DFS destinations. Use when the inbox has accumulated drafts and the user asks to file or clean them up. | 需额外资产 | promote_inbox_draft | — |
+| `dfs-inbox-consolidate` | Classify and archive 99-Inbox drafts into DFS destinations. Use when the inbox has accumulated drafts and the user asks to file or clean them up. | 需额外资产 | promote_inbox_draft | refs×1 |
 | `dfs-incident` | Triage a production incident and draft a blameless postmortem. Use when a service is down, degraded, or the user asks for an incident review. | 需知识库 | — | tpl×1 |
 | `dfs-interview` | Conduct high-rigor 1v1 technical interview defense drills. Use when the user wants to rehearse explaining or defending their own work. | 需知识库 | — | — |
 | `dfs-migrate` | Plan zero-downtime database schema migrations safely. Use when a schema change must ship without taking the service offline. | — | — | tpl×1 scripts×1 |
@@ -132,7 +136,7 @@ python scripts/vault-inbox-consolidate.py --vault-path <知识库根> --dry-run
 **别读这段，直接跑**——全部零依赖，不需要 pytest：
 
 ```bash
-python tests/test_skills_conformance.py    # 14 条规则 × 24 个技能        → exit 0
+python tests/test_skills_conformance.py    # 14 条规则 × 28 个技能        → exit 0
 python tests/mutation_check.py             # 给每条规则注入缺陷，必须被抓 → exit 0
 python tests/test_knowledge_server.py      # MCP 服务真实 stdio 协议      → exit 0
 python tests/test_vendored_scripts.py      # 台账 / 事务化归档 / 回滚     → exit 0
@@ -204,10 +208,10 @@ python tests/test_shipped_assets_tracked.py # 随包资产真被 git 跟踪（�
 * **`dfs-bootstrap` Phase 3.5 已完成跨平台移植。** `dfs-bootstrap/scripts/bootstrap.py`（stdlib）一次跑完：校验并补齐 `.gitignore`、安装密钥扫描钩子（**绝不覆写**已有钩子）并设置 `core.hooksPath`、注入规则锚点、下发 `WORKMEMORY/` 四件套；幂等，`--dry-run` 可预览，模板缺失即 **exit 2** 而不是跳过。原先那版 Windows-only PowerShell 不随包（对照见 [`scripts/README.md`](scripts/README.md)）。
 * **`vault-healthcheck.py` / `vault-inbox-triage.py` 不随包。** 它们体检的是特定知识库的结构，换成别人的库天生就是错的——受影响的是 `dfs-inbox-consolidate`（即表格里唯一标为「需额外资产」的技能）。
 * **检索是加权关键词/标签打分，不是 BM25 + 图谱。** 对笔记量级的知识库足够；上万篇就该换真正的排序器（升级点写在 `mcp/knowledge_server.py` 的模块注释里）。
-* **frontmatter 遵循 Agent Skills 开放标准：官方 `skills-ref validate` 对 24 个技能 24/24 通过。** 顶层只有规范字段，厂商扩展全部收进 `metadata` 扩展槽（字符串值，列表用 block YAML）。代价也写明：`metadata.disable-model-invocation` 不再被任何 harness 当硬开关执行——7 个技能的安全意图靠文件顶部的统一横幅 + Claude Code `skillOverrides` 兜底；`metadata.platforms` 对 Hermes 的平台过滤失效（当前 24 个技能都声明全平台，零实际影响）。逐条映射见 [`dfs/references/harness-field-mapping.md`](dfs/references/harness-field-mapping.md)：哪个 harness 认哪个键、不认时用什么等效杠杆。注意 `metadata.hermes.mcp_tools` **不是任何 harness 的功能**——它是本套件自己的声明，由一致性门禁校验。
+* **frontmatter 遵循 Agent Skills 开放标准：官方 `skills-ref validate` 对 28 个技能 28/28 通过。** 顶层只有规范字段，厂商扩展全部收进 `metadata` 扩展槽（字符串值，列表用 block YAML）。代价也写明：`metadata.disable-model-invocation` 不再被任何 harness 当硬开关执行——7 个技能的安全意图靠文件顶部的统一横幅 + Claude Code `skillOverrides` 兜底；`metadata.platforms` 对 Hermes 的平台过滤失效（当前 24 个技能都声明全平台，零实际影响）。逐条映射见 [`dfs/references/harness-field-mapping.md`](dfs/references/harness-field-mapping.md)：哪个 harness 认哪个键、不认时用什么等效杠杆。注意 `metadata.hermes.mcp_tools` **不是任何 harness 的功能**——它是本套件自己的声明，由一致性门禁校验。
 * **投放箱不是知识库。** 完全没有知识库时草稿能存能列，但**归档（晋级）必须有一个知识库根**——`--execute` 在没有根时会 exit 2，而不是猜一个目标目录。这是刻意的：归档是"删原件 + 写正式目录"，目标都不能猜。
-* 仓库内含 **24 个技能**（`dfs-agent-sdk` 已移出——它是第三方语料，不随本仓库发布）；表格的「前置」列把每个技能的依赖实测标出，最轻的 6 个零前置技能装完即用。
-* **渐进式披露实际是两级，不是三级。** Skill 规范推荐「`description`（始终在索引里）→ SKILL.md 正文 → `references/`＋`scripts/` 详细资料」的三级披露。本套件落实的是**前两级**：24 个技能的 `description` 全部携带显式触发子句（第一级），正文承载完整流程（第二级）。第三级只有 `dfs` 用到了——它带 `references/`×3；其余 23 个技能没有 `references/` 子目录，也没有任何技能用到嵌套主题层级。这是刻意的：这里的每个技能都是**一条稳定工作流**，把正文压到 500 行以内比造层级更划算；等某个技能真的需要纵深再拆第三级。
+* 仓库内含 **28 个技能**（`dfs-agent-sdk` 已移出——它是第三方语料，不随本仓库发布）；表格的「前置」列把每个技能的依赖实测标出，最轻的 9 个零前置技能装完即用。
+* **渐进式披露实际是两级，不是三级。** Skill 规范推荐「`description`（始终在索引里）→ SKILL.md 正文 → `references/`＋`scripts/` 详细资料」的三级披露。本套件落实的是**前两级**：28 个技能的 `description` 全部携带显式触发子句（第一级），正文承载完整流程（第二级）。第三级只有 `dfs` 用到了——它带 `references/`×6；其余 23 个技能没有 `references/` 子目录，也没有任何技能用到嵌套主题层级。这是刻意的：这里的每个技能都是**一条稳定工作流**，把正文压到 500 行以内比造层级更划算；等某个技能真的需要纵深再拆第三级。
 * **语言策略：英文机器面、双语 README、正文英文优先。** agent 路由时必然加载的 frontmatter（`name` / `description` / `mcp_tools`）已全英文；`SKILL.md` 正文 15/24 为纯英文，残余 **1,865 个汉字**分布在 9 个技能里（最大三处：`dfs-inbox-consolidate` 473 / `dfs` 342 / `dfs-grill` 307，其余为零星片段）——**刻意保留，不是未完工**：面板数据不参与指令，对模型理解无影响，翻译的收益远小于它带来的维护成本。提 issue / PR 用英文即可。
 
 ---

@@ -6,32 +6,21 @@ metadata:
   version: 0.2.0
   platforms: linux, macos, windows
   hermes:
-    tags:
-      - brainstorming
-      - idea-sizing
-      - design-spec
-      - dual-lens
-      - product-ux
-    related_skills:
-      - dfs-plan
-      - dfs-grill
-      - dfs-adr
-      - dfs-exec
-    mcp_tools:
-      - omni_search
+    mcp_tools: [omni_search]
+    tags: [brainstorming, idea-sizing, design-spec, dual-lens, product-ux]
+    related_skills: [dfs-plan, dfs-grill, dfs-adr, dfs-exec]
 ---
-
 # DFS-SPARK: Idea Sizing & Exploratory Design
 
 Turn vague ideas, open-ended feature thoughts, or fuzzy developer needs into structured, knowledge-grounded design specifications through collaborative dialogue across **Dual Lenses: User Problem Validation + Technical Architecture**.
 
-## 🚨 The Spec-First Invariant (RFC 2119 MUST)
+## [MUST] The Spec-First Invariant (RFC 2119 MUST)
 > **Do NOT invoke any implementation skill, write production code, or scaffold repositories until presenting the design spec and obtaining explicit human partner approval.**
 > Jumping into coding from fuzzy requirements without a sized specification violates the Fog of War staged development principle.
 
 ---
 
-## 🚪 This skill, or `/dfs-grill`?
+## [NOTE] This skill, or `/dfs-grill`?
 
 Both start from something vague. They split on **what you are being asked to do**:
 
@@ -126,7 +115,7 @@ Auto-relay to `/dfs-plan` upon confirmation.
 
 ---
 
-## 🚫 Common Rationalizations & Anti-Patterns
+## [ANTI] Common Rationalizations & Anti-Patterns
 
 | Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
 |---|---|---|
@@ -135,7 +124,7 @@ Auto-relay to `/dfs-plan` upon confirmation.
 | *"The user asked a simple probe question, so I'll write a full 200-line spec."* | **Process Bureaucracy**: Over-processing small spikes stalls exploration velocity. | Honor the Three-Path Classification: Spikes need 2-3 sentence probe plans, not spec docs. |
 | *"I left some edge cases as TBD in the spec to figure out during coding."* | **Fog of War Trap**: Unresolved architectural questions explode into blocking bugs during execution. | Spec MUST contain zero TODO/TBD markers; resolve or explicitly scope out before handoff. |
 
-## 🧪 Worked example — classification decides the process
+## [NOTE] Worked example — classification decides the process
 
 Input A: *"Can we cut cold-start below 200 ms?"* -> Phase 1 classifies this a **Spike** (a
 feasibility / cost question): present a 2-3 sentence probe plan, get a nod, investigate, report — no

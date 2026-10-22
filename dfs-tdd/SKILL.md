@@ -3,19 +3,18 @@ name: dfs-tdd
 description: Enforce strict RED-GREEN-REFACTOR TDD and fake-green guards. Use when implementing a feature test-first, or when a green test suite is suspect.
 license: MIT
 metadata:
-  version: 0.2.0
+  version: 0.3.0
   platforms: linux, macos, windows
   hermes:
     tags: [tdd, red-green-refactor, mutation-testing, fake-green, testing]
     related_skills: [dfs-plan, dfs-exec, dfs-refactor, dfs-debug]
     mcp_tools: [get_code_template]
 ---
-
 # DFS-TDD: Contract-Driven Development & Mutation Defense
 
 Execute Test-Driven Development enforcing **The Iron Law**: Zero production code without a failing test, zero success claims without mutation verification, and zero tolerance for Reward Hacking.
 
-## 🚨 The Iron Law of TDD (RFC 2119 MUST)
+## [MUST] The Iron Law of TDD (RFC 2119 MUST)
 > **NO production code shall be written before an automated test is written AND verified to fail (RED) for the expected reason.**
 > Tests that pass before writing implementation code are invalid (Fake Green).
 > Deleting failing tests, weakening assertions, or skipping tests to simulate a green result is strictly forbidden (Reward Hacking).
@@ -31,7 +30,7 @@ Execute Test-Driven Development enforcing **The Iron Law**: Zero production code
        [Step 2: Verify Test Fails with Expected Error]
                      │
                      ▼
-  ★ [Step 3: Mutation Verification (Anti-Fake Green)] ★
+  [NOTE] [Step 3: Mutation Verification (Anti-Fake Green)] [NOTE]
     (Mutate logic -> Assert test fails -> Revert)
                      │
                      ▼
@@ -55,10 +54,17 @@ Execute Test-Driven Development enforcing **The Iron Law**: Zero production code
 - **Applicability Scope (When to Mutate)**:
   1. **Mandatory Case**: The test unexpectedly passes on first run (Step 2 passed without code — obvious Fake Green / Tautological Test).
   2. **High-Risk Invariant Case**: Cryptographic logic, concurrent lock handoffs, and security gatekeeper rules.
-  3. **Exempt Case**: Standard linear functions, simple DTO mappers, or obvious bugfixes that already failed Step 2 with the exact expected error message. Do not perform ritualistic mutation for trivial logic.
+  3. **The Four Mandatory Classes (field-derived — mutate these even when the logic looks trivial)**:
+     - **Corruption/duplication guards** — anything whose job is to stop a value being written twice (idempotency keys, accumulate-vs-replace, dedupe predicates). A guard that silently stops guarding doubles data.
+     - **State transitions** — every legal/illegal edge of a state machine. Remove the `WHERE status IN (...)` guard and confirm the illegal-transition test goes red.
+     - **Error classification** — any branch that maps an exception to a retryable vs permanent outcome. Break the mapping and confirm the test that pins it fails.
+     - **Human-input parsing boundaries** — any regex/parser that reads back an artifact a human edited. Loosen the pattern by one character and confirm the "malformed row is rejected" test fails; this is the class that silently ate three human judgements and produced a plausible wrong conclusion.
+  4. **Exempt Case**: Standard linear functions, simple DTO mappers, or obvious bugfixes that already failed Step 2 with the exact expected error message. Do not perform ritualistic mutation for trivial logic.
 - **The Mutation Check**: Intentionally mutate the target function to return a zero-value or throw an error.
 - Verify the test turns RED. If it stays GREEN, the test is not asserting real behavior (Fake Green) and must be rewritten.
-- **Checkable Completion Criterion**: Mutation produces a verified RED failure, and code is reverted to its original clean state.
+- **Evidence Rule (MUST)**: quote the failing assertion **verbatim** in the report — `file:line: expected X, got Y`. "The test went red" is a self-report; the assertion text is evidence.
+- **Tier 3 Addition (MUST)**: the orchestrator physically re-executes at least one mutation in the parent tree. A child's description of its own mutation has been observed to disagree with what its code actually did.
+- **Checkable Completion Criterion**: Mutation produces a verified RED failure with a quoted assertion, and code is reverted to its original clean state.
 
 ### Step 4: Implement Minimal Production Code (GREEN)
 - Write the minimal code required to pass the test.
@@ -73,7 +79,7 @@ Execute Test-Driven Development enforcing **The Iron Law**: Zero production code
 
 ---
 
-## 🚫 Common Rationalizations & Anti-Patterns
+## [ANTI] Common Rationalizations & Anti-Patterns
 
 | Agent Rationalization (Anti-Pattern) | Real Hazard (DPO Bad Case) | Defensive Guard (MUST) |
 |---|---|---|

@@ -45,6 +45,10 @@ _REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 # not this author's work, and not published here. It still lives in the author's private
 # skills tree, so the two trees intentionally differ — see scripts/README.md.
 SKILL_NAMES = [
+    "dfs-verify",
+    "dfs-orchestrate",
+    "dfs-maintain",
+    "dfs-gate",
     "dfs",
     "dfs-adr",
     "dfs-bootstrap",

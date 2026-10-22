@@ -23,16 +23,16 @@ audience: both
 
 ## 3. Considered Options
 - **Option 1**: {Title & Brief Description}
-  - 👍 Pros: {Key advantages}
-  - 👎 Cons: {Key drawbacks}
+  - [NOTE] Pros: {Key advantages}
+  - [NOTE] Cons: {Key drawbacks}
 - **Option 2**: {Title & Brief Description}
-  - 👍 Pros: {Key advantages}
-  - 👎 Cons: {Key drawbacks}
+  - [NOTE] Pros: {Key advantages}
+  - [NOTE] Cons: {Key drawbacks}
 
 ## 4. Decision Outcome
 Chosen option: **Option {X}**, because {First-Principles rationale justifying the trade-off}.
 
 ## 5. Consequences and Trade-offs
-- 🟢 **Positive**: {What becomes easier or faster}
-- 🔴 **Negative**: {What becomes more complex, and how we mitigate it}
-- 🛡️ **Compliance Guardrail**: {Code rules or static tests enforcing this decision}
+- [OK] **Positive**: {What becomes easier or faster}
+- [NOTE] **Negative**: {What becomes more complex, and how we mitigate it}
+- [MUST] **Compliance Guardrail**: {Code rules or static tests enforcing this decision}

@@ -6,28 +6,20 @@ metadata:
   version: 0.2.0
   platforms: linux, macos, windows
   hermes:
-    tags:
-      - dependencies
-      - upgrade
-      - breaking-changes
-      - impact-analysis
-    related_skills:
-      - dfs-plan
-      - dfs-research
-      - dfs-review
+    tags: [dependencies, upgrade, breaking-changes, impact-analysis]
+    related_skills: [dfs-plan, dfs-research]
 ---
-
 # DFS-UPGRADE: Dependency Upgrade Risk & Impact Assessment
 
 Systematically assess breaking changes, deprecation ladders, and local call-site impacts before modifying manifests, package lockfiles, or production imports.
 
-## 🚨 The Verification-Before-Manifest Invariant (RFC 2119 MUST)
+## [MUST] The Verification-Before-Manifest Invariant (RFC 2119 MUST)
 > **NO package manifest (`package.json`, `go.mod`, `Cargo.toml`, `requirements.txt`) or lockfile shall be edited before all intermediate breaking deltas are mapped against physical codebase call sites with binary verification.**
 > Jumping major versions without auditing intermediate deprecations violates the Intermediate Hop Ladder.
 
 ---
 
-## 🚪 This skill, or `/dfs-research` / `/dfs-plan`?
+## [NOTE] This skill, or `/dfs-research` / `/dfs-plan`?
 
 | | this skill | `/dfs-research` | `/dfs-plan` |
 |---|---|---|---|
@@ -101,7 +93,7 @@ Ground upstream deltas against concrete local workspace files:
 ### Phase 4: Upgrade Hop Strategy & Handover to /dfs-plan
 1. **Enforce the Intermediate Hop Ladder**:
    - When jumping major versions, define intermediate hops to clear deprecations while tests remain green.
-   - Hop sequence: `v_old ➔ v_intermediate (resolve deprecations) ➔ v_new (apply breaking changes)`.
+   - Hop sequence: `v_old -> v_intermediate (resolve deprecations) -> v_new (apply breaking changes)`.
 2. **Generate Structured Impact Report**:
    - Load and follow `templates/impact-report-template.md`.
    - Record baseline test commands, impacted call sites, hop sequence, and regression safeguards.
@@ -112,7 +104,7 @@ Ground upstream deltas against concrete local workspace files:
 
 ---
 
-## 🚫 Common Rationalizations & Anti-Patterns
+## [ANTI] Common Rationalizations & Anti-Patterns
 
 | Agent Rationalization (Anti-Pattern) | Real Risk | Defensive Guard (MUST) |
 |---|---|---|
@@ -123,7 +115,7 @@ Ground upstream deltas against concrete local workspace files:
 
 ---
 
-## 🧪 Worked Example — Upgrading a Client Library
+## [NOTE] Worked Example — Upgrading a Client Library
 
 Input: *"We need to upgrade github.com/alice/httpclient from v1.3.0 to v2.1.0."*
 

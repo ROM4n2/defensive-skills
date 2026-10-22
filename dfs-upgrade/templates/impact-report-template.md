@@ -3,10 +3,10 @@
 Use this document template to record breaking changes, call-site impacts, migration hops, and verification baselines before executing a dependency upgrade.
 
 ```markdown
-# 📦 Dependency Upgrade Impact Report: [Package Name] ([Current Version] ➔ [Target Version])
+# [NOTE] Dependency Upgrade Impact Report: [Package Name] ([Current Version] -> [Target Version])
 
 > **Target Package**: `package-name`
-> **Upgrade Range**: `v1.2.0` ➔ `v2.0.0`
+> **Upgrade Range**: `v1.2.0` -> `v2.0.0`
 > **Ecosystem / Language**: [Go / Python / Node / Rust / Java]
 > **Assessed Risk Level**: [HIGH - Breaking API / MEDIUM - Deprecations & Behavior Change / LOW - Patch/Minor]
 > **Date Assessed**: YYYY-MM-DD
@@ -47,10 +47,10 @@ Use this document template to record breaking changes, call-site impacts, migrat
 ## 4. 梯级跳跃路径 (Version Hop Migration Ladder)
 *(Do NOT skip major architectural hops if deprecations must be cleaned up first)*
 
-1. **Hop 1: `v1.2.0` ➔ `v1.5.0`**
+1. **Hop 1: `v1.2.0` -> `v1.5.0`**
    - Clean up deprecated APIs while running existing test suite.
    - Verify zero deprecation warnings.
-2. **Hop 2: `v1.5.0` ➔ `v2.0.0`**
+2. **Hop 2: `v1.5.0` -> `v2.0.0`**
    - Apply breaking signature updates and dependency lockfile bump.
    - Run full regression suite.
 

@@ -38,7 +38,7 @@ SEMVER = re.compile(r"\d+\.\d+\.\d+")
 def emit(text: str) -> None:
     """打印，且在控制台编码吃不下字符时降级 —— 绝不因为一行日志崩掉发版脚本。
 
-    GBK 控制台打印 emoji（✅ / ℹ️ / 📦）会抛 UnicodeEncodeError；发版脚本在打印阶段
+  GBK 控制台打印 emoji（ / ℹ️ / ）会抛 UnicodeEncodeError；发版脚本在打印阶段
     崩掉，会把"其实已经写完盘"误报成失败。
     """
     try:
@@ -117,19 +117,19 @@ def generate_markdown(version: str, categories: dict[str, list[str]]) -> str:
     today = date.today().isoformat()
     lines = [f"## [v{version}] - {today}\n"]
     if categories["breaking"]:
-        lines.append("### ⚠️ Breaking Changes")
+    lines.append("### ️ Breaking Changes")
         lines.extend(categories["breaking"])
         lines.append("")
     if categories["features"]:
-        lines.append("### 🚀 Features")
+    lines.append("### Features")
         lines.extend(categories["features"])
         lines.append("")
     if categories["fixes"]:
-        lines.append("### 🐛 Bug Fixes")
+    lines.append("### Bug Fixes")
         lines.extend(categories["fixes"])
         lines.append("")
     if categories["perf"]:
-        lines.append("### ⚡ Performance & Refactoring")
+    lines.append("### Performance & Refactoring")
         lines.extend(categories["perf"])
         lines.append("")
     return "\n".join(lines).strip()
@@ -195,7 +195,7 @@ def main() -> int:
     md = generate_markdown(args.version, cats)
     count = sum(len(v) for v in cats.values())
 
-    emit(f"📦 Previous Tag: {latest_tag} | Commits: {count} | Recommended Bump: {bump}")
+  emit(f" Previous Tag: {latest_tag} | Commits: {count} | Recommended Bump: {bump}")
     emit("=" * 60)
     emit(md)
     emit("=" * 60)
@@ -211,7 +211,7 @@ def main() -> int:
         existing = ""
     with open("CHANGELOG.md", "w", encoding="utf-8") as f:
         f.write(insert_entry(existing, md))
-    emit("✅ 已插入 CHANGELOG.md（新条目位于第一个既有版本标题之前，头部未改动）")
+  emit(" 已插入 CHANGELOG.md（新条目位于第一个既有版本标题之前，头部未改动）")
     return 0
 
 

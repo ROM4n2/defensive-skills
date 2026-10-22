@@ -11,7 +11,6 @@ metadata:
     tags: [handoff, session-end, continuation-card, workmemory]
     related_skills: [dfs-save, dfs-exec]
 ---
-
 # DFS-HANDOFF: Session Wrap-up & 1-Click Agent Handoff (v3)
 
 > **Invocation — explicit only.** `disable-model-invocation: true` is honored by Claude Code and ignored
@@ -51,7 +50,7 @@ Ask: *Did this session discover any non-obvious bugs, workarounds, or reusable p
 - If no: Proceed to Phase 2.
 
 ### Phase 2: Ground-Truth State Capture
-1. Git Status: `git status --short` & `git log -n 1 --oneline`
+1. Git Status & Maintenance: Run `/dfs-maintain` to prune lingering subagent worktrees, clear git locks, and re-sync repository baselines; capture `git status --short` & `git log -n 1 --oneline`.
 2. Test Evidence: Run test suite (`pytest`, `go test ./...`) and record passing count.
 3. Ledger Status: Inspect `.vault-exec-ledger.json` for remaining tasks.
 
@@ -63,6 +62,20 @@ Ask: *Did this session discover any non-obvious bugs, workarounds, or reusable p
 3. **更新索引**：把包挂进约定指定的索引节（例 `INDEX.md` 的 `## Active handoffs`），把「（无）」替换为指向该包的一行。
 
 **反模式（实测踩过）**：只把状态写进对话；只记 `WORK_END` 而不写包；写了包却不更新索引。三者任缺其一，下一个 agent / 下一次会话**都拿不到**，交接等于没做。包写好后，Phase 4 的交接卡**只给指针，不复制包内容**。
+
+### Phase 3b: WORKMEMORY 卫生（仅当 Phase 0.5 探测到项目约定；2026-10-17 补入）
+
+交接不只是"给下一个 agent 一张卡"，还要把**共享记忆层**留在可继续工作的状态：
+
+1. **轮转（HOT → WARM）**：若事件数 > 项目配置的保留阈值 × 1.5 ⇒ **下一个开始工作的 agent 顺手执行**（不要等有人想起来）：
+   - 最老事件按**事件日期**移入 `archive/work-YYYY-MM-DD.log`（已存在的分片追加在其后，保持时间序）；
+   - 热层只留最新 N 条；**只移动、不改字节**（禁止顺手改写/美化/去重/重排任何事件正文）；
+   - **MUST 执行并发守卫**：轮转前**立即重读**事件日志（**禁止**用会话早期快照当基准）；轮转后复核 ① 末条事件头不变 ② **事件集合守恒**（`grep -h '^### ' work.log archive/*.log | sort | uniq -c` 的 before/after `diff` **无输出**）。
+2. **COLD digest**：**仅在用户显式要求**（如"把上月总结成 digest"）时生成 `cold/digest-YYYY-MM.md`，并**同步刷新项目 primer**（如 `PROJECT_OVERVIEW.md`）。未要求 ⇒ 不做。
+3. **目录与索引（按项目协议，别硬编码）**：
+   - 超限事件正文放 `notes/`（若项目有该目录）；
+   - **closed 的 handoff MUST 移入 `archive/`**，并从 Active handoffs 节改挂到「已归档」段；
+   - **热层索引 MUST 保持极小**：若项目已拆出 `INDEX-topics.md`，则主题索引与蒸馏登记写**那里**（WARM，按需加载），`INDEX.md` 只留配置 + 文件清单 + Active/已归档 handoffs + 一行指针。
 
 ### Phase 4: 1-Click Continuation Card Generation（预算分节）
 交接卡 MUST 遵守 token 预算：**≈75 词 ≈ 100 token**。必带节压缩到事实句；一切长内容用指针节导流，不内联。
@@ -86,4 +99,20 @@ Key required sections in `continuation-card.md`:
 - **5. 1-Click Continuation Prompt**: Copy-pasteable shell/agent resumption prompt.
 
 ### Phase 5: Output & Exit
-Deliver the handoff card to the user, then **verify the 收尾三件套 actually landed**（仅当 Phase 0.5 探测到项目约定时）：包文件存在、交接事件已追加且**事件头合规**、索引节已从「（无）」更新为指向该包 —— 用一行 `ls` / `grep` **取证**，不要凭记忆宣称「写了」。再确认 every Phase 0 correction has landed（`WORK_END` 一行 or 交接卡 `## Corrections`），最后优雅收尾。
+Deliver the handoff card to the user, then **verify the 收尾三件套 actually landed**（仅当 Phase 0.5 探测到项目约定时）：包文件存在、交接事件已追加且**事件头合规**、索引节已从「（无）」更新为指向该包 —— 用一行 `ls` / `grep` **取证**，不要凭记忆宣称「写了」。再确认：① 若触发轮转阈值 ⇒ **已轮转**且守恒对账 `diff` 无输出；② 若用户要求了 digest ⇒ `cold/digest-YYYY-MM.md` 已生成且 primer 已刷新；③ closed 的 handoff 已入 `archive/` 且索引段已改挂。
+最后确认 every Phase 0 correction has landed（`WORK_END` 一行 or 交接卡 `## Corrections`），最后优雅收尾。
+---
+
+## Checkable Completion Criterion
+- Continuation card generated strictly within 100-token budget.
+- If project protocol exists: handoff package written to disk, event logged, and active index updated with verified exit 0.
+
+---
+
+## Common Rationalizations & Anti-Patterns
+
+| Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
+|---|---|---|
+| *"I described what was done in the conversation, so the handoff is complete."* | **Context Amnesia**: Conversation text is lost upon fresh session startup. | When repository protocol specifies workmemory, MUST write the handoff package to disk, log the event, and update the index. |
+| *"I will inline full test logs and complete diffs inside the continuation card."* | **Token Budget Exhaustion**: Large continuation cards overflow fresh session token budgets and degrade attention. | Enforce the 100-token budget: continuation cards contain brief factual bullets and point to disk artifacts for details. |
+| *"I'll update the index without checking if the package was physically created."* | **Dangling Index Pointer**: Subsequent agents encounter broken links when attempting to load handoff packages. | Physically verify package file existence with `ls` or `read_file` before updating index markers. |

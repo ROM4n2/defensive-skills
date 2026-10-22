@@ -6,19 +6,9 @@ metadata:
   version: 0.2.0
   platforms: linux, macos, windows
   hermes:
-    tags:
-      - adr
-      - architecture
-      - decision-record
-      - madr
-      - documentation
-    related_skills:
-      - dfs-grill
-      - dfs-spark
-      - dfs-plan
-      - dfs-save
+    tags: [adr, architecture, decision-record, madr, documentation]
+    related_skills: [dfs-grill, dfs-spark, dfs-plan]
 ---
-
 # DFS-ADR: Architecture Decision Record Generator
 
 Lock in key architectural decisions into permanent history in `08-Projects/{project}/01-ADR/` or `01-Rules/` using the MADR (Markdown Architecture Decision Record) specification.
@@ -69,7 +59,7 @@ The ADR document structure comprises 5 core sections:
 
 ---
 
-## 🚫 Common Rationalizations & Anti-Patterns
+## [ANTI] Common Rationalizations & Anti-Patterns
 
 | Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
 |---|---|---|
@@ -78,7 +68,7 @@ The ADR document structure comprises 5 core sections:
 | *"I remembered the last ADR was 0003, so I will name this 0004 without checking."* | **Collision & Broken Links**: Concurrency or missed files cause numbering collisions. | Always physically scan the directory for `[0-9]{4}-*.md` to compute the next number. |
 | *"Consequences section can be empty since this architecture is purely beneficial."* | **Blind Spot Cascades**: Every architecture decision carries trade-offs (memory, complexity, latency). | Every ADR MUST list at least one negative consequence or required compliance guardrail. |
 
-## 🧪 Worked example — ADR-0004
+## [NOTE] Worked example — ADR-0004
 
 Input: *"We are moving SQLite to WAL mode. Record the decision."*
 Output file: `08-Projects/dfs/01-ADR/0004-sqlite-wal-concurrency.md`

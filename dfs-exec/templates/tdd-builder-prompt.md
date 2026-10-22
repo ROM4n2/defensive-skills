@@ -18,12 +18,20 @@ Instructions:
 2. Run test command: `{test_cmd}` and verify failure.
 3. Implement minimal code to pass (GREEN).
 4. Refactor with Guard Clauses (max 2 levels indentation).
-5. Output final summary with test execution evidence.
+5. Mutation self-proof for the four mandatory classes — corruption/duplication guards,
+   state transitions, error classification, human-input parsing boundaries. Quote the
+   failing assertion VERBATIM (`file:line: expected X, got Y`), then revert and prove the
+   tree is green again. A prose claim ("the test went red") is not evidence.
+6. Declare what you could NOT validate on this host, and anything you found OUTSIDE your
+   file ownership. Both are mandatory report fields; silence is read as "nothing to report".
+
+Output final summary with test execution evidence.
 
 <agent_status>
 Task: {task_id} of {total_tasks} | Role: TDD Builder | Status: IN_PROGRESS
 Completed: {completed_tasks} | Pending: {pending_tasks}
 Invariants: Strict RED-GREEN-REFACTOR | Zero Mock on Real Paths
+Repo invariants: {repo_invariants_path} — read it; do not wait for the rules to be restated.
 </agent_status>
 """
 )
@@ -39,3 +47,4 @@ Invariants: Strict RED-GREEN-REFACTOR | Zero Mock on Real Paths
 - `{target_files}`: Paths of files created or modified.
 - `{test_files}`: Paths of corresponding test files.
 - `{test_cmd}`: Exact terminal command to run the targeted test.
+- `{repo_invariants_path}`: Path to the repository's invariants/anchor file the child must read (see `dfs-plan` Phase 2). Leave empty only when the repo genuinely has none.

@@ -6,24 +6,14 @@ metadata:
   version: 0.2.0
   platforms: linux, macos, windows
   hermes:
-    tags:
-      - database
-      - migration
-      - zero-downtime
-      - ddl
-      - expand-contract
-      - sql
-    related_skills:
-      - dfs-perf
-      - dfs-team
-      - dfs-review
+    tags: [database, migration, zero-downtime, ddl, expand-contract, sql]
+    related_skills: [dfs-perf, dfs-team]
 ---
-
 # DFS-MIGRATE: Zero-Downtime Database Schema Migration
 
 Plan and execute production-safe database schema evolutions avoiding metadata locks, replication lag spikes, and service disruptions through the Expand/Contract paradigm.
 
-## 🚨 The Zero-Lock Invariant (RFC 2119 MUST)
+## [MUST] The Zero-Lock Invariant (RFC 2119 MUST)
 > **Always apply the 5-step Expand/Contract ladder for schema evolutions on production tables.**
 > Use backward-compatible additions, dual-writes, and decoupled drops to guarantee zero application downtime.
 > Running destructive or lock-holding DDL (`ALTER TABLE ... DROP COLUMN`, synchronous `ADD COLUMN NOT NULL`) on active tables is strictly prohibited.
@@ -45,7 +35,7 @@ Plan and execute production-safe database schema evolutions avoiding metadata lo
   [Stage 4: Automated DDL Risk Lint & Execution Artifact Dispatch]
 ```
 
-## 🛠️ Automated DDL Risk Linter
+## [NOTE] Automated DDL Risk Linter
 Before executing any migration SQL, run the static lock-hazard auditor:
 ```bash
 python scripts/ddl_lint.py <path_to_migration.sql> --dialect auto
@@ -94,7 +84,7 @@ The linter detects table lock hazards (synchronous `NOT NULL` additions, un-alia
 
 ---
 
-## 🚫 Common Rationalizations & Anti-Patterns
+## [ANTI] Common Rationalizations & Anti-Patterns
 
 | Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
 |---|---|---|

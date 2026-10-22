@@ -127,10 +127,30 @@ port. Three marks make every divergence greppable — `grep -rn "DFS-PORT\|ponyt
   needed so `--inbox <dir outside the root>` can remove the draft it just filed. Default behavior is
   unchanged (no extra roots → the same refusal), and writes are never allowed outside the root.
 
+## Divergences introduced by the 2026-10-20 port
+
+The published tree is now the author's live suite (1 router + 27 sub-skills, all de-emoji'd to
+`[MUST]` / `[ANTI]` / `[NOTE]` / `[STEP]` / `[MAP]` markers), with the publication conventions
+re-applied. Four things deliberately differ from the private tree:
+
+* **`dfs-agent-sdk` is not published.** It is third-party documentation derived from another
+  repository (`buchidonggua/dg-ai-notes`'s `dg-piagent` skill), not this project's work, and it once
+  accounted for 90% of the repo's bytes without touching the argument this repo makes.
+* **`scripts/sync-workmemory-template.py` is not published.** It is the one-way vault → skill
+  template sync; it inspects a specific knowledge-base layout. The published
+  `dfs-bootstrap/templates/workmemory/` copies ARE the reference here, and `bootstrap.py` scaffolds
+  all five of them.
+* **`dfs-inbox-consolidate` ships `scripts/routing.example.json`**, not the author's `routing.json`:
+  the routing table encodes one knowledge base's topic taxonomy, so the shipped file is an example
+  to copy and extend. The router-loader test the private tree runs is likewise vault-side.
+* **`vault-rule-freshness` is named as a capability, not a path.** The freshness check reads a
+  specific vault's standards tree; the skill now says so instead of pointing at a file that cannot
+  resolve outside the author's machine.
+
 ## Tests
 
 ```bash
 python tests/test_vendored_scripts.py      # ledger + transaction + archival + deletion bounds (17)
 python tests/test_bootstrap_script.py      # bootstrap.py against a temp repo: idempotency, no clobber
-python tests/test_skills_conformance.py    # 14 rules over all 24 skills, incl. these pointers
+python tests/test_skills_conformance.py    # 14 rules over all 28 skills, incl. these pointers
 ```

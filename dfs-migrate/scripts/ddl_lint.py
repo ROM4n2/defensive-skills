@@ -54,7 +54,7 @@ DANGEROUS_PATTERNS = [
 
 def lint_sql_file(file_path: pathlib.Path, dialect: str) -> list[dict]:
     if not file_path.is_file():
-        print(f"❌ File not found: {file_path}")
+    print(f" File not found: {file_path}")
         return [{"severity": "CRITICAL", "message": f"File not found: {file_path}"}]
 
     content = file_path.read_text(encoding="utf-8")
@@ -85,17 +85,17 @@ def main() -> int:
     args = parser.parse_args()
 
     sql_file = pathlib.Path(args.file)
-    print(f"🔍 Auditing DDL file: {sql_file}")
+  print(f" Auditing DDL file: {sql_file}")
     print("=" * 60)
 
     violations = lint_sql_file(sql_file, args.dialect)
 
     if not violations:
-        print("✅ Zero dangerous DDL patterns detected! Safe for zero-downtime execution.")
+    print(" Zero dangerous DDL patterns detected! Safe for zero-downtime execution.")
         return 0
 
     critical_count = sum(1 for v in violations if v["severity"] == "CRITICAL")
-    print(f"🚨 Found {len(violations)} DDL risk violation(s) ({critical_count} CRITICAL):\n")
+  print(f" Found {len(violations)} DDL risk violation(s) ({critical_count} CRITICAL):\n")
     for v in violations:
         print(f"  [{v['severity']}] Line {v['line']}: {v['rule']}")
         print(f"    Snippet : {v['snippet']}")

@@ -13,13 +13,13 @@ Every generated `implementation_plan.md` MUST adhere strictly to the following s
 
 ---
 
-## 🏛️ Decisions So Far
+## [NOTE] Decisions So Far
 <!-- Closed decisions and resolved architectural questions; low-res index -->
 - [ADR-0001](link): Adopted Go 1.24+ worker pool over unbounded goroutines.
 
 ---
 
-## 🎯 Active Frontier (Unblocked Tasks)
+## [NOTE] Active Frontier (Unblocked Tasks)
 
 ### Task 1: [Component Name] [Tier: 1-Light | 2-Standard | 3-Critical] [Mode: AFK | HITL] [Role: ...]
 *(Tier: 1-Light = Solo Fast-Path + physical receipt, no Reviewer subagent | 2-Standard = Full TDD Builder + Reviewer Maker-Checker | 3-Critical = Swarm / HITL gate)*
@@ -63,14 +63,14 @@ Every generated `implementation_plan.md` MUST adhere strictly to the following s
 
 ---
 
-## 🌫️ Fog of War (Not Yet Specified)
+## [NOTE] Fog of War (Not Yet Specified)
 <!-- Tasks that depend on open unknowns or upstream outcomes; FORBIDDEN from premature speculative breakdown -->
 - **[Unknown 1]**: Caching tier strategy (Pending benchmarking results from Task 2).
 - **[Unknown 2]**: Distributed coordinator topology (Pending ADR-0002 decision).
 
 ---
 
-## 🚫 Out of Scope
+## [NOTE] Out of Scope
 <!-- Explicitly ruled out boundaries for this effort; never graduates into tasks -->
 - Multi-region cross-datacenter consensus replication.
 - Web UI dashboard (pure CLI backend engine scope).

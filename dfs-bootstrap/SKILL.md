@@ -3,14 +3,13 @@ name: dfs-bootstrap
 description: Initialize a repository with security git hooks and DFS rule anchors. Use when starting a new repo or adding DFS guardrails to an existing one.
 license: MIT
 metadata:
-  version: 0.2.1
+  version: 0.2.3
   platforms: linux, macos, windows
   disable-model-invocation: 'true'
   hermes:
     tags: [bootstrap, git-hooks, security, pre-commit, repo-init]
-    related_skills: [dfs-onboard, dfs-save, dfs-pipeline]
+    related_skills: [dfs-onboard, dfs-save, dfs-pipeline, dfs-gate]
 ---
-
 # DFS-BOOTSTRAP: Repository Security & Knowledge Anchoring
 
 > **Invocation — explicit only.** `disable-model-invocation: true` is honored by Claude Code and ignored
@@ -19,7 +18,7 @@ metadata:
 > here. When you need to know which harness actually honors a given frontmatter key — and what
 > to use in its place where one is ignored — read `dfs/references/harness-field-mapping.md`.
 
-Initialize any new or existing repository (`D:/Code/{project}`) with zero-leak secret detection git hooks and 3-line Defensive Skills knowledge anchors.
+Initialize any new or existing repository (`<project-root>`) with zero-leak secret detection git hooks and 3-line Defensive Skills knowledge anchors.
 
 ## The 4-Phase Bootstrap Protocol
 
@@ -47,6 +46,7 @@ Initialize any new or existing repository (`D:/Code/{project}`) with zero-leak s
    cp templates/githooks-pre-commit.sh .githooks/pre-commit   # first line MUST be exactly: #!/usr/bin/env bash
    chmod +x .githooks/pre-commit
    git config core.hooksPath .githooks
+   # Note: For project-specific quality gates or recurring defect checks beyond base security, author them using /dfs-gate.
    ```
 3. **Pin LF in `.gitattributes` — otherwise the hook re-breaks on fresh checkout.** On Windows
    `core.autocrlf=true` silently rewrites `pre-commit` to CRLF when git materializes it, undoing the
@@ -67,7 +67,7 @@ Initialize any new or existing repository (`D:/Code/{project}`) with zero-leak s
 Create/Update project-level `CLAUDE.md` and `.agent-rules.md` in repository root with the standardized 3-line anchor:
 
 ```markdown
-## 📖 工程规范与避坑检索
+## [NOTE] 工程规范与避坑检索
 - 核心规范源：`{vault_root}/AGENTS.md`（`{vault_root}` 按 `$WIKI_PATH` → `$OBSIDIAN_VAULT_PATH` → 向上查找 `AGENTS.md` 解析，契约见 `dfs/references/vault-root-resolution.md`）
 - 检索避坑规范：调用 `search_vault` MCP 工具；没有 MCP 时按 `mcp/README.md` 的 file-level fallback 表直接检索文件
 - 发现新踩坑自动沉淀：写草稿至 `{vault_root}/99-Inbox/YYYY-MM-DD-{topic}.md`
@@ -78,7 +78,10 @@ Create/Update project-level `CLAUDE.md` and `.agent-rules.md` in repository root
 ### Phase 3.5: WORKMEMORY Scaffold & Agent Distillation (MUST)
 Run the mechanical scaffold, then distill the primer:
 
-1. Run `python3 dfs-bootstrap/scripts/bootstrap.py` (idempotent — it scaffolds `WORKMEMORY/` 4-piece set from `templates/workmemory/`, injects anchors, and skips existing state; `--dry-run` previews, a missing template is a hard exit 2).
+1. Run `python3 dfs-bootstrap/scripts/bootstrap.py` (idempotent — it scaffolds `WORKMEMORY/` **5-piece set** (`INDEX.md` + **`INDEX-topics.md`** + `PROTOCOL.md` + `PROJECT_OVERVIEW.md` + `work.log`) from `Templates/workmemory/`, injects anchors, and skips existing state). `notes/` (oversized-event bodies >4KB) is created on first use — no need to pre-create.
+   - `templates/workmemory/INDEX-topics.md` is the WARM topic index the scaffold drops in alongside the hot `INDEX.md`; `notes/` is created on first use.
+   - **Hot-index discipline (2026-10-17)**: `INDEX.md` is the per-session HOT layer — it MUST hold only Configuration / 文件清单 / Active handoffs. Topic index and distillation registry live in `INDEX-topics.md` (WARM, loaded on `grep` hit). Never grow `INDEX.md` with topic tables; that cost is paid by **every** new session.
+   - **The embedded copies are the published source**: a published skill cannot bundle a whole knowledge base, so `dfs-bootstrap/templates/workmemory/` IS the reference here — edit it directly, and if you keep a private vault `Templates/workmemory/`, treat the vault as the copy. No sync program ships with this repo (the author's one-way sync script inspects a specific vault layout), so there is nothing to run and no drift to check.
 2. **Agent distillation step (script cannot do this)**: read the project codebase and fill `WORKMEMORY/PROJECT_OVERVIEW.md` from its template skeleton — 一段话项目定位（目标/技术栈/运行方式）、当前状态（进行中工作与待办）、高频坑（现象→根因→解法）。Replace the placeholder comments with real content distilled from README/AGENTS.md/git log/ADR.
 3. Append a bootstrap `NOTE` event to `work.log` recording what was distilled (identity: ask user for model-id if unsure).
 4. Event discipline (SHOULD): `WORK_START` 附「不做范围」一行（明确排除的功能/重构/顺手修改）；`WORK_END` 收尾时做回写检查——稳定结论回写（dfs/模块文档/INDEX）、临时产物（日志/真实数据/凭据/截图）不入库。
@@ -101,4 +104,20 @@ does NOT prove it blocks anything. Verify the barrier with these probes before c
    then confirm `file .githooks/pre-commit` reports plain `ASCII text`, not `with CRLF line terminators`
    (catches a missing `.gitattributes` LF pin).
 5. Clean up every probe (`git reset -q HEAD ...` + `rm -f`), confirm the worktree is back to the intended state.
-6. Announce: `✅ Repository bootstrapped with zero-leakage pre-commit guard and Vault anchors.`
+6. Announce: `[PASS] Repository bootstrapped with zero-leakage pre-commit guard and Vault anchors.`
+---
+
+## Checkable Completion Criterion
+- `.githooks/pre-commit` installed with LF line endings and executable permissions.
+- `git config core.hooksPath` set to `.githooks`.
+- Synthetic secret probe and filename probe both exit 1 with abort proof.
+
+---
+
+## Common Rationalizations & Anti-Patterns
+
+| Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
+|---|---|---|
+| *"I'll skip pre-commit secret hooks during initial scaffolding to move faster."* | **Credential Leakage**: Unprotected commits leak API keys or local configurations permanently into git history. | Install and activate `.githooks/pre-commit` before making the first commit in any repository. |
+| *"I'll configure git hooks without normalizing line endings."* | **CRLF Shebang Failure**: Windows CRLF line endings break bash execution (`cannot spawn .githooks/pre-commit`). | Force LF line endings and no UTF-8 BOM on all `.githooks/*` files upon creation. |
+| *"Testing with a live secret literal verifies the hook works."* | **Secret Scanner Invalidation**: Committing real secret tokens trips remote platform scanners and revokes credentials. | Use runtime-concatenated synthetic probes (e.g. `'sk-' + '0'*32`) that exercise regexes without tripping remote scanners. |

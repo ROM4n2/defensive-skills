@@ -3,7 +3,7 @@
 Use this document schema to structure every production database migration plan.
 
 ```markdown
-# 🗄️ Database Migration Plan: [Migration Name]
+# [NOTE] Database Migration Plan: [Migration Name]
 
 > **Target Database**: [MySQL 8.0+ / PostgreSQL 15+ / SQLite 3]
 > **Migration Tool**: [golang-migrate / alembic / flyway / native SQL]

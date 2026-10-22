@@ -5,19 +5,12 @@ license: MIT
 metadata:
   version: 0.3.0
   platforms: linux, macos, windows
-  disable-model-invocation: "true"
+  disable-model-invocation: 'true'
   hermes:
-    tags:
-      - inbox-processing
-      - archival
-      - knowledge-management
-      - triage
-    related_skills:
-      - dfs-save
-    mcp_tools:
-      - promote_inbox_draft
+    mcp_tools: [promote_inbox_draft]
+    tags: [inbox-processing, archival, knowledge-management, triage]
+    related_skills: [dfs-save]
 ---
-
 # DFS-INBOX-CONSOLIDATE: Inbox Draft Archival Pipeline
 
 > **Invocation — explicit only.** This skill carries `disable-model-invocation: "true"` under
@@ -28,29 +21,16 @@ metadata:
 > here. When you need to know which harness actually honors a given frontmatter key — and what
 > to use in its place where one is ignored — read `dfs/references/harness-field-mapping.md`.
 
-## 🚨 The Transactional Archival Invariant (RFC 2119 MUST)
+## [MUST] The Transactional Archival Invariant (RFC 2119 MUST)
 > **NO draft shall be deleted from `99-Inbox/` until its target note write is committed and verified.**
 > Always run `--dry-run` before `--execute`. Never guess destinations for ambiguous drafts.
 
 ---
 
-## ⚡ Scope Detection (MUST — 执行前第一步)
-
-**在任何操作前，MUST 先检测当前 Vault 根目录**：
-
-```python
-import os
-def detect_vault_root():
-    d = os.getcwd()
-    while d != os.path.dirname(d):
-        if os.path.exists(os.path.join(d, "AGENTS.md")) or os.path.exists(os.path.join(d, "CLAUDE.md")):
-            return d
-        d = os.path.dirname(d)
-    return None
-```
-
-- **检测到 Vault**：脚本路径为 `{vault_root}/scripts/vault-inbox-consolidate.py`
-- **未检测到 Vault**：报错退出，不执行归档
+## Scope Detection (MUST - 执行前第一步)
+在任何操作前，先解析当前 Vault 根目录（遵循 Tier 1 环境变量 `$WIKI_PATH` / `$OBSIDIAN_VAULT_PATH` 或向父目录上溯探测 `AGENTS.md`）。
+- **检测到 Vault**: 执行脚本为 `{vault_root}/scripts/vault-inbox-consolidate.py`
+- **未检测到 Vault**: 报错退出，严禁盲目执行归档
 
 ---
 
@@ -66,38 +46,26 @@ def detect_vault_root():
 | `topic/git`, `topic/error-handling`, ... | rule-append | `01-Rules/{TARGET}.md` |
 | `topic/architecture`, `topic/refactoring`, ... | source-article | `06-Sources/Articles/{TITLE}.md` |
 | `topic/linguistics` + `project/delector` | project | `08-Projects/DeLector/{TITLE}.md` |
-| 无匹配 + source-notes | source-article | `06-Sources/Articles/{TITLE}.md` |
 | `category/pattern` | **pattern-card** | `01-Rules/{NAME}.md`（独立卡，命名不带日期；与 `category/rules` 并列） |
+| 无匹配 + source-notes | source-article | `06-Sources/Articles/{TITLE}.md` |
 
-> **pattern vs troubleshooting**：`category/pattern` = 可复用的**成功做法**（"做对了什么"）⇒ 独立成卡；`category/troubleshooting` = 事故复盘 ⇒ **合并进对应规则的 §n**（不新建卡）。两类都晋级，别只处理事故类，否则"做法"永远失传。
+> **pattern vs troubleshooting（2026-10-17 补入）**：`category/pattern` = 可复用的**成功做法**（"做对了什么"）⇒ 独立成卡；`category/troubleshooting` = 事故复盘 ⇒ **合并进对应规则的 §n**（不新建卡）。两类都晋级，别只处理事故类，否则"做法"永远失传。首张实例：`01-Rules/REFACTOR-SAFETY-NET.md`。
 
 ---
 
 ## 1b. 「归档目标」优先与路由对账 (MUST)
-
-脚本判定是**建议**不是真值：`analyze_draft()` 按 `tags` **列表顺序取首个命中**（同一 tag 序列、不同归属的草稿只有一个出口），未注册 tag 则静默落 fallback 目标，**不报错**。
-
+脚本判定是**建议**不是真值：`analyze_draft()` 按 `tags` **列表顺序取首个命中**（同 tag 序列、不同归属的草稿只有一个出口），未注册 tag 则静默落 `fallback.default`（`01-Rules/CODING-UNIVERSAL.md`），**不报错**。
 - **逐篇对账 (MUST)**：`--dry-run` 后 MUST 把每篇的脚本判定与**草稿正文自述的「归档目标」**对照；不一致即走 §2c 人工落位，MUST NOT 接受脚本判定。
 - **多段 frontmatter (MUST)**：只取 canonical 段（外层），MUST NOT 把正文内重复的 YAML 段追加进规则文件。
-- **补盲区 (MUST)**：发现未注册 tag ⇒ 补路由配置（`scripts/routing.example.json`）并在其基线测试中登记，补完做变异自证（删条目 ⇒ 必红）。
+- **补盲区 (MUST)**：发现未注册 tag ⇒ 补 `scripts/routing.example.json`（本仓随包的示例路由表；派生你自己的 `routing.json`），再把新条目登记进你的路由加载测试（§5 冻结集合防线），补完做变异自证（删条目 ⇒ 必红）。
 
 ## 2. 使用方式
-
 ```bash
-# 预览模式（默认）— 不修改任何文件
-python scripts/vault-inbox-consolidate.py --dry-run
-
-# 预览单个文件
-python scripts/vault-inbox-consolidate.py --dry-run --file "2026-09-06-xxx.md"
-
-# 执行归档 — 创建目标文件 + 删除原件
-python scripts/vault-inbox-consolidate.py --execute
-
-# 执行单个文件
-python scripts/vault-inbox-consolidate.py --execute --file "2026-09-06-xxx.md"
-
-# JSON 输出
-python scripts/vault-inbox-consolidate.py --dry-run --json
+python scripts/vault-inbox-consolidate.py --dry-run                # 预览模式 (默认)
+python scripts/vault-inbox-consolidate.py --dry-run --file <name>  # 预览单文件
+python scripts/vault-inbox-consolidate.py --execute               # 执行归档 (原子写入+原件移除)
+python scripts/vault-inbox-consolidate.py --execute --file <name>  # 执行单文件
+python scripts/vault-inbox-consolidate.py --dry-run --json        # JSON 格式输出
 ```
 
 ---
@@ -114,29 +82,18 @@ Agent 判断目标时可参考上方 `TARGET_ROUTING_MAP`；目标仍有歧义�
 ---
 
 ## 2c. 人工落位路径（脚本判定不适用时）
-
-1. **定位**：目标为已有规则文件 ⇒ 走**附录块**（不新建文件、不改章节编号）。
+1. **定位**：目标为已有规则文件 ⇒ 走**附录块**（不新建文件、不改章节编号）；目标需新建 ⇒ 只在此处新建。
 2. **附录块形态**：yaml 分隔线 + `#### <标题>` + `> 来源: 99-Inbox/<原名> | 日期: <YYYY-MM-DD>` + 一句**已执行态**说明 + 正文（去掉与外层重复的 `# H1`）。**行尾 MUST 与目标文件一致**（CRLF / LF 不可混）。
-3. **补字段**：目标 frontmatter 的 `updated` / `verified` 刷为今天，并补关联索引条目。
-4. **验证后移除原件 (MUST)**：先做**逐行覆盖比对**（「标题存在」≠「内容落盘」）并备份副本 —— 投放箱目录常为 untracked，**无 git 兜底**；通过后才删。
-5. **收口**：跑该知识库的质检与巡检命令（Inbox MUST CLEAN）。
+3. **补字段**：目标 frontmatter 的 `updated` / `verified` 刷为今天，并补关联索引条目（§4b）。
+4. **验证后移除原件 (MUST)**：先做**逐行覆盖比对**（「标题存在」≠「内容落盘」）并备份副本 —— `99-Inbox/` untracked，**无 git 兜底**；通过后才 `rm`。
+5. **收口**：`vault-quality-check.py`（本次改动文件零告警） + `vault-healthcheck.py`（[4] Inbox MUST CLEAN）。
 
 ## 3. 执行流程与完成判据
 
 ```
-  [1. 扫描 99-Inbox/*.md（排除 tpl- 前缀）]
-                     │
-                     ▼
-  [2. 解析 YAML frontmatter (tags, status, type)]
-                     │
-                     ▼
-  [3. 匹配 TARGET_ROUTING_MAP 确定目标路径]
-                     │
-                     ▼
-  [4. 运行 --dry-run 预览计划并确认]
-                     │
-                     ▼
-  [5. 运行 --execute 提交原子事务并清理原件]
+  [1. 扫描 99-Inbox/] -> [2. 解析 YAML 元数据] -> [3. 匹配目标路由]
+                                                       │
+  [5. --execute 原子写入+原件移除] <--- [4. --dry-run 预览确认] <┘
 ```
 
 - **Checkable Completion Criterion**: 
@@ -145,40 +102,22 @@ Agent 判断目标时可参考上方 `TARGET_ROUTING_MAP`；目标仍有歧义�
 ---
 
 ## 4. Dual-Version CHEATSHEET 同步 (VAULT-STRUCTURE §5)
-
-当路由到 `dual-version` 时，脚本自动处理 CHEATSHEET 同步检测：
-
-**行为**：
-- STANDARDS 追加后，脚本检查对应 CHEATSHEET 是否已包含新章节标题
-- `cheatsheet_action = "synced"`：CHEATSHEET 已有该章节，无需操作
-- `cheatsheet_action = "stale"`：CHEATSHEET 缺少该章节，返回浓缩指令
-- `cheatsheet_action = "missing"`：CHEATSHEET 文件不存在，提示从 STANDARDS 生成
-
-**Agent 收到 `stale` 后 MUST 执行**：
-1. 读取 `{LANG}-STANDARDS.md` 中新增章节
-2. 在 `{LANG}-CHEATSHEET.md` 对应位置追加浓缩版（一句话核心法则 + ≤5 行代码示例）
-3. 确保章节序号 1:1 对齐
-
-**输出示例**：
-```
-  [1] Python 异步并发模式
-      Tags: lang/python, topic/concurrency
-      Target: dual → 03-Languages/Python/PYTHON-STANDARDS.md
-      Action: dual-append — 已追加至 STANDARDS
-      ⚠️  CHEATSHEET 同步: PYTHON-CHEATSHEET.md 中未找到「PYTHON-ASYNC-CONCURRENCY-MODES」章节
-  ────────────────────────────────────────────────────────────
-  📋 CHEATSHEET 同步待办 (VAULT-STRUCTURE §5):
-    ⚠️  03-Languages/Python/PYTHON-CHEATSHEET.md ← 需从 STANDARDS 浓缩
-```
+当路由到 `dual-version` 时，脚本自动处理 CHEATSHEET 同步检测。若输出状态为 `stale`，Agent MUST 遵循 [references/cheatsheet-sync.md](references/cheatsheet-sync.md) 协议在 `{LANG}-CHEATSHEET.md` 对应位置同步追加浓缩版并对齐章节编号。
 
 ---
 
-## 4b. 晋级后 MUST 补字段 / 标取代关系
+## 4b. 晋级后 MUST 补字段 / 标取代关系（2026-10-17 补入）
 
-1. **`description`（触发句）**：一句话写明"什么场景该读本条"，MUST NOT 写成标题复述。
-2. **`verified`（复核日期）**：MUST 更新为今天（`updated` 不等于复核）。
-3. **被取代的旧结论**：使旧条目失效 ⇒ 标 `status: superseded-by: <path>`；不静默删除，也不静默保留。
-4. **时效闸**：跑规则时效检查，超期未复核的规范会被点名；随各规则被引用时补 `verified` 逐步收敛。
+晋级（脚本或 MCP）完成后，Agent MUST 检查目标文件的 frontmatter 与正文：
+
+1. **`description`（触发句）**：一句话写明"什么场景该读本条"，**MUST NOT** 写成标题复述——后续检索靠它做相关性过滤。
+2. **`verified`（复核日期）**：MUST 更新为今天。`updated` 不等于复核（改错别字不算）。
+3. **被取代的旧结论**：若本次晋级使某条旧规则/旧条目失效 ⇒ 在该处标 `status: superseded-by: <path>`，**不静默删除、也不静默保留**（保持历史可追溯，但检索时必须看得出它已过期）。
+4. **时效闸**：用你自己的规则时效检查（作者版是 `vault-rule-freshness`，看 `verified` 日期与 `--days N` 阈值；**不随包**，因为它读的是特定知识库的规范目录结构）报告超期未复核的规范；迁移期内严格模式会红，属预期，随各规则被引用时补 `verified` 逐步收敛。
+
+**Checkable Completion Criterion**：目标文件含 `description` + `verified`；若存在被取代项，其 `superseded-by` 已标注。
+
+---
 
 ## 5. 归档后 MUST 验证
 
@@ -188,11 +127,11 @@ Agent 判断目标时可参考上方 `TARGET_ROUTING_MAP`；目标仍有歧义�
 python scripts/vault-healthcheck.py
 ```
 
-确认 Inbox Ingestion Hygiene 为 ✅ CLEAN。
+确认 Inbox Ingestion Hygiene 为 [PASS] CLEAN。
 
 ---
 
-## 🚫 Common Rationalizations & Anti-Patterns
+## [ANTI] Common Rationalizations & Anti-Patterns
 
 | Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
 |---|---|---|
@@ -207,5 +146,6 @@ python scripts/vault-healthcheck.py
 
 - Inbox 超龄扫描：`python scripts/vault-inbox-triage.py`
 - 全库健康巡检：`python scripts/vault-healthcheck.py`
+- 规则时效闸：作者版 `vault-rule-freshness --strict`，需自备等价物（见 `scripts/README.md`）
 - Vault 结构规范：[[01-Rules/VAULT-STRUCTURE]]
 - CC Switch 管理规范：[[05-Tools/CC-SWITCH-GUIDE]]
