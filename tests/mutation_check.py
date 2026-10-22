@@ -21,6 +21,16 @@ import tempfile
 REPO = pathlib.Path(__file__).resolve().parents[1]
 GATE = REPO / "tests" / "test_skills_conformance.py"
 
+# Probes are not limited to one gate any more: the field-mapping and README-catalogue gates used to be
+# hand-probed because the harness only ever ran `GATE`. Route each expected failure to the file that
+# owns it; anything not listed runs against the conformance gate as before.
+GATE_OF: dict[str, pathlib.Path] = {
+    "02_the_portable_core_matches_reality": REPO / "tests" / "test_harness_field_mapping.py",
+    "03_the_disable_model_invocation_roster_matches_reality": REPO / "tests" / "test_harness_field_mapping.py",
+    "02_descriptions_and_mcp_columns_match_frontmatter": REPO / "tests" / "test_readme_skill_table.py",
+    "01_table_matches_the_tree_in_both_directions": REPO / "tests" / "test_readme_skill_table.py",
+}
+
 # The pristine tree is expected to be FULLY GREEN: published blocker B4 (the dangling script
 # references Rule 8 was catching) is fixed, so no rule is expected to be red. An EMPTY baseline is
 # the stronger assertion — every mutation must introduce its own failure, and any failure present
@@ -133,10 +143,41 @@ MUTATIONS = [
      "dfs-adr/SKILL.md", lambda t: t.replace("name: dfs-adr", "name:", 1)),
 ]
 
+# Two gates had no automatic probe: they were hand-checked once (inject / observe red / restore) and
+# that receipt went stale the moment either file changed. A manual probe is a probe you will not
+# re-run. These four put them on the same mechanical terms as every rule above.
+MUTATIONS += [
+    # Portable-core drift: harness-field-mapping.md claims the portable core is
+    # {description, license, name, metadata.platforms, metadata.version}. Drop one from a skill and
+    # the doc/reality comparison must notice. test_01 stays green — the key is still documented, the
+    # defect is the missing value.
+    ("02_the_portable_core_matches_reality",
+     "dfs-release/SKILL.md", lambda t: t.replace("  platforms: linux, macos, windows\n", "", 1)),
+    # Roster drift: §2 states how many skills carry the flag and names them; stripping it from one
+    # makes the doc a claim about a tree that no longer exists. The value is quoted either way in the
+    # tree ('true' / "true"), so the probe accepts both instead of silently mutating nothing.
+    ("03_the_disable_model_invocation_roster_matches_reality",
+     "dfs-pipeline/SKILL.md",
+     lambda t: re.sub(r"^  disable-model-invocation: [\"']true[\"']\n", "", t, count=1, flags=re.M)),
+    # Catalogue drift, one word: every README description is re-derived from the skill's own
+    # frontmatter, so a paraphrase that "reads the same" is still a lie the gate can name.
+    ("02_descriptions_and_mcp_columns_match_frontmatter",
+     "README.md", lambda t: t.replace("or check whether a release actually shipped.",
+                                      "or check whether a release shipped.", 1)),
+    # Catalogue drift, one entry: a row with no skill behind it. A phantom row is a promise to the
+    # reader that `install.py` cannot keep.
+    ("01_table_matches_the_tree_in_both_directions",
+     "README.md", lambda t: t.replace(
+         "| `dfs-research` |",
+         "| `dfs-ghost` | Does not exist. Use when you want a gate to fail. | — | — | — |\n"
+         "| `dfs-research` |", 1)),
+]
 
-def failing_tests(workdir: pathlib.Path) -> set[str]:
+
+def failing_tests(workdir: pathlib.Path, gate: pathlib.Path) -> set[str]:
     env = dict(os.environ, DFS_SKILLS_DIR=str(workdir))
-    proc = subprocess.run([sys.executable, str(GATE)], capture_output=True, text=True, env=env)
+    proc = subprocess.run([sys.executable, str(workdir / gate.relative_to(REPO))],
+                          capture_output=True, text=True, env=env)
     names = re.findall(r"^FAIL: (\S+)", proc.stderr, re.M)
     # unittest prints the method name ("test_rule_7_..."); keys here are rule names.
     return {n[len("test_"):] if n.startswith("test_") else n for n in names}
@@ -152,12 +193,21 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as td:
         tmp = pathlib.Path(td)
 
-        baseline = failing_tests(fresh_copy(tmp, "baseline"))
+        baseline = failing_tests(fresh_copy(tmp, "baseline"), GATE)
         if baseline != KNOWN_RED_BASELINE:
             print(f"BASELINE MOVED: expected {sorted(KNOWN_RED_BASELINE)}, got {sorted(baseline)}")
             print("Update KNOWN_RED_BASELINE deliberately, not reflexively.")
             return 1
         print(f"baseline: {len(baseline)} known-red test(s) -> {sorted(baseline)}")
+
+        # Every gate a probe targets must be green before mutation, or a probe can be "caught" by a
+        # failure that was already there. Same assertion as above, per gate.
+        for gate in sorted(set(GATE_OF.values()) - {GATE}):
+            pre = failing_tests(fresh_copy(tmp, "pre_" + gate.stem), gate)
+            if pre:
+                print(f"BASELINE MOVED in {gate.name}: {sorted(pre)}")
+                return 1
+            print(f"baseline {gate.name}: green")
 
         missed = []
         for i, (expected, relpath, transform) in enumerate(MUTATIONS):
@@ -177,7 +227,7 @@ def main() -> int:
             else:
                 target.write_text(mutated, encoding="utf-8")
 
-            failed = failing_tests(copy)
+            failed = failing_tests(copy, GATE_OF.get(expected, GATE))
             caught = expected in failed
             extra = sorted(failed - baseline - {expected})
             status = "CAUGHT" if caught else "MISSED"

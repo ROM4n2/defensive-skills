@@ -1,0 +1,37 @@
+name: gates
+
+# The suite's whole claim is that its checks can go red. So CI runs the mutation harness, not just
+# the tests: a green `pytest` on a tree whose probes cannot fail is exactly the failure mode this
+# repository documents. Baseline is asserted first (KNOWN_RED_BASELINE must be empty), so a
+# pre-existing failure cannot be absorbed as "caught".
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install test runner
+        run: python -m pip install --upgrade pip pytest
+      - name: Unittest-suites under pytest (109 collected)
+        run: python -m pytest tests/ -q
+      - name: Mutation harness (every rule must be able to fail)
+        run: python tests/mutation_check.py
+      - name: Installer dry-run (the manifest must not promise what it cannot copy)
+        run: python install.py --target /tmp/dfs-install --mode copy --dry-run
