@@ -6,23 +6,14 @@ metadata:
   version: 0.2.0
   platforms: linux, macos, windows
   hermes:
-    tags:
-      - refactoring
-      - guard-clauses
-      - complexity-reduction
-      - code-quality
-      - yagni
-    related_skills:
-      - dfs-tdd
-      - dfs-review
-      - dfs-perf
+    tags: [refactoring, guard-clauses, complexity-reduction, code-quality, yagni]
+    related_skills: [dfs-tdd, dfs-review]
 ---
-
 # DFS-REFACTOR: Senior Complexity Reduction & Flattening
 
 Execute senior-level code refactoring focusing on complexity reduction, Guard Clause flattening, stdlib consolidation, and dead code elimination while maintaining 100% Green test coverage.
 
-## 🚨 The Behavior Preservation Invariant (RFC 2119 MUST)
+## [MUST] The Behavior Preservation Invariant (RFC 2119 MUST)
 > **DO NOT touch any production code until the full test suite is verified GREEN.**
 > Refactoring changes internal structure without changing external behavior. If you cannot run tests or if test passing count changes, stop immediately.
 
@@ -100,7 +91,7 @@ A **shallow module** has a complex interface but weak implementation (many publi
 
 ---
 
-## 🚫 Common Rationalizations & Anti-Patterns
+## [ANTI] Common Rationalizations & Anti-Patterns
 
 | Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
 |---|---|---|
@@ -116,16 +107,16 @@ A **shallow module** has a complex interface but weak implementation (many publi
 Every refactoring deliverable MUST provide a quantitative comparison:
 
 ```markdown
-# 🧹 Code Refactoring Summary: [Target Module]
+# [NOTE] Code Refactoring Summary: [Target Module]
 
-### 📊 Complexity & Quantitative Delta
-- **Max Indentation Depth**: `4 levels` ➔ `2 levels` (Guard Clauses)
-- **Lines of Code (LOC)**: `340` ➔ `195` (🔻 42.6% reduction)
+### [NOTE] Complexity & Quantitative Delta
+- **Max Indentation Depth**: `4 levels` -> `2 levels` (Guard Clauses)
+- **Lines of Code (LOC)**: `340` -> `195` ([-] 42.6% reduction)
 - **Deletions**: <what was deleted and why>
 - **Stdlib Replacements**: <custom X → stdlib Y>
-- **Test Integrity**: ✅ All 48 tests passing (Green-to-Green preserved)
+- **Test Integrity**: [PASS] All 48 tests passing (Green-to-Green preserved)
 
-### 🔍 Key Transformation Diff
+### [NOTE] Key Transformation Diff
 ```diff
 - if user != nil {
 -     if user.IsActive {

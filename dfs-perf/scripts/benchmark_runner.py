@@ -26,7 +26,7 @@ def detect_language(root: pathlib.Path) -> str:
 
 def run_command(cmd: list[str], cwd: pathlib.Path) -> tuple[int, str]:
     """Execute command and stream output with exit code."""
-    print(f"🚀 Running: {' '.join(cmd)} (cwd: {cwd})")
+  print(f" Running: {' '.join(cmd)} (cwd: {cwd})")
     try:
         proc = subprocess.run(
             cmd,
@@ -45,19 +45,19 @@ def run_command(cmd: list[str], cwd: pathlib.Path) -> tuple[int, str]:
 
 def run_go_bench(root: pathlib.Path, bench_pattern: str, check_race: bool) -> int:
     print("=" * 60)
-    print("📦 [Go Runtime Benchmark & Race Audit]")
+  print(" [Go Runtime Benchmark & Race Audit]")
     print("=" * 60)
 
     if check_race:
-        print("\n🔍 Checking for data races (-race)...")
+    print("\n Checking for data races (-race)...")
         code, out = run_command(["go", "test", "-race", "./..."], root)
         print(out)
         if code != 0:
-            print("❌ Data race detected! Aborting performance profiling.")
+      print(" Data race detected! Aborting performance profiling.")
             return code
-        print("✅ Data race check PASSED (clean).")
+    print(" Data race check PASSED (clean).")
 
-    print(f"\n⚡ Running Benchmarks (pattern: {bench_pattern})...")
+  print(f"\n Running Benchmarks (pattern: {bench_pattern})...")
     bench_cmd = ["go", "test", f"-bench={bench_pattern}", "-benchmem", "-count=5", "./..."]
     code, out = run_command(bench_cmd, root)
     print(out)
@@ -66,20 +66,20 @@ def run_go_bench(root: pathlib.Path, bench_pattern: str, check_race: bool) -> in
 
 def run_python_bench(root: pathlib.Path, bench_pattern: str) -> int:
     print("=" * 60)
-    print("🐍 [Python Benchmark & cProfile Audit]")
+  print(" [Python Benchmark & cProfile Audit]")
     print("=" * 60)
     
     # Check if pytest-benchmark is installed
     check_code, _ = run_command(["pytest", "--version"], root)
     if check_code == 0:
-        print(f"\n⚡ Running pytest benchmarks (pattern: {bench_pattern})...")
+    print(f"\n Running pytest benchmarks (pattern: {bench_pattern})...")
         cmd = ["pytest", "-k", bench_pattern, "--benchmark-only", "-v"]
         code, out = run_command(cmd, root)
         print(out)
         if code == 0:
             return 0
             
-    print("\n⚡ Running cProfile snapshot...")
+  print("\n Running cProfile snapshot...")
     cmd = [sys.executable, "-m", "cProfile", "-s", "cumtime", "-m", "unittest"]
     code, out = run_command(cmd, root)
     lines = out.splitlines()[:35]
@@ -89,11 +89,11 @@ def run_python_bench(root: pathlib.Path, bench_pattern: str) -> int:
 
 def run_cpp_bench(root: pathlib.Path) -> int:
     print("=" * 60)
-    print("⚙️ [C++ Google Benchmark Audit]")
+  print("️ [C++ Google Benchmark Audit]")
     print("=" * 60)
     build_dir = root / "build"
     if not build_dir.exists():
-        print("⚠️ Build directory not found. Please compile with cmake first.")
+    print("️ Build directory not found. Please compile with cmake first.")
         return 1
     
     cmd = ["cmake", "--build", str(build_dir), "--target", "run_benchmarks"]
@@ -115,7 +115,7 @@ def main() -> int:
     lang = args.lang
     if lang == "auto":
         lang = detect_language(root)
-        print(f"🔍 Auto-detected tech stack: {lang.upper()} at {root}")
+    print(f" Auto-detected tech stack: {lang.upper()} at {root}")
         
     if lang == "go":
         return run_go_bench(root, args.bench, args.race)
@@ -124,7 +124,7 @@ def main() -> int:
     elif lang == "cpp":
         return run_cpp_bench(root)
     else:
-        print(f"❌ Unknown or unsupported language stack at {root}")
+    print(f" Unknown or unsupported language stack at {root}")
         return 1
 
 

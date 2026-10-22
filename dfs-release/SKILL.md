@@ -9,12 +9,11 @@ metadata:
     tags: [release, semver, changelog, rollback, deployment, git-tag, release-notes]
     related_skills: [dfs-pipeline, dfs-review, dfs-handoff]
 ---
-
 # DFS-RELEASE: Semantic Versioning, Changelog, Rollback & Post-Release Gate
 
 Standardize the production release lifecycle: pre-flight verification → version bump → changelog + rollback plan → tagging → **post-release verification**.
 
-## 🚨 The Pre-Flight Gate Invariant (RFC 2119 MUST)
+## [MUST] The Pre-Flight Gate Invariant (RFC 2119 MUST)
 > **Verify, on the exact commit you are about to tag: `git status --porcelain` empty AND the project's own gates green (test suite + the artifact/packaging smoke gate, if the repo has one).**
 > "Green on my machine last night" is not evidence; "green on **that commit**" is. Any commit that lands after the audit re-opens the audit.
 
@@ -63,8 +62,8 @@ A green gate certifies **only what it executes**. Before tagging, list the gates
 
 ## Stage 3: Release Notes & Rollback Brief
 1. Load `templates/changelog-template.md` via `read_file(path='templates/changelog-template.md')`.
-2. The new entry MUST carry **⚠️ Known Limitations** — what this release does *not* fix, especially anything a user could mistake for a defect or a speed-up. An undeclared known limitation becomes a support ticket or a false promise.
-3. The **🔄 Rollback** subsection MUST separate the independent axes — "revert the commit" is not a rollback plan:
+2. The new entry MUST carry **[MUST] Known Limitations** — what this release does *not* fix, especially anything a user could mistake for a defect or a speed-up. An undeclared known limitation becomes a support ticket or a false promise.
+3. The **[MUST] Rollback** subsection MUST separate the independent axes — "revert the commit" is not a rollback plan:
    - **Code / artifact**: previous version's package, and whether users *can* downgrade (a mobile `versionCode` is one-way ⇒ uninstall/reinstall — say so).
    - **Data**: does this release *move* data (new directory / host / format)? Then the old version may not find it — document the manual step and the backup left behind.
    - **Schema**: additive (new column/index — old code still reads it) vs destructive (needs a down-migration **and** a restore path).
@@ -95,7 +94,7 @@ A green gate certifies **only what it executes**. Before tagging, list the gates
 
 ---
 
-## 🚫 Common Rationalizations & Anti-Patterns
+## [ANTI] Common Rationalizations & Anti-Patterns
 
 | Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
 |---|---|---|

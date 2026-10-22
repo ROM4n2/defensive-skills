@@ -3,25 +3,24 @@ name: dfs-review
 description: Review a code diff against 7-language RFC 2119 DFS rules. Use when the user asks for a code review, or before merging a change.
 license: MIT
 metadata:
-  version: 0.2.0
+  version: 0.3.0
   platforms: linux, macos, windows
   hermes:
     tags: [code-review, rfc-2119, red-card, standards, gatekeeper, subagents]
-    related_skills: [dfs-team, dfs-refactor, dfs-exec]
+    related_skills: [dfs-team, dfs-refactor, dfs-exec, dfs-verify]
     mcp_tools: [get_rule_snippet, list_standards]
 ---
-
 # DFS-Review: Adversarial Red/Yellow Card Code Review
 
 Conduct thorough, unsparing code review on a git diff or pull request against Defensive Skills standards, The Ladder of Reuse, and language invariants by dispatching an independent, fresh-context reviewer subagent.
 
-## 🚨 The Adversarial Review Invariant (RFC 2119 MUST)
+## [MUST] The Adversarial Review Invariant (RFC 2119 MUST)
 > **The reviewer reports, the caller fixes. Every finding MUST include a concrete failure scenario with exact `file:line` citations.**
 > Anti-Sycophancy: Zero performative praise. The reviewer is an adversarial prosecutor, not a polite assistant.
 
 ---
 
-## 🚪 Before you start — is this the right reviewer?
+## [NOTE] Before you start — is this the right reviewer?
 
 This skill is the **narrow, deep gate**: one adversarial reviewer, one axis, a diff as input, and a verdict allowed to halt the commit.
 
@@ -65,25 +64,38 @@ Two reviewers on one single-surface diff is waste; one reviewer on a six-domain 
    - Standard snippets retrieved for every touched file extension and passed to the reviewer scaffold.
 
 ### Step 3 — Adaptive Review Dispatch (阈值自适应审查)
+0. **Attach the Test-Evidence Manifest (MUST)** — before dispatching, hand the reviewer a list of
+   `test name -> what it asserts` for every test the diff adds or changes, plus the mutation
+   self-proofs the builder already ran (with quoted assertions). Then state the scope limit
+   explicitly: **do not re-derive what the manifest already proves.** A reviewer that
+   re-derives covered contracts burns a full dispatch to reproduce the builder's own evidence;
+   the findings that justify the seat live where tests do *not* reach.
 1. **Diff Scope Inspection & Adaptive Dispatch**:
    - **Lightweight Diff (Diff ≤ 20 lines & Docs/Metadata/Constants only)**:
      Orchestrator performs inline self-review against the Red Card rubric directly in-thread, outputting a concise verdict. Eliminates subagent cold-start latency and avoids 429 rate limits for trivial mechanical edits.
    - **Production Logic Diff (Diff > 20 lines or touches business/algorithmic code)**:
      **MANDATORY**: Dispatch independent, context-isolated subagent (`delegate_task` is the portable path; runtime variants in `dfs/references/subagent-dispatch.md`) using `templates/code-reviewer-prompt.md`.
      Reviewer runs strictly read-only (zero source code edits) and evaluates code strictly against Red Card blockers (RFC 2119 MUST violations) and Yellow Card polish items.
-2. **Checkable Completion Criterion**:
+2. **Reviewer's mandated focus** (what the manifest cannot cover):
+   - **Untested invariants**: error-classification width, cancelled-context teardown, progress semantics, duplicate implementations of one rule (the four classes in `/dfs-grill` Stage 2.5).
+   - **Contract breaks**: public signatures, test baselines, packaging/embed guards.
+   - **Scope creep**: anything in the diff the task did not ask for.
+   - **Residual unknowns**: an explicit list of conclusions the reviewer could *not* physically verify on this host. A silent report is treated as full verification and is the one thing a reviewer must never do.
+3. **Checkable Completion Criterion**:
    - Structured verdict (`RED CARD` or `CLEAN PASS`) returned with zero performative compliments.
+   - Manifest attached, scope limit stated, residual-unknowns list present.
 
 ### Step 4 — Report Verdict & Remedy
 1. **Process Verdict**:
    - **If Verdict is REJECTED (RED CARD)**: Present findings with exact line numbers, failure scenarios, and minimal fixes. Halt git commit/push until resolved.
    - **If Verdict is APPROVED WITH NOTES / CLEAN PASS**: Present verification proof and proceed to commit.
+   - **Disputed / Unverified Findings**: If a reported defect is disputed or suspected of being a model hallucination, invoke `/dfs-verify` to run negative-search proof and condition checks rather than blindly altering code or arguing in prompt prose.
 2. **Checkable Completion Criterion**:
    - Binary decision reached: either a blocking defect list with `file:line` is presented, or explicit merge approval is given.
 
 ---
 
-## 🚫 Common Rationalizations & Anti-Patterns
+## [ANTI] Common Rationalizations & Anti-Patterns
 
 | Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
 |---|---|---|
@@ -91,3 +103,4 @@ Two reviewers on one single-surface diff is waste; one reviewer on a six-domain 
 | *"This could potentially be improved theoretically."* | **Vague Review Bloat**: non-actionable academic feedback that slows down delivery. | Every finding MUST cite exact `file:line` and describe a concrete, falsifiable failure scenario. |
 | *"The reviewer subagent fixed the bug directly in the repo."* | **Maker-Checker Boundary Violation**: executing and reviewing in the same context creates blind spots. | Reviewer is strictly read-only. Caller fixes, reviewer only reports. |
 | *"Feeding a 20,000-line massive diff in a single prompt."* | **Attention Degradation**: critical boundary errors buried in the middle of long diffs are missed. | If diff > 15,000 characters, partition by file or module and review in chunks. |
+| *"The builder already ran these tests, so I will re-run them and re-derive the same conclusions."* | **Duplicate Derivation Burn**: a full dispatch spent reproducing evidence that was handed over, while the untested invariants go unexamined. | Consume the Test-Evidence Manifest as given; spend the dispatch on what tests cannot reach (the four defect classes, contract breaks, scope creep, residual unknowns). |

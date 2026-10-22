@@ -6,30 +6,20 @@ metadata:
   version: 0.2.0
   platforms: linux, macos, windows
   hermes:
-    tags:
-      - performance
-      - profiling
-      - benchmarks
-      - race-detection
-      - pprof
-      - query-plan
-    related_skills:
-      - dfs-refactor
-      - dfs-review
-      - dfs-pipeline
+    tags: [performance, profiling, benchmarks, race-detection, pprof, query-plan]
+    related_skills: [dfs-refactor, dfs-review]
 ---
-
 # DFS-PERF: Multi-Language Performance & Benchmark Profiling
 
 Execute high-rigor performance profiling, memory allocation auditing, data race detection, and database query plan optimization across Go, Python, C++, and SQL.
 
-## 🚨 The Physical Measurement Invariant (RFC 2119 MUST)
+## [MUST] The Physical Measurement Invariant (RFC 2119 MUST)
 > **Never claim a performance improvement without physical before-and-after benchmark numbers from identical test environments.**
 > Speculative optimizations without profiling receipts are strictly prohibited. Zero data races (`-race`) permitted.
 
 ---
 
-## 🛠️ Automated Benchmark CLI
+## [NOTE] Automated Benchmark CLI
 Use the bundled profiling runner for automated detection and execution:
 ```bash
 python scripts/benchmark_runner.py --dir . --lang auto --race
@@ -78,7 +68,7 @@ Take the protocol below that the `--lang auto` verdict selects, and touch only t
 
 ---
 
-## 🚫 Common Rationalizations & Anti-Patterns
+## [ANTI] Common Rationalizations & Anti-Patterns
 
 | Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
 |---|---|---|

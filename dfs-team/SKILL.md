@@ -9,12 +9,11 @@ metadata:
     tags: [multi-agent, team-review, code-review, audit, consensus]
     related_skills: [dfs-review, dfs-grill, dfs-plan]
 ---
-
 # Multi-Expert Swarm Review & Consensus Synthesis
 
 Orchestrate a full-spectrum domain-specialist subagent swarm to audit a target — code, a design, or a plan — in parallel across **User Experience + Frontend + Database + Performance + Code Quality + Availability**, synthesizing an actionable verdict.
 
-## 🚪 Entry Gate — this skill, or `/dfs-review`?
+## [MAP] Entry Gate — this skill, or `/dfs-review`?
 
 Both skills audit. They split on **breadth**, and on **what the output is allowed to do**:
 
@@ -70,7 +69,7 @@ Dispatch the relevant specialist seats concurrently with **Strict Dynamic Prunin
 
 ---
 
-## 🚫 Common Rationalizations & Anti-Patterns
+## [ANTI] Common Rationalizations & Anti-Patterns
 
 | Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
 |---|---|---|
@@ -105,6 +104,7 @@ Before synthesis, verify each **P0 and P1** finding. Dispatch an independent ske
 - Refutation fails (the finding survives a genuine read of the code) → label **CONFIRMED**.
 - Refutation succeeds or the scenario proves unreachable → label **PLAUSIBLE**, keep it in the report with the label visible — do not silently drop it, and do not let it drive a blocker verdict on its own.
 - P2 findings are not adversarially verified; label them UNVERIFIED.
+- **Unverified Claim Resolution**: For any findings marked UNVERIFIED (or disputed PLAUSIBLE claims) that must be acted upon before implementation, route to `/dfs-verify` to obtain physical negative-search proof and verify condition guards before filing remediation tasks.
 
 Do not skip this step by trusting seat reports at face value — a single-seat P0 that survives an independent skeptic read is worth five that don't.
 
@@ -141,19 +141,19 @@ Key reporting rules:
 - **Reuse Ladder Invariant**: Every finding proposing new code or a dependency MUST include a Reuse Ladder check against stdlib and existing modules.
 - **Actionable Patches**: Synthesize concrete, ordered remediation steps into the consensus action plan.
 
-## 🧪 Worked example — synthesis excerpt
+## [NOTE] Worked example — synthesis excerpt
 
 Target: a diff touching the inbox consolidator. Seats dispatched: `perf-profiler`, `code-reviewer`.
 Seats skipped (why): `product-ux`, `frontend-architect` — the diff has no UI or client-state surface.
 
 ```
-### 🚨 Critical Findings (P0 / P1)
+### [NOTE] Critical Findings (P0 / P1)
 - **[perf-profiler]** [CONFIRMED]: `scripts/vault-inbox-consolidate.py` walks each draft twice
   (`:132` and `:188`), so a large inbox pays 2N file reads per run.
   - *Verification Status*: CONFIRMED via skeptic read — both call sites hit the same directory walk,
     and neither caches the parsed draft.
 
-### ⚠️ Improvements & Suggestions (P2)
+### [NOTE] Improvements & Suggestions (P2)
 - **[code-reviewer]** [UNVERIFIED]: the nested `if` in the archive branch could be flattened with a
   guard clause.
 ```

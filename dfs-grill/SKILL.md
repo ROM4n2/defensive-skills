@@ -3,23 +3,22 @@ name: dfs-grill
 description: Interrogate a proposal's boundaries and undecided points through Dual-Lens Socratic inquiry, ending in an architecture decision record. Use when the user wants an idea, design, or plan challenged or pressure-tested before building.
 license: MIT
 metadata:
-  version: 0.2.0
+  version: 0.3.0
   platforms: linux, macos, windows
   hermes:
     tags: [architecture, socratic-grill, dual-lens, adr, stress-testing]
     related_skills: [dfs-spark, dfs-adr, dfs-plan, dfs-team]
     mcp_tools: [omni_search]
 ---
-
 # DFS-GRILL: Socratic Stress-Testing & Dual-Lens Panel
 
-## 🚪 Two-Track Grill Triage (两级审讯分流)
+## [NOTE] Two-Track Grill Triage (两级审讯分流)
 
 Determine the inquiry scope immediately:
 
 | Track | Proposal Scope | Workflow | Deliverable |
 |---|---|---|---|
-| **Track 1: Lightweight Trade-off (局部权衡)** | Localized parameter tuning, library choice, refactoring approach, simple bugfix direction. | **Single-turn structured Pros vs Cons comparison**: State options, list trade-offs, provide explicit `➡️ <recommended>` choice. Resolve in-chat. | Direct consensus in chat (**NO ADR generated**) |
+| **Track 1: Lightweight Trade-off (局部权衡)** | Localized parameter tuning, library choice, refactoring approach, simple bugfix direction. | **Single-turn structured Pros vs Cons comparison**: State options, list trade-offs, provide explicit `->️ <recommended>` choice. Resolve in-chat. | Direct consensus in chat (**NO ADR generated**) |
 | **Track 2: Architectural Watershed (重大架构分水岭)** | Subsystem restructuring, protocol changes, new storage models, multi-agent invariants, irreversible decisions. | **Full Dual-Lens Socratic Inquiry**: User & Product Experience (UX) + Technical & Systems Rigor, tight numbered decision rounds. | Numbered MADR `ADR-000x` Document |
 
 - Nothing is designed yet → **`/dfs-spark`** generates the design first.
@@ -27,7 +26,7 @@ Determine the inquiry scope immediately:
 
 ---
 
-## ⚡ Scope Detection (MUST — 执行前第一步)
+## [MUST] Scope Detection (MUST — 执行前第一步)
 
 **在任何操作前，MUST 先检测当前 Vault 根目录**：
 
@@ -52,7 +51,7 @@ Interview and stress-test the developer's proposed plan, architecture, or design
 ## Core Philosophy (Dual-Lens Socratic First Principles)
 - **Dual-Lens Evaluation**: Every design must be validated on both **User Value (用户体验与刚需闭环)** and **Technical Resilience (技术高可用与健壮性)**.
 - **The Frontier Protocol**: Work the tree in **tight numbered rounds** (1~2 high-leverage questions per round). Never overwhelm the human.
-- **Decisions Belong to the Human**: Formulate clear trade-offs, state your recommended option (`➡️ <recommended>`), and wait for user decision.
+- **Decisions Belong to the Human**: Formulate clear trade-offs, state your recommended option (`->️ <recommended>`), and wait for user decision.
 
 ---
 
@@ -66,7 +65,7 @@ Interview and stress-test the developer's proposed plan, architecture, or design
        ┌───────────────────────┴───────────────────────┐
        ▼                                               ▼
   【用户与产品体验层】                             【技术与工程实现层】
-  🎯 产品经理与用户体验架构师                      🤖 后端并发 / 🎨 前端交互 / 🗄️ 数据库 / 🛡️ SRE
+  [NOTE] 产品经理与用户体验架构师                      [NOTE] 后端并发 / [NOTE] 前端交互 / [NOTE] 数据库 / [NOTE] SRE
   - 拷问真实痛点 vs 伪需求                        - 拷问并发死锁、状态机竞态
   - 拷问操作旅程与认知摩擦                        - 拷问慢查询、弱网重连与熔断
        │                                               │
@@ -75,7 +74,7 @@ Interview and stress-test the developer's proposed plan, architecture, or design
                  主审官 (Lead Socratic Inquisitor)
                  - 汇总用户体验 + 技术架构的核心盲区
                  - 提炼 1~2 个最关键的前沿选择题
-                 - 给出推荐方案 (➡️ Recommended)
+                 - 给出推荐方案 (->️ Recommended)
                                ▼
                         用户拍板 (1句话)
                                ▼
@@ -108,26 +107,40 @@ Query `omni_search(proposal, scope='ladder')` to challenge against **The Ladder 
 - **Checkable Completion Criterion**:
   - `omni_search` query executed; Ladder of Reuse evaluation recorded against stdlib and existing modules.
 
+### Stage 2.5: Known Defect Class Interrogation (MUST — 四类已知缺陷)
+Before synthesizing frontier questions, run these four against the proposal. They are not
+hypothetical: four consecutive milestones each shipped exactly one real defect from one of
+these classes, and every one of them had passed a green test suite.
+
+| # | Class | The question to ask | Field evidence |
+|---|---|---|---|
+| 1 | **Error-classification width** | Which failures in this catch/handler are *permanent* and which are *retryable*? What does the retrying side actually read — a code, or a message nobody prints? | `except Exception -> 503` turned "empty model spec" and "index out of range" into "try again later"; the Go side read only the code, the service logged nothing, so the misconfiguration had **no landing point anywhere on the chain**. |
+| 2 | **Cancelled-context teardown** | On the cancel/abort path, which context does the *closing write* use? | Passing an already-cancelled `ctx` to the final status write: `database/sql` checks `ctx.Done()` **before** acquiring a connection, so the UPDATE is never sent. The job stayed `running` forever and the `canceled` branch was dead code. |
+| 3 | **Progress semantics** | Is this number "what this run did" or "the absolute state"? Does it still answer the question after a *resume* and after a *no-op run*? | Per-run counters recorded `0/0` for a conversation that was already fully scored, and "24% done" for one that had just finished. Absolute coverage is the only number that answers "how far along?" in both cases. |
+| 4 | **One rule, two implementations** | How many places implement this rule? Can they drift, and which one do the tests pin? | A threshold was implemented twice: one side treated the exact boundary as neutral, the other as a verdict — and the mutation test pinned only one of them. The result was a silent polarity inversion waiting for the right input. |
+
+- **Checkable Completion Criterion**: each of the four classes is either answered in the design or explicitly recorded as not applicable with a reason.
+
 ### Stage 3: Frontier Round Protocol (Tight Socratic Rounds)
 Synthesize the specialists' findings into tight, numbered questions:
 
 ```markdown
-❓ **Q1 - <Product & User Experience Decision>**: <Socratic question body exposing user journey friction or value assumptions>
+[?] **Q1 - <Product & User Experience Decision>**: <Socratic question body exposing user journey friction or value assumptions>
   - Option A: [Minimalist/High-Value approach]
   - Option B: [Feature-rich approach]
 
-➡️ **Recommended**: Option A — [Concise justification on user value & simplicity]
+->️ **Recommended**: Option A — [Concise justification on user value & simplicity]
 
 ---
 
-❓ **Q2 - <Technical Architecture Decision>**: <Question about failure recovery, concurrency, or data consistency>
+[?] **Q2 - <Technical Architecture Decision>**: <Question about failure recovery, concurrency, or data consistency>
 
-➡️ **Recommended**: [Concrete defense strategy]
+->️ **Recommended**: [Concrete defense strategy]
 ```
 
 Recompute the frontier on each user reply. Stop when every frontier point carries a chosen option in the draft: a point that still has an open question and no chosen option *is* the frontier, so the cone is closed only when none remain.
 - **Checkable Completion Criterion**:
-  - Socratic questions formulated with `➡️ Recommended` options; user answers received closing the frontier cone.
+  - Socratic questions formulated with `->️ Recommended` options; user answers received closing the frontier cone.
 
 ### Stage 4: Consensus & ADR Archiving
 Summarize consensus into a formal **Architecture Decision Record (ADR-000x)**:
@@ -140,14 +153,14 @@ Summarize consensus into a formal **Architecture Decision Record (ADR-000x)**:
 
 ---
 
-## 🚫 Common Rationalizations & Anti-Patterns
+## [ANTI] Common Rationalizations & Anti-Patterns
 
 | Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
 |---|---|---|
 | *"I'll dump 10 architectural questions at once to cover everything quickly."* | **Cognitive Overload**: Humans give superficial answers when faced with walls of questions. | Strict Frontier Protocol: 1~2 numbered questions per round. Drive to closure iteratively. |
 | *"The user chose an approach without trade-off analysis, so I'll just accept it."* | **Unvetted Architectural Debt**: Passive agreement leads to fragile systems in production. | Socratic Inquest: Challenge assumptions using Dual-Lens (UX friction vs Systems resilience). |
-| *"I'll skip proposing a recommended option to stay neutral."* | **Decision Paralysis**: Users expect senior engineer opinions, not uncurated option lists. | Always state a concrete recommendation (`➡️ Recommended: Option A`) backed by YAGNI. |
-| *"We can close this grill round without recording an ADR."* | **Decision Evaporation**: Verbal consensus in chat is lost in the next session context. | **Track 2 (architectural) grills MUST archive an ADR markdown artifact** — no exceptions. Track 1 (lightweight trade-off) resolves in-chat by design; its outcome MUST still be recorded as an explicit `➡️ <recommended>` choice in the conversation, otherwise it evaporates just the same. |
+| *"I'll skip proposing a recommended option to stay neutral."* | **Decision Paralysis**: Users expect senior engineer opinions, not uncurated option lists. | Always state a concrete recommendation (`->️ Recommended: Option A`) backed by YAGNI. |
+| *"We can close this grill round without recording an ADR."* | **Decision Evaporation**: Verbal consensus in chat is lost in the next session context. | **Track 2 (architectural) grills MUST archive an ADR markdown artifact** — no exceptions. Track 1 (lightweight trade-off) resolves in-chat by design; its outcome MUST still be recorded as an explicit `->️ <recommended>` choice in the conversation, otherwise it evaporates just the same. |
 
 ---
 

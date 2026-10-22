@@ -134,7 +134,7 @@ class BootstrapScriptTest(unittest.TestCase):
         for name in ("CLAUDE.md", ".agent-rules.md", ".cursorrules", "AGENTS.md"):
             self.assertTrue((self.target / name).is_file(), f"{name} not created")
         files = sorted(p.name for p in (self.target / "WORKMEMORY").iterdir())
-        self.assertEqual(files, ["INDEX.md", "PROJECT_OVERVIEW.md", "PROTOCOL.md", "work.log"])
+        self.assertEqual(files, ["INDEX-topics.md", "INDEX.md", "PROJECT_OVERVIEW.md", "PROTOCOL.md", "work.log"])
         overview = (self.target / "WORKMEMORY" / "PROJECT_OVERVIEW.md").read_text(encoding="utf-8")
         self.assertIn(self.target.name, overview, "{{PROJECT_NAME}} was not substituted")
         self.assertNotIn("{{", overview, "unsubstituted placeholder left in PROJECT_OVERVIEW.md")

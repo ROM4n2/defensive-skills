@@ -5,21 +5,11 @@ license: MIT
 metadata:
   version: 0.2.0
   platforms: linux, macos, windows
-  disable-model-invocation: "true"
+  disable-model-invocation: 'true'
   hermes:
-    tags:
-      - incident-response
-      - postmortem
-      - sre
-      - blameless
-      - 5-whys
-      - root-cause
-    related_skills:
-      - dfs-debug
-      - dfs-save
-      - dfs-team
+    tags: [incident-response, postmortem, sre, blameless, 5-whys, root-cause]
+    related_skills: [dfs-debug, dfs-save, dfs-team]
 ---
-
 # DFS-INCIDENT: Production Incident Response & Blameless Postmortem
 
 > **Invocation — explicit only.** This skill carries `disable-model-invocation: "true"` under
@@ -32,7 +22,7 @@ metadata:
 
 Coordinate rapid incident containment (mitigation before analysis), build forensic event timelines, uncover systemic root causes with 5-Whys, and archive blameless postmortems to prevent repeat failures.
 
-## 🚨 The Containment-First Iron Rule (RFC 2119 MUST)
+## [MUST] The Containment-First Iron Rule (RFC 2119 MUST)
 > **In an active production outage, STOP debugging and prioritize IMMEDIATE CONTAINMENT.**
 > Rollback, shed load, toggle feature flags, or cut traffic first. Perform deep forensic root-cause analysis ONLY after user service is restored.
 
@@ -81,13 +71,14 @@ Coordinate rapid incident containment (mitigation before analysis), build forens
 1. Load `templates/postmortem-template.md` via `read_file(path='templates/postmortem-template.md')`.
 2. Conduct 5-Whys causal analysis (focus on systemic flaws and missing guardrails, never on human blame).
 3. Record preventative Action Items with owners and deadlines.
-4. Auto-ingest defensive takeaways into `01-Rules/` or draft to `99-Inbox/` via `dfs-save`.
+4. Convert systemic failure modes into permanent automated CI / pre-commit blockers via `/dfs-gate` (enforcing mutation test verification).
+5. Auto-ingest defensive takeaways into `01-Rules/` or draft to `99-Inbox/` via `dfs-save`.
 5. **Checkable Completion Criterion**:
    - Postmortem markdown file written to `docs/postmortems/YYYY-MM-DD-<incident>.md`; at least 1 preventative rule draft generated via `dfs-save`.
 
 ---
 
-## 🚫 Common Rationalizations & Anti-Patterns
+## [ANTI] Common Rationalizations & Anti-Patterns
 
 | Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
 |---|---|---|

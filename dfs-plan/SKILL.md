@@ -3,25 +3,24 @@ name: dfs-plan
 description: Draft bite-sized TDD implementation plans from specs. Use when the user asks for an implementation plan, or before writing code for a multi-step feature.
 license: MIT
 metadata:
-  version: 0.2.0
+  version: 0.3.0
   platforms: linux, macos, windows
   hermes:
     tags: [planning, tdd, architecture, implementation-plan, task-breakdown]
-    related_skills: [dfs-exec, dfs-tdd, dfs-spark, dfs-grill]
+    related_skills: [dfs-exec, dfs-tdd, dfs-spark, dfs-grill, dfs-orchestrate]
     mcp_tools: [omni_search, get_code_template]
 ---
-
 # DFS-Anchored Implementation Planning
 
 Produce structured, deterministic implementation plans where every task includes an actionable **Subagent Prompt Scaffold** ready for direct consumption by `/dfs-exec`.
 
-## 🚨 The Plan-Before-Code Invariant (RFC 2119 MUST)
+## [MUST] The Plan-Before-Code Invariant (RFC 2119 MUST)
 > **NO multi-step implementation shall begin without an approved `implementation_plan.md` adhering strictly to `templates/plan-schema.md`.**
 > Never speculate on downstream unknown components — unknowns MUST be quarantined in Fog of War until upstream tasks graduate them.
 
 ---
 
-## 🚪 This skill, or `/dfs-spark` / `/dfs-exec`?
+## [NOTE] This skill, or `/dfs-spark` / `/dfs-exec`?
 
 | | this skill | `/dfs-spark` | `/dfs-exec` |
 |---|---|---|---|
@@ -59,12 +58,17 @@ Produce structured, deterministic implementation plans where every task includes
    - Load the full template specification via `read_file(path='templates/plan-schema.md')`.
 2. **Mandatory Sections in `implementation_plan.md`**:
    - **Plan Header**: Goal, Tech Stack, Spec/ADR Reference, and Global Constraints.
+   - **Repo Invariants Pointer**: the path of the repository's invariants/anchor file that every subagent brief will cite instead of restating rules. If none exists, create it as part of Task 0 (`/dfs-onboard` Phase 3 produces it) — a plan whose briefs must each restate the invariants pays that cost on every dispatch.
    - **Task Specification**: Target files (Create/Modify/Test) and Interface boundaries (`Consumes:` / `Produces:`).
    - **Mode Tagging**: Every task MUST be tagged either `[Mode: AFK]` (autonomous) or `[Mode: HITL]` (human checkpoint).
    - **Subagent Prompt Scaffold**: Self-contained dispatch prompt ready for `/dfs-exec` or subagent delegation.
+   - **File-Occupancy Partitioning**: For multi-subagent tasks, consult `/dfs-orchestrate` to assign an exclusive per-file table (preventing concurrent merge collisions) before dispatch.
    - **TDD Step Breakdown**: Checkbox list covering Red -> Verify Red -> Green -> Verify Green -> Refactor -> Commit.
+   - **Deferred Gap Register**: one row per gap the plan knowingly leaves open, with the columns `gap | why deferred | trigger that forces revisiting | owner`. A row that says only "TODO" is not a register entry — the trigger column is the load-bearing one: a gap deferred without a named trigger gets deferred twice more and is eventually forced open by an unrelated task at the worst moment.
+   - **Deviation Table (post-execution, filled before merge)**: `plan text | what was actually built | why`. Three columns, no exceptions: a task whose implementation deviated from its plan without this table does not merge.
 3. **Checkable Completion Criterion**:
    - `implementation_plan.md` exists, adheres to `templates/plan-schema.md`, has zero `TODO`/`TBD` in active tasks, and every active task specifies `Produces:` interface signatures.
+   - Deferred Gap Register present with a non-empty trigger column for every row.
 
 ### Phase 3: Downstream Dispatch & Ledger Handshake
 1. **Pre-Dispatch Verification**:
@@ -80,23 +84,23 @@ Produce structured, deterministic implementation plans where every task includes
 
 ---
 
-## 🚫 Common Rationalizations & Anti-Patterns
+## [ANTI] Common Rationalizations & Anti-Patterns
 
 | Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
 |---|---|---|
-| *"I can plan all 5 subsystems at once even though subsystem 2 depends on an unbuilt engine."* | **Speculative Hallucination**: cascading API drifts when upstream assumptions change. | Quarantine unverified dependencies in `## 🌫️ Fog of War`. Break monolithic specs into sub-plans. |
+| *"I can plan all 5 subsystems at once even though subsystem 2 depends on an unbuilt engine."* | **Speculative Hallucination**: cascading API drifts when upstream assumptions change. | Quarantine unverified dependencies in `## [NOTE] Fog of War`. Break monolithic specs into sub-plans. |
 | *"I don't need to read existing code before drafting task files."* | **Phantom Symbol Coupling**: calling non-existent functions or wrong package paths. | Ground all existing paths and interfaces with `read_file` or `search_files` during Phase 1. |
 | *"The task description is clear enough; I don't need the prompt scaffold."* | **Subagent Context Amnesia**: isolated subagents lack instructions and fail to execute. | Every task MUST carry a self-contained Subagent Prompt Scaffold. |
 | *"I'll group several unrelated edits into Task 1 to save time."* | **Unverifiable Mega-Diffs**: breaking TDD atomicity and impossible maker-checker audit. | Enforce bite-sized task granularity (one discrete 2~5 minute action per task). |
 
 ---
 
-## 🧪 Worked Example — One Task With Its Exact Interface Contract
+## [NOTE] Worked Example — One Task With Its Exact Interface Contract
 
 Input spec: *"Add a ledger resume command to the execution engine."* -> `implementation_plan.md` excerpt:
 
 ```markdown
-## 🎯 Active Frontier (Unblocked Tasks)
+## [NOTE] Active Frontier (Unblocked Tasks)
 
 ### Task 2: Ledger resume loader [Mode: AFK] [Role: TDD Builder]
 

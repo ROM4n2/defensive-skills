@@ -5,19 +5,11 @@ license: MIT
 metadata:
   version: 0.2.0
   platforms: linux, macos, windows
-  disable-model-invocation: "true"
+  disable-model-invocation: 'true'
   hermes:
-    tags:
-      - interview
-      - technical-defense
-      - socratic
-      - system-design
-      - drill
-    related_skills:
-      - dfs-grill
-      - dfs-review
+    tags: [interview, technical-defense, socratic, system-design, drill]
+    related_skills: [dfs-grill]
 ---
-
 # DFS-INTERVIEW: 1v1 Technical Defense Coach & Adaptive Ladder
 
 > **Invocation — explicit only.** This skill carries `disable-model-invocation: "true"` under
@@ -60,7 +52,7 @@ Based on candidate's answer:
 After 3~5 questions, deliver an executive scorecard:
 
 ```markdown
-# 🎯 Technical Interview Evaluation Radar: [Domain Name]
+# [NOTE] Technical Interview Evaluation Radar: [Domain Name]
 
 | Dimension | Score (0~10) | Strengths & Highlights | Gaps & Recommended Vault Notes |
 |---|---|---|---|
@@ -69,5 +61,5 @@ After 3~5 questions, deliver an executive scorecard:
 | **生产排障 (Troubleshooting)**| 9.0 / 10 | 5-Whys 根因排查逻辑极其严密 | 实战经验丰富 |
 | **架构权衡 (System Design)** | 8.0 / 10 | 良好掌握读写分离与缓存穿透 | 建议研读：`[[09-Career/System-Design/]]` |
 
-**Overall Verdict**: 🟢 **READY FOR SENIOR INTERVIEWS** (8.1 / 10)
+**Overall Verdict**: [OK] **READY FOR SENIOR INTERVIEWS** (8.1 / 10)
 ```

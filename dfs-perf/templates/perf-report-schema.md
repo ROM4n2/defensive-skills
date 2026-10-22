@@ -3,7 +3,7 @@
 Use this schema to structure performance benchmarking before vs after reports.
 
 ```markdown
-# ⚡ Performance Optimization Report: [Component Name]
+# [NOTE] Performance Optimization Report: [Component Name]
 
 > **Target Language / Runtime**: [Go 1.24+ / Python 3.11+ / C++20 / MySQL 8.0]
 > **Host Environment**: [OS, CPU Model, Core Count, Memory]
@@ -15,11 +15,11 @@ Use this schema to structure performance benchmarking before vs after reports.
 
 | Metric | Before Optimization | After Optimization | Delta / Speedup | Verification Status |
 |---|---|---|---|---|
-| **Latency (p50 / avg)** | 480 ns/op | 62 ns/op | 🚀 **7.74x faster** | Verified |
-| **Latency (p99)** | 1,420 ns/op | 185 ns/op | 🚀 **7.67x faster** | Verified |
-| **Throughput / QPS** | 24,000 ops/s | 178,000 ops/s | 🚀 **+641%** | Verified |
-| **Memory Allocations** | 38 allocs/op (2.4 KB) | 0 allocs/op (0 B) | 🟢 **Zero Alloc (Stack)** | Verified |
-| **Data Race Status** | Clean | Clean | ✅ Clean | `-race` Verified |
+| **Latency (p50 / avg)** | 480 ns/op | 62 ns/op | [NOTE] **7.74x faster** | Verified |
+| **Latency (p99)** | 1,420 ns/op | 185 ns/op | [NOTE] **7.67x faster** | Verified |
+| **Throughput / QPS** | 24,000 ops/s | 178,000 ops/s | [NOTE] **+641%** | Verified |
+| **Memory Allocations** | 38 allocs/op (2.4 KB) | 0 allocs/op (0 B) | [OK] **Zero Alloc (Stack)** | Verified |
+| **Data Race Status** | Clean | Clean | [PASS] Clean | `-race` Verified |
 
 ---
 
