@@ -182,7 +182,13 @@ def get_script_roots() -> list[pathlib.Path]:
 
 def extract_script_pointers(text: str) -> set[str]:
     """Extract `scripts/<name>.<ext>` and `scripts/tests/<name>.py` references."""
-    raw = re.findall(r"scripts/(?:tests/)?[A-Za-z0-9_\-\.]+\.(?:py|sh|ps1|js|ts|go)", text)
+    # 后缀白名单 MUST 含 json（公开树里有 `scripts/routing.example.json`），且末尾 MUST 带
+    # 负向边界断言：否则 `routing.example.json` 会被截成 `routing.example.js`，报一个并不存在
+    # 的文件（子串碰撞假阳性）。与 vault 侧同名闸门同步修正。
+    raw = re.findall(
+        r"scripts/(?:tests/)?[A-Za-z0-9_\-\.]+?\.(?:json|ps1|py|sh|js|ts|go)(?![A-Za-z0-9])",
+        text,
+    )
     return {p.rstrip(".,;:)]}\"'`") for p in raw if p}
 
 
