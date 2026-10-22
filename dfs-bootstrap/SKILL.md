@@ -68,9 +68,9 @@ Create/Update project-level `CLAUDE.md` and `.agent-rules.md` in repository root
 
 ```markdown
 ## [NOTE] 工程规范与避坑检索
-- 核心规范源：`{vault_root}/AGENTS.md`（`{vault_root}` 按 `$WIKI_PATH` → `$OBSIDIAN_VAULT_PATH` → 向上查找 `AGENTS.md` 解析，契约见 `dfs/references/vault-root-resolution.md`）
-- 检索避坑规范：调用 `search_vault` MCP 工具；没有 MCP 时按 `mcp/README.md` 的 file-level fallback 表直接检索文件
-- 发现新踩坑自动沉淀：写草稿至 `{vault_root}/99-Inbox/YYYY-MM-DD-{topic}.md`
+- 核心规范源：优先通过 `search_vault` MCP 或环境变量 `$WIKI_PATH`/`$OBSIDIAN_VAULT_PATH` 解析；无外部知识库时以本仓 `AGENTS.md` 及 `docs/` 为自闭环规范源
+- 检索避坑规范：调用 `search_vault` MCP；无 MCP 时检索本地工程文档与测试套件
+- 发现新踩坑自动沉淀：优先调用 `save_inbox_draft`；无外部知识库时写草稿至 `WORKMEMORY/notes/YYYY-MM-DD-{topic}.md`
 ```
 
 ---
@@ -85,7 +85,7 @@ Run the mechanical scaffold, then distill the primer:
 2. **Agent distillation step (script cannot do this)**: read the project codebase and fill `WORKMEMORY/PROJECT_OVERVIEW.md` from its template skeleton — 一段话项目定位（目标/技术栈/运行方式）、当前状态（进行中工作与待办）、高频坑（现象→根因→解法）。Replace the placeholder comments with real content distilled from README/AGENTS.md/git log/ADR.
 3. Append a bootstrap `NOTE` event to `work.log` recording what was distilled (identity: ask user for model-id if unsure).
 4. Event discipline (SHOULD): `WORK_START` 附「不做范围」一行（明确排除的功能/重构/顺手修改）；`WORK_END` 收尾时做回写检查——稳定结论回写（dfs/模块文档/INDEX）、临时产物（日志/真实数据/凭据/截图）不入库。
-5. Protocol reference: `{vault_root}/01-Rules/CROSS-AGENT-MEMORY.md`; canonical instance: the DeLector repo's `WORKMEMORY/PROTOCOL.md`.
+5. Protocol reference: 优先解析 `$WIKI_PATH/01-Rules/CROSS-AGENT-MEMORY.md`；无外部知识库时以本仓 `WORKMEMORY/PROTOCOL.md` 为自包含真源。
 
 ---
 

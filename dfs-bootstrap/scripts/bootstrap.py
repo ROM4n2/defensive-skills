@@ -104,16 +104,14 @@ def append_text(path: pathlib.Path, text: str, dry_run: bool) -> None:
         fh.write(text)
 
 
-def resolve_vault_root(explicit: str | None) -> str:
-    """`--vault-root` -> `$WIKI_PATH` -> `$OBSIDIAN_VAULT_PATH` -> unresolved placeholder.
-
-    Never guesses: an upward search from an arbitrary cwd is how a code checkout gets mistaken for
-    a knowledge base, and this suite treats a wrong answer worse than a loud 'unresolved'.
+def resolve_vault_root(explicit: str | None) -> str | None:
+    """Explicit `--vault-root` only. Never inlines host environment variables into
+    generated files by default, ensuring all bootstrapped repositories are portable,
+    zero-PII, and safe for open-source distribution.
     """
-    for candidate in (explicit, os.environ.get("WIKI_PATH"), os.environ.get("OBSIDIAN_VAULT_PATH")):
-        if candidate:
-            return str(pathlib.Path(candidate).expanduser())
-    return UNRESOLVED_ROOT
+    if explicit:
+        return str(pathlib.Path(explicit).expanduser())
+    return None
 
 
 def ensure_gitignore(target: pathlib.Path, dry_run: bool) -> list[str]:
@@ -171,14 +169,22 @@ def posix_join(root: str, *parts: str) -> str:
     return pathlib.Path(root, *parts).as_posix()
 
 
-def rule_anchor_text(vault_root: str) -> str:
+def rule_anchor_text(vault_root: str | None = None) -> str:
+    if vault_root:
+        return (
+            "\n## 工程规范与避坑检索\n\n"
+            f"- 核心规范源：`{posix_join(vault_root, 'AGENTS.md')}`（解析契约：`$WIKI_PATH` → "
+            "`$OBSIDIAN_VAULT_PATH` → 向上查找 `AGENTS.md`）\n"
+            "- 检索避坑规范：调用 `search_vault` MCP（无 MCP 时用 `search_files` / `read_file` 直接检索；"
+            "服务与降级表见 DFS 仓库 `mcp/README.md`）\n"
+            f"- 发现新踩坑自动沉淀：写草稿至 `{posix_join(vault_root, '99-Inbox', 'YYYY-MM-DD-{topic}.md')}`\n"
+        )
     return (
-        "\n## 工程规范与避坑检索\n\n"
-        f"- 核心规范源：`{posix_join(vault_root, 'AGENTS.md')}`（解析契约：`$WIKI_PATH` → "
-        "`$OBSIDIAN_VAULT_PATH` → 向上查找 `AGENTS.md`）\n"
-        "- 检索避坑规范：调用 `search_vault` MCP（无 MCP 时用 `search_files` / `read_file` 直接检索；"
-        "服务与降级表见 DFS 仓库 `mcp/README.md`）\n"
-        f"- 发现新踩坑自动沉淀：写草稿至 `{posix_join(vault_root, '99-Inbox', 'YYYY-MM-DD-{topic}.md')}`\n"
+        "\n## [NOTE] 工程规范与避坑检索\n\n"
+        "- 核心规范源：优先通过 `search_vault` MCP 或环境变量 `$WIKI_PATH`/`$OBSIDIAN_VAULT_PATH` 解析；"
+        "无外部知识库时以本仓 `AGENTS.md` 及 `docs/` 为自闭环规范源\n"
+        "- 检索避坑规范：调用 `search_vault` MCP；无 MCP 时检索本地工程文档与测试套件\n"
+        "- 发现新踩坑自动沉淀：优先调用 `save_inbox_draft`；无外部知识库时写草稿至 `WORKMEMORY/notes/YYYY-MM-DD-{topic}.md`\n"
     )
 
 
@@ -193,7 +199,7 @@ def workmemory_anchor_text() -> str:
     )
 
 
-def inject_anchors(target: pathlib.Path, vault_root: str, dry_run: bool) -> None:
+def inject_anchors(target: pathlib.Path, vault_root: str | None, dry_run: bool) -> None:
     for name in RULE_ANCHOR_FILES:
         path = target / name
         text = path.read_text(encoding="utf-8", errors="replace") if path.exists() else ""
@@ -209,7 +215,7 @@ def inject_anchors(target: pathlib.Path, vault_root: str, dry_run: bool) -> None
             say("OK", f"created {name} with the rules anchor")
 
 
-def scaffold_workmemory(target: pathlib.Path, vault_root: str, dry_run: bool) -> None:
+def scaffold_workmemory(target: pathlib.Path, vault_root: str | None, dry_run: bool) -> None:
     dest = target / "WORKMEMORY"
     if dest.exists():
         say("OK", "WORKMEMORY/ already exists, skipping the scaffold (agent keeps its own history)")
@@ -220,16 +226,17 @@ def scaffold_workmemory(target: pathlib.Path, vault_root: str, dry_run: bool) ->
         raise SystemExit(2)
     project = target.resolve().name
     stamp = time.strftime("%Y-%m-%d %H:%M")
+    fallback_root = vault_root or "$WIKI_PATH"
     for name in WORKMEMORY_FILES:
         body = (TEMPLATES / "workmemory" / name).read_text(encoding="utf-8")
         body = body.replace("{{PROJECT_NAME}}", project)
         body = body.replace("{{TIMESTAMP}}", stamp)
-        body = body.replace("{{VAULT_ROOT}}", vault_root)
+        body = body.replace("{{VAULT_ROOT}}", fallback_root)
         write_text(dest / name, body, dry_run)
     say("OK", f"scaffolded {len(WORKMEMORY_FILES)} files into WORKMEMORY/ for '{project}'")
 
 
-def inject_workmemory_anchor(target: pathlib.Path, vault_root: str, dry_run: bool) -> None:
+def inject_workmemory_anchor(target: pathlib.Path, vault_root: str | None, dry_run: bool) -> None:
     for name in WM_ANCHOR_FILES:
         path = target / name
         if not path.exists():
@@ -281,11 +288,10 @@ def main(argv: list[str] | None = None) -> int:
     vault_root = resolve_vault_root(args.vault_root)
     print(f"DFS bootstrap -> {target.resolve()}")
     print("-" * 68)
-    if vault_root == UNRESOLVED_ROOT:
-        say("WARN", "no knowledge base root resolved; anchors will carry the placeholder "
-                    f"'{UNRESOLVED_ROOT}' (set $WIKI_PATH, or pass --vault-root)")
+    if not vault_root:
+        say("OK", "no knowledge base root resolved; using portable dynamic anchors (tier-3 degradation enabled)")
     else:
-        say("OK", f"knowledge base root: {vault_root}")
+        say("OK", f"knowledge base root (explicit): {vault_root}")
 
     ensure_gitignore(target, args.dry_run)
     install_hook(target, args.dry_run)
