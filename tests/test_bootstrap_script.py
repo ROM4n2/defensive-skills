@@ -201,6 +201,21 @@ class BootstrapScriptTest(unittest.TestCase):
                 if line.strip() and (line.startswith("###") or not line.lstrip().startswith("#"))]
         self.assertEqual(live, [], f"the scaffolded work.log ships real content, not just structure: {live}")
 
+    def test_14_scaffold_with_env_has_zero_machine_paths(self):
+        """Even when WIKI_PATH or OBSIDIAN_VAULT_PATH is exported in the shell, default execution
+        must generate portable dynamic anchors and NEVER bake machine drive letters or paths into files."""
+        proc = run_bootstrap(self.target, env_extra={"WIKI_PATH": "D:/Obsidian/Coding", "OBSIDIAN_VAULT_PATH": "D:/Obsidian/Coding"})
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        for name in ("CLAUDE.md", ".agent-rules.md", ".cursorrules", "AGENTS.md"):
+            text = (self.target / name).read_text(encoding="utf-8")
+            self.assertNotRegex(text, ABSOLUTE_PATH, f"{name} leaks an absolute path from environment")
+            self.assertNotIn("D:/Obsidian", text, f"{name} inlined host WIKI_PATH")
+            self.assertIn("search_vault", text)
+        for p in (self.target / "WORKMEMORY").iterdir():
+            t = p.read_text(encoding="utf-8")
+            self.assertNotRegex(t, ABSOLUTE_PATH, f"{p.name} leaks an absolute path")
+            self.assertNotIn("D:/Obsidian", t)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
