@@ -1,11 +1,11 @@
 ---
 name: dfs-bootstrap
 description: Initialize a repository with security git hooks and DFS rule anchors. Use when starting a new repo or adding DFS guardrails to an existing one.
-disable-model-invocation: true
-version: 0.2.1
 license: MIT
-platforms: [linux, macos, windows]
 metadata:
+  version: 0.2.1
+  platforms: linux, macos, windows
+  disable-model-invocation: 'true'
   hermes:
     tags: [bootstrap, git-hooks, security, pre-commit, repo-init]
     related_skills: [dfs-onboard, dfs-save, dfs-pipeline]

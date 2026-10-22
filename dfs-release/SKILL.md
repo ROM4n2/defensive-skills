@@ -1,10 +1,10 @@
 ---
 name: dfs-release
 description: Draft semantic releases, changelogs, rollback plans, and verify published releases. Use when the user asks to cut a release, tag a version, write a changelog, or check whether a release actually shipped.
-version: 0.3.0
 license: MIT
-platforms: [linux, macos, windows]
 metadata:
+  version: 0.3.0
+  platforms: linux, macos, windows
   hermes:
     tags: [release, semver, changelog, rollback, deployment, git-tag, release-notes]
     related_skills: [dfs-pipeline, dfs-review, dfs-handoff]
