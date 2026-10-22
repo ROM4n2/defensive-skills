@@ -1,11 +1,12 @@
 ---
 name: dfs-handoff
 description: Generate a session wrap-up and a 1-click continuation card. Use when the user wants to pause, hand off, or resume later in a fresh session.
-disable-model-invocation: true
-version: 0.3.0
-author: Haoyu
-platforms: [linux, macos, windows]
+license: MIT
 metadata:
+  version: 0.3.0
+  platforms: linux, macos, windows
+  disable-model-invocation: 'true'
+  author: Defensive Skills contributors
   hermes:
     tags: [handoff, session-end, continuation-card, workmemory]
     related_skills: [dfs-save, dfs-exec]

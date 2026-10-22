@@ -3,7 +3,7 @@ name: dfs-inbox-consolidate
 description: Classify and archive 99-Inbox drafts into DFS destinations. Use when the inbox has accumulated drafts and the user asks to file or clean them up.
 license: MIT
 metadata:
-  version: 0.2.0
+  version: 0.3.0
   platforms: linux, macos, windows
   disable-model-invocation: "true"
   hermes:
@@ -67,8 +67,19 @@ def detect_vault_root():
 | `topic/architecture`, `topic/refactoring`, ... | source-article | `06-Sources/Articles/{TITLE}.md` |
 | `topic/linguistics` + `project/delector` | project | `08-Projects/DeLector/{TITLE}.md` |
 | 无匹配 + source-notes | source-article | `06-Sources/Articles/{TITLE}.md` |
+| `category/pattern` | **pattern-card** | `01-Rules/{NAME}.md`（独立卡，命名不带日期；与 `category/rules` 并列） |
+
+> **pattern vs troubleshooting**：`category/pattern` = 可复用的**成功做法**（"做对了什么"）⇒ 独立成卡；`category/troubleshooting` = 事故复盘 ⇒ **合并进对应规则的 §n**（不新建卡）。两类都晋级，别只处理事故类，否则"做法"永远失传。
 
 ---
+
+## 1b. 「归档目标」优先与路由对账 (MUST)
+
+脚本判定是**建议**不是真值：`analyze_draft()` 按 `tags` **列表顺序取首个命中**（同一 tag 序列、不同归属的草稿只有一个出口），未注册 tag 则静默落 fallback 目标，**不报错**。
+
+- **逐篇对账 (MUST)**：`--dry-run` 后 MUST 把每篇的脚本判定与**草稿正文自述的「归档目标」**对照；不一致即走 §2c 人工落位，MUST NOT 接受脚本判定。
+- **多段 frontmatter (MUST)**：只取 canonical 段（外层），MUST NOT 把正文内重复的 YAML 段追加进规则文件。
+- **补盲区 (MUST)**：发现未注册 tag ⇒ 补路由配置（`scripts/routing.example.json`）并在其基线测试中登记，补完做变异自证（删条目 ⇒ 必红）。
 
 ## 2. 使用方式
 
@@ -101,6 +112,14 @@ Agent 判断目标时可参考上方 `TARGET_ROUTING_MAP`；目标仍有歧义�
 **MUST NOT** 凭猜测写入正式目录。
 
 ---
+
+## 2c. 人工落位路径（脚本判定不适用时）
+
+1. **定位**：目标为已有规则文件 ⇒ 走**附录块**（不新建文件、不改章节编号）。
+2. **附录块形态**：yaml 分隔线 + `#### <标题>` + `> 来源: 99-Inbox/<原名> | 日期: <YYYY-MM-DD>` + 一句**已执行态**说明 + 正文（去掉与外层重复的 `# H1`）。**行尾 MUST 与目标文件一致**（CRLF / LF 不可混）。
+3. **补字段**：目标 frontmatter 的 `updated` / `verified` 刷为今天，并补关联索引条目。
+4. **验证后移除原件 (MUST)**：先做**逐行覆盖比对**（「标题存在」≠「内容落盘」）并备份副本 —— 投放箱目录常为 untracked，**无 git 兜底**；通过后才删。
+5. **收口**：跑该知识库的质检与巡检命令（Inbox MUST CLEAN）。
 
 ## 3. 执行流程与完成判据
 
@@ -153,6 +172,13 @@ Agent 判断目标时可参考上方 `TARGET_ROUTING_MAP`；目标仍有歧义�
 ```
 
 ---
+
+## 4b. 晋级后 MUST 补字段 / 标取代关系
+
+1. **`description`（触发句）**：一句话写明"什么场景该读本条"，MUST NOT 写成标题复述。
+2. **`verified`（复核日期）**：MUST 更新为今天（`updated` 不等于复核）。
+3. **被取代的旧结论**：使旧条目失效 ⇒ 标 `status: superseded-by: <path>`；不静默删除，也不静默保留。
+4. **时效闸**：跑规则时效检查，超期未复核的规范会被点名；随各规则被引用时补 `verified` 逐步收敛。
 
 ## 5. 归档后 MUST 验证
 
