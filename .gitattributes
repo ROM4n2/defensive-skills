@@ -6,12 +6,15 @@
 *.sh      text eol=lf
 *.py      text eol=lf
 *.json    text eol=lf
-*.md      text=auto
+*.md      text eol=lf
 *.ps1     text eol=crlf
 
-# `*.md` stays `text=auto` because skill Markdown must remain byte-identical to the live tree.
-# The two front pages have no live counterpart, so pin them: a CRLF rewrite silently breaks
-# multi-line edits to them (it broke three patches during the README work).
+# Every Markdown file — skills, templates, the two front pages — is pinned to LF. Skill bodies must
+# stay byte-identical to the author's live tree, and since 2026-10-22 that tree is LF too, so
+# `text=auto` no longer buys parity: it only let a Windows checkout hand back CRLF for the same blob
+# a Linux clone got as LF (57 spurious "LF will be replaced by CRLF" warnings during the live-tree
+# port). The front pages have no live counterpart and were already pinned — a CRLF rewrite silently
+# breaks multi-line edits to them (it broke three patches during the README work).
 README.md     text eol=lf
 README.en.md  text eol=lf
 
