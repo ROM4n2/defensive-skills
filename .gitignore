@@ -1,7 +1,7 @@
 # ============================================================
 #  Sensitive credentials & secrets  (dfs-bootstrap §Phase 1)
-#  This block MUST stay byte-identical to $requiredIgnores
-#  in the DFS bootstrap script (single source of truth).
+#  This block MUST stay byte-identical to REQUIRED_IGNORES
+#  in dfs-bootstrap/scripts/bootstrap.py (single source of truth).
 #  Do not reorder, do not comment out.
 # ============================================================
 config.yaml
