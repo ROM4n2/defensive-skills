@@ -66,8 +66,8 @@ sqlite3 data.db "SELECT id,status,done,total FROM jobs ORDER BY id DESC LIMIT 1;
 
 **适用**：任何"渲染出来了"的交付物（报告、Dashboard、PDF 预览）。
 
-`--screenshot` 在 `load` 事件就按下快门，异步图表（wordcloud、Vue mount 后的 ECharts）
-还没画；`--virtual-time-budget` 会把计时器拍平，反而更容易出空白。正确顺序：
+`--screenshot` 在 `load` 事件就按下快门，异步图表（wordcloud、Vue mount 后的 ECharts）还没画；`--virtual-time-budget` 会把计时器拍平，反而更容易出空白截图假绿。
+**确定性就绪守卫（MUST）**：必须显式轮询应用就绪标识（`document.body.dataset.ready === "1"`）且断言非零渲染像素/包围盒（`lit > 0` 或 `getBoundingClientRect().width > 0`）再采证，严禁依赖 `--virtual-time-budget` 抢拍。正确顺序：
 
 ```bash
 # 1. 以调试端口起 headless 浏览器（Edge/Chrome 均可）

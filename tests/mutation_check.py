@@ -145,6 +145,12 @@ MUTATIONS = [
     # mutation's `also:` list: it skips skills whose frontmatter fails to parse, on purpose.
     ("rule_2_frontmatter_schema",
      "dfs-adr/SKILL.md", lambda t: t.replace("name: dfs-adr", "name:", 1)),
+    # Rule 15 caps SKILL.md progressive disclosure size budget (<=120 lines and <=8500 bytes for
+    # v0.4.0 disclosure skills, <=180 lines globally). Adding 50 comment lines pushes dfs-orchestrate
+    # (currently ~89 lines) over the 120-line budget.
+    ("rule_15_skill_md_progressive_disclosure_budget",
+     "dfs-orchestrate/SKILL.md",
+     lambda t: t + "\n" + "\n".join(f"# progressive disclosure budget bloat {i}" for i in range(50))),
 ]
 
 # Two gates had no automatic probe: they were hand-checked once (inject / observe red / restore) and

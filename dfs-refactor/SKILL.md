@@ -3,91 +3,61 @@ name: dfs-refactor
 description: Execute senior-level refactoring with guard-clause flattening. Use when the user asks to clean up, simplify, or restructure existing code.
 license: MIT
 metadata:
-  version: 0.2.0
+  version: 0.3.0
   platforms: linux, macos, windows
   hermes:
-    tags: [refactoring, guard-clauses, complexity-reduction, code-quality, yagni]
-    related_skills: [dfs-tdd, dfs-review]
+    tags:
+    - refactoring
+    - guard-clauses
+    - complexity-reduction
+    - code-quality
+    - yagni
+    related_skills:
+    - dfs-tdd
+    - dfs-review
+    - dfs-perf
 ---
+
+
 # DFS-REFACTOR: Senior Complexity Reduction & Flattening
 
 Execute senior-level code refactoring focusing on complexity reduction, Guard Clause flattening, stdlib consolidation, and dead code elimination while maintaining 100% Green test coverage.
 
-## [MUST] The Behavior Preservation Invariant (RFC 2119 MUST)
-> **DO NOT touch any production code until the full test suite is verified GREEN.**
-> Refactoring changes internal structure without changing external behavior. If you cannot run tests or if test passing count changes, stop immediately.
+## The Behavior Preservation Invariant (RFC 2119 MUST)
+> DO NOT touch production code until the full test suite is verified GREEN. Stop immediately if test count changes.
 
 ---
 
 ## The 5-Step Refactoring Lifecycle
 
-```
-  [Step 0: Establish Green Baseline]
-                     │
-                     ▼
-  [Step 1: The Deletion Test — remove before reshaping]
-                     │
-                     ▼
-  [Step 2: Flatten & Consolidate (Guard Clauses + Stdlib)]
-                     │
-                     ▼
-  [Step 3: Deepen Modules (minimal interface, high-cohesion internals)]
-                     │
-                     ▼
-  [Step 4: Verify Green + Atomic Commit]
-```
+`Step 0: Baseline` -> `Step 1: Deletion` -> `Step 2: Flatten` -> `Step 3: Deepen` -> `Step 4: Verify`
 
 ### Step 0: Establish Green Baseline (MUST)
-1. Run the full test suite **before any edit**. Record the passing count $N$.
-2. This is your invariant — every subsequent step must preserve it. If tests are failing or missing, stop and call `/dfs-debug` or `/dfs-tdd` first.
-3. **Checkable Completion Criterion**:
-   - Test command executed; terminal output confirms 100% passing tests with exact baseline count $N$ recorded.
+1. Run full test suite before any edit. Record exact passing count $N$.
+2. **Seam-First Split Precheck (when splitting files/modules)**: If tests pin internal layout, modernize to public contract probes in a separate commit *before* moving code — load [references/split-and-seam-safety.md](references/split-and-seam-safety.md) §1.
+3. Preserved invariant: if tests fail/missing, stop and invoke `/dfs-debug` or `/dfs-tdd`. Done when 100% green with count $N$.
 
 ### Step 1: The Deletion Test — Remove Before Reshaping
-Before refactoring code into a "better shape", ask: **can I delete it entirely?**
-
-- **Single-implementation interface**: an interface/ABC/protocol with exactly one concrete type → delete the interface, inline the implementation.
-- **Speculative wrapper**: a class/function that adds no logic, just forwards arguments → delete it, call the underlying directly.
-- **Dead code**: unreachable branches, unused imports, commented-out blocks → delete without ceremony.
-- **Duplicate helper**: same logic in two places → keep the better one, delete the other.
-
-The best refactoring is deletion. Every line you delete is a line that can never have a bug.
-- **Checkable Completion Criterion**:
-   - Dead code, unused wrappers, or redundant interfaces removed; test suite re-run with exact $N$ tests passing.
+Before reshaping, ask: **can I delete it entirely?**
+- Delete single-implementation interfaces, speculative forwarding wrappers, unreachable dead code, and duplicate helpers.
+- The best refactoring is deletion. Done when unneeded code removed and test suite re-run with exact $N$ passes.
 
 ### Step 2: Flatten & Consolidate
-Apply these in order:
-
-1. **Guard Clause Flattening**: Maximum 2 levels of indentation. Return early on preconditions, validation errors, and nil/null checks. The happy path reads straight down the left margin.
-2. **The Ladder of Reuse (all levels)**:
-   - Level 0 (YAGNI): Does this abstraction serve a real caller today, or an imagined future one? If imagined → delete (Step 1).
-   - Level 1 (Stdlib): Replace custom wheels with standard library built-ins (`functools.lru_cache`, `sync.OnceValue`, `itertools`, `context`, `http`).
-   - Level 2 (Existing deps): Can an already-imported library do this? If yes → delete the custom code.
-   - Level 3 (Minimal effective implementation): If you must write it, write the smallest version that passes the tests.
-3. **Extract cohesive helpers**: Break functions > 40 lines into focused pure helpers. Each helper does one thing and returns one thing.
-- **Checkable Completion Criterion**:
-   - Indentation depth <= 2 verified; custom wheels replaced with stdlib/existing dependencies; test suite remains 100% green with $N$ passes.
+Apply in order:
+1. **Guard Clause Flattening**: Max 2 levels of indentation. Return early on preconditions and null checks. Happy path reads straight down.
+2. **Ladder of Reuse**: Level 0 (YAGNI delete) -> Level 1 (Stdlib built-ins) -> Level 2 (Existing deps) -> Level 3 (Minimal implementation).
+3. **Extract Cohesive Helpers**: Break functions > 40 lines into focused single-purpose pure helpers. Done when max depth <= 2 and $N$ passes.
 
 ### Step 3: Deepen Modules
-A **shallow module** has a complex interface but weak implementation (many public methods, thin bodies). A **deep module** has a minimal interface and high-cohesion internals.
-
-- Reduce the public surface: can callers reach the same outcome with fewer exposed functions/methods?
-- Move orchestration logic inward: if the caller must call A then B then C in order, that sequence belongs inside the module.
-- **Done when** you can name, for each public function, the misuse a caller could still make — and a type error or a test catches every one of them.
-- **Checkable Completion Criterion**:
-   - Public API surface minimized or verified cohesive; no callers broken; full test suite passes with $N$ tests.
+A deep module has a minimal public interface and high-cohesion internals:
+- Reduce public surface; move caller sequencing and orchestration logic inward.
+- **Cohesive File Splitting & Test Triple Conservation**: When splitting files, preserve package boundaries and enforce 100% conservation of test count, test IDs, and assertions per [references/split-and-seam-safety.md](references/split-and-seam-safety.md) §3.
+- Done when public surface is minimized, misuse is caught by types/tests, and all $N$ tests pass.
 
 ### Step 4: Verify Green + Atomic Commit (MUST)
-1. Run the full test suite. **Exact same passing count as Step 0.** If any test broke, revert the last atomic edit and re-examine.
-2. Commit per refactoring type, not per file:
-   ```
-   refactor(<scope>): flatten guard clauses in <module>
-   refactor(<scope>): delete single-impl interface <Name>
-   refactor(<scope>): replace custom <X> with stdlib <Y>
-   ```
-3. **营地法则 (Campsite Rule)**: Leave the code cleaner than you found it. If you touched a function and noticed unrelated mess, note it — but do not fix it in this commit. Separate commits for separate concerns.
-4. **Checkable Completion Criterion**:
-   - Full test suite exit code 0 with count $N$; atomic git commits created; Quantitative Delta Report rendered.
+1. Re-verify full test suite passes with exact same count $N$. Revert atomic edit if broken.
+2. **Post-Move Mock Reachability (MUST)**: If symbols moved across modules, verify `patch` targets point to call-time lookup module and prove interception with 1 mutation ([references/split-and-seam-safety.md](references/split-and-seam-safety.md) §2).
+3. Commit atomically per refactoring concern (`flatten`, `delete`, `stdlib`, `deepen`). Leave campsite cleaner than found.
 
 ---
 
@@ -104,32 +74,4 @@ A **shallow module** has a complex interface but weak implementation (many publi
 
 ## Output Schema: Quantitative Delta Report
 
-Every refactoring deliverable MUST provide a quantitative comparison:
-
-```markdown
-# [NOTE] Code Refactoring Summary: [Target Module]
-
-### [NOTE] Complexity & Quantitative Delta
-- **Max Indentation Depth**: `4 levels` -> `2 levels` (Guard Clauses)
-- **Lines of Code (LOC)**: `340` -> `195` ([-] 42.6% reduction)
-- **Deletions**: <what was deleted and why>
-- **Stdlib Replacements**: <custom X → stdlib Y>
-- **Test Integrity**: [PASS] All 48 tests passing (Green-to-Green preserved)
-
-### [NOTE] Key Transformation Diff
-```diff
-- if user != nil {
--     if user.IsActive {
--         if user.HasPermission("admin") {
--             return doAdminWork(user)
--         }
--     }
-- }
-- return ErrUnauthorized
-+
-+ if user == nil || !user.IsActive || !user.HasPermission("admin") {
-+     return ErrUnauthorized
-+ }
-+ return doAdminWork(user)
-```
-```
+Every refactoring deliverable MUST conclude with the Quantitative Delta Report (complexity delta, LOC reduction, deletions, and Green-to-Green preservation) per [references/split-and-seam-safety.md](references/split-and-seam-safety.md) §4.

@@ -34,6 +34,9 @@ Use this document schema to structure every production database migration plan.
   ```sql
   UPDATE users SET email_v2 = email WHERE email_v2 IS NULL AND id BETWEEN ? AND ?;
   ```
+- [ ] Reconciliation Predicate: Gate on missing capability (`WHERE col IS NULL`), never one-shot flags or `COUNT(*) > 0`.
+- [ ] Honest NULL: Leave field `NULL` on genuine missing inputs; never fabricate placeholders.
+- [ ] Three-Phase Temporal Suite: Verify Fresh DB -> Interrupted Re-Run (idempotent, honest NULL) -> Legacy Restore.
 
 ### Phase 3: Switch Reads (切读新字段)
 - [ ] Verify data parity (`COUNT(*)` and hash check between old and new columns).

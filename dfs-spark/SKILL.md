@@ -3,65 +3,51 @@ name: dfs-spark
 description: Generate a design specification from a fuzzy need through Dual-Lens dialogue, at a size the idea earns. Use when the user has an idea with no design yet and wants it shaped into a spec, a short design note, or a feasibility answer.
 license: MIT
 metadata:
-  version: 0.2.0
+  version: 0.3.0
   platforms: linux, macos, windows
   hermes:
-    mcp_tools: [omni_search]
-    tags: [brainstorming, idea-sizing, design-spec, dual-lens, product-ux]
-    related_skills: [dfs-plan, dfs-grill, dfs-adr, dfs-exec]
+    tags:
+    - brainstorming
+    - idea-sizing
+    - design-spec
+    - dual-lens
+    - product-ux
+    related_skills:
+    - dfs-plan
+    - dfs-grill
+    - dfs-adr
+    - dfs-exec
+    mcp_tools:
+    - omni_search
 ---
+
+
 # DFS-SPARK: Idea Sizing & Exploratory Design
 
 Turn vague ideas, open-ended feature thoughts, or fuzzy developer needs into structured, knowledge-grounded design specifications through collaborative dialogue across **Dual Lenses: User Problem Validation + Technical Architecture**.
 
-## [MUST] The Spec-First Invariant (RFC 2119 MUST)
-> **Do NOT invoke any implementation skill, write production code, or scaffold repositories until presenting the design spec and obtaining explicit human partner approval.**
-> Jumping into coding from fuzzy requirements without a sized specification violates the Fog of War staged development principle.
+## The Spec-First Invariant (RFC 2119 MUST)
+> Do NOT invoke implementation skills, write code, or scaffold repositories until presenting the spec and obtaining human partner approval.
 
 ---
 
-## [NOTE] This skill, or `/dfs-grill`?
-
-Both start from something vague. They split on **what you are being asked to do**:
-
-| | this skill | `/dfs-grill` |
-|---|---|---|
-| The ask | **generate** — there is no design yet | **interrogate** — a proposal exists and its edges are unclear |
-| Output | a **spec**, sized to the idea (or a feasibility answer / a short design note) | an **ADR**: every undecided point forced to a choice |
-| Feeds | `/dfs-plan` | the decision record |
-
-A design already written, and you want it attacked? That is `/dfs-grill`. Nothing designed yet? Start
-here, and let Phase 1 decide how much process the idea has earned.
+## This skill, or /dfs-grill?
+- No design yet: start here to **generate** a spec, note, or feasibility spike.
+- Proposal exists and needs edges interrogated/forced to a choice: hand off to **`/dfs-grill`** (ADR output).
 
 ---
 
 ## The 5-Phase Idea Sizing State Machine
 
-```
-  [Phase 1: Intent Scoping & Three-Path Classification (Spike/Bounded/Arch)]
-                               │
-                               ▼
-  [Phase 2: Vault & Codebase Knowledge Grounding (L1 -> L0)]
-                               │
-                               ▼
-  [Phase 3: Socratic Dialogue & Dual-Lens Trade-Off Matrix (UX vs Tech)]
-                               │
-                               ▼
-  [Phase 4: Spec Generation & Self-Review (Zero TBD Check)]
-                               │
-                               ▼
-  [Phase 5: Handoff Gate (Relay to /dfs-plan)]
-```
+`Phase 1: Classification` -> `Phase 2: Grounding` -> `Phase 3: Socratic Dialogue` -> `Phase 4: Spec Generation` -> `Phase 5: Handoff Gate`
 
 ---
 
 ## Phase 1: Intent Scoping & Three-Path Classification
 Classify the task upfront and announce it:
-- **Spike** (Feasibility question): "Can we / what is the cost / quick probe". Present probe plan in 2-3 sentences, get nod, investigate, report recommendation. No spec doc.
-- **Bounded** (Scoped tweak to existing code): Clarify questions, present 2-3 paragraph design in chat, get explicit approval, then proceed without plan doc.
-- **Architectural** (New feature / subsystem / restructuring): Full process (Phase 2 to Phase 5).
-- **Checkable Completion Criterion**:
-  - Classification announced with justification; user confirms scope before proceeding.
+- **Spike**: Present probe plan in 2-3 sentences, get nod, investigate, report recommendation (no spec doc).
+- **Bounded**: Clarify questions, present 2-3 paragraph design in chat, get approval, proceed without plan doc.
+- **Architectural**: Full process (Phase 2 to Phase 5). Done when classification confirmed by user.
 
 ---
 
@@ -85,24 +71,16 @@ Propose **2 to 3 distinct approaches** with explicit trade-offs:
 - **Option A (Minimalist)**: Lowest complexity, zero-dependency, standard library first.
 - **Option B (Domain-Native)**: Deep integration with existing project engines.
 - **Option C (Extensible)**: Pluggable architecture for future multi-tenant growth.
+- **Agent & Harness Architecture Guardrails (when designing AI agents/RAG/tools)**: Enforce the 11-system empirical baselines — native concurrency loop over black-box agent frameworks, deterministic AST/ripgrep over source-code vector RAG, bit-perfect prefix caching, and deferred loading (`tool_search`) above 15 tools. Load [references/agent-harness-and-sizing-examples.md](references/agent-harness-and-sizing-examples.md) §1.
 - **Checkable Completion Criterion**:
   - Trade-off matrix rendered comparing A/B/C across complexity, operational cost, and YAGNI risk; user selection recorded.
 
 ---
 
 ## Phase 4: Spec Generation & Self-Review
-On user approval of the approach:
-1. Generate design document: `docs/specs/YYYY-MM-DD-<topic>-design.md` (or `08-Projects/{project}/`).
-2. Load and follow the design specification schema defined in `templates/spec-template.md` via `read_file(path='templates/spec-template.md')`.
-3. **Required Schema**:
-   - `1. Problem Statement & User Value` (Why build this, target scenario)
-   - `2. User Journey & Core Flow` (Step-by-step user interaction & feedback)
-   - `3. Architecture & Data Models` (Components, types, persistence)
-   - `4. Edge Cases & Resilience` (Network drops, race conditions, error boundaries)
-   - `5. Test Strategy` (Unit tests, integration scenarios)
-4. Spec Self-Review: Check for zero "TODO/TBD" placeholders, contradictions, or scope creep.
-5. **Checkable Completion Criterion**:
-   - Design spec written to disk; zero `TODO`/`TBD` occurrences; all 5 schema sections populated.
+On approval of the approach:
+1. Generate `docs/specs/YYYY-MM-DD-<topic>-design.md` following schema in `templates/spec-template.md` (`Problem Statement`, `User Journey`, `Architecture`, `Edge Cases`, `Test Strategy`).
+2. Self-Review: Check for zero `TODO`/`TBD` placeholders, contradictions, or scope creep. Done when all 5 schema sections populated.
 
 ---
 
@@ -124,39 +102,5 @@ Auto-relay to `/dfs-plan` upon confirmation.
 | *"The user asked a simple probe question, so I'll write a full 200-line spec."* | **Process Bureaucracy**: Over-processing small spikes stalls exploration velocity. | Honor the Three-Path Classification: Spikes need 2-3 sentence probe plans, not spec docs. |
 | *"I left some edge cases as TBD in the spec to figure out during coding."* | **Fog of War Trap**: Unresolved architectural questions explode into blocking bugs during execution. | Spec MUST contain zero TODO/TBD markers; resolve or explicitly scope out before handoff. |
 
-## [NOTE] Worked example — classification decides the process
-
-Input A: *"Can we cut cold-start below 200 ms?"* -> Phase 1 classifies this a **Spike** (a
-feasibility / cost question): present a 2-3 sentence probe plan, get a nod, investigate, report — no
-spec document.
-
-Input B: *"We want a pluggable storage layer."* -> **Architectural**: full Phase 2-5. Phase 3, Step 1
-trade-off matrix:
-
-| Option | Complexity | Startup cost | Verdict |
-|---|---|---|---|
-| A. Minimalist: stdlib `dbm` only | lowest | none | rejected — no query support |
-| B. Domain-Native: reuse the existing SQLite engine | medium | reuses the existing open path | **chosen** |
-| C. Extensible: pluggable driver registry | highest | none | rejected — YAGNI at one backend |
-
-Chosen **B**: the repo already opens SQLite, and a driver registry would have exactly one member.
-
-Its mirrored output — the approved spec head — is:
-
-```
-# Design Specification: Pluggable Storage Layer
-
-**Date**: 2026-09-28
-**Status**: APPROVED
-**Target Path**: `docs/specs/2026-09-28-storage-layer-design.md`
-
-## 1. Problem Statement & User Value
-- Why build this: one backend today, a second is planned for next quarter.
-- Target Scenario & Persona: the platform engineer wiring storage per environment.
-- Cost of Doing Nothing: each environment keeps a bespoke, untested adapter.
-
-## 2. User Journey & Core Flow
-1. Set `storage.driver` -> the loader resolves the backend
-2. Write a record -> the configured driver persists it
-3. Read it back through the same interface -> value achieved
-```
+## Worked Example
+For worked classification and sizing examples (Spike vs Bounded vs Architectural storage layer), load [references/agent-harness-and-sizing-examples.md](references/agent-harness-and-sizing-examples.md) §2.

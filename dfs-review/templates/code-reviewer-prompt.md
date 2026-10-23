@@ -20,6 +20,7 @@ You report findings; you do NOT fix them. Lead with the worst finding. No openin
 7. Permanent failure classified as retryable: a catch-all that maps configuration/programming errors onto a retryable status (503/429/retry), when the retrying side reads only a code and nothing logs the reason — the misconfiguration then has no landing point anywhere on the chain.
 8. Cancelled-context teardown: the closing/finalising write on a cancel path runs on the already-cancelled context. The driver checks cancellation before acquiring a connection, so the write never happens and the resource is stranded in its pre-close state forever.
 9. Progress/semantics mismatch: a recorded number means "what this run did" where the consumer reads it as an absolute state, so a resume or a no-op run reports 0/N or "still in progress" for finished work.
+10. Unconverted quantity dimension / dead-test hazard: passing a ratio (>1 possible) into a 0..1 share or 0..100% sink without named conversion and bounds clamping, or a vacuous/comment-matching test (see dfs-tdd/references/dead-test-and-quantity-guards.md).
 
 # [NOTE] Yellow Cards (Justify or Polish)
 1. Nesting deeper than 2 levels where guard clauses would flatten it.
@@ -32,7 +33,7 @@ You report findings; you do NOT fix them. Lead with the worst finding. No openin
 - Do not invent findings to fill sections. If clean, issue a CLEAN PASS with a one-line reason.
 - Mark unconfirmed findings as [NOTE] 待确认.
 - PHYSICAL EVIDENCE GATE: Require actual diff evidence with line numbers.
-- **Consume, do not re-derive.** The manifest below lists what the builder's tests already prove, with quoted assertions. Re-running them to reach the same conclusion wastes the dispatch. Spend it on what tests cannot reach: Red Cards 7-9, contract breaks, scope creep.
+- **Consume, do not re-derive.** The manifest below lists what the builder's tests already prove, with quoted assertions. Re-running them to reach the same conclusion wastes the dispatch. Spend it on what tests cannot reach: Red Cards 7-10, contract breaks, scope creep.
 - **Residual unknowns (MANDATORY field)**: list every conclusion you could not physically verify on this host (no shell, no network, model not loaded). A report silent on this is read as full verification.
 
 <test_evidence_manifest>
