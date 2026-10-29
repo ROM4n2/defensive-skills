@@ -14,6 +14,8 @@ metadata:
 
 Produce structured, deterministic implementation plans where every task includes an actionable **Subagent Prompt Scaffold** ready for direct consumption by `/dfs-exec`.
 
+> **Detailed playbook**: this skill's long-form sections were moved to [`references/plan-example.md`](references/plan-example.md). Load it when you need the full procedure, the worked example, or the field evidence — the constraints above are self-sufficient without it.
+
 ## [MUST] The Plan-Before-Code Invariant (RFC 2119 MUST)
 > **NO multi-step implementation shall begin without an approved `implementation_plan.md` adhering strictly to `templates/plan-schema.md`.**
 > Never speculate on downstream unknown components — unknowns MUST be quarantined in Fog of War until upstream tasks graduate them.
@@ -94,34 +96,3 @@ Produce structured, deterministic implementation plans where every task includes
 | *"I'll group several unrelated edits into Task 1 to save time."* | **Unverifiable Mega-Diffs**: breaking TDD atomicity and impossible maker-checker audit. | Enforce bite-sized task granularity (one discrete 2~5 minute action per task). |
 
 ---
-
-## [NOTE] Worked Example — One Task With Its Exact Interface Contract
-
-Input spec: *"Add a ledger resume command to the execution engine."* -> `implementation_plan.md` excerpt:
-
-```markdown
-## [NOTE] Active Frontier (Unblocked Tasks)
-
-### Task 2: Ledger resume loader [Mode: AFK] [Role: TDD Builder]
-
-**Files:**
-- Modify: `scripts/vault_exec_state.py`
-- Test: `tests/test_vendored_scripts.py`
-
-**Interfaces:**
-- Consumes: `json.loads(ledger_path.read_text())`
-- Produces: `def resume(ledger_path: Path) -> list[str]`
-
-**Subagent Prompt Scaffold (for /dfs-exec):**
-> "Implement Task 2: Ledger resume loader. Steps: write a failing test in
-> `tests/test_vendored_scripts.py` (RED); run `python tests/test_vendored_scripts.py` and verify it
-> fails; add `resume()` (GREEN); return a receipt with the raw exit code."
-
-**Step Breakdown:**
-- [ ] Step 1: Write the failing test (RED)
-- [ ] Step 2: Run it and verify it fails with the expected message
-- [ ] Step 3: Implement the minimal production code (GREEN)
-```
-
-The `Produces:` line is the falsifiable part — `/dfs-exec` must hit that exact signature, or the plan
-and the code have silently diverged.

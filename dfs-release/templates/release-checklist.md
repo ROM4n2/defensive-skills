@@ -24,8 +24,16 @@ A pushed tag is not a release — do not report "released" until the Post-Releas
 
 ## B. Post-Release Gate (after the pipeline)
 
-- [ ] **14. All Producer Jobs Green**: every platform/artifact job succeeded. Any red job ⇒ the publish step is usually **skipped**: the tag exists but no Release does — go to *Post-Tag Failure Recovery* in `SKILL.md`.
+- [ ] **14. All Producer Jobs Green**: every platform/artifact job succeeded. Any red job ⇒ the publish step is usually **skipped**: the tag exists but no Release does — go to *Section C. Post-Tag Failure Recovery Runbook*.
 - [ ] **15. Published Assets Verified**: expected count, names, sizes, and signature/content gates (mobile signing, "archive contains X"). Three of four assets is a silent failure.
 - [ ] **16. Release Notes Completed**: if the pipeline body is static boilerplate, append the version-specific sections (highlights + known limitations) via `gh release edit <tag> --notes-file <f>`, then re-read the body to confirm the append landed.
 - [ ] **17. Repo Metadata Checked**: description / homepage / topics (tags) still describe the current product.
 - [ ] **18. Release Recorded**: event written to the repo's coordination log (WORKMEMORY / CHANGELOG / ledger) and the final card reported to the user (version, tag → commit, asset table, open items).
+
+## C. Post-Tag Failure Recovery Runbook (when tag exists & pipeline is red)
+
+1. **Do not re-run to "get green", and do not re-tag blindly**: Classify defect as *flake* or *deterministic* with mathematical proof. Retrying a deterministic failure leaves defects in released commits.
+2. **Fix root cause on a new commit**: Treat gate/test defects as release blockers.
+3. **Re-cutting a tag requires explicit user approval**: Safe only when ① no Release published; ② nobody downloaded/installed it; ③ no one-way counter (e.g. mobile `versionCode`) was distributed.
+4. **Re-cut sequence**: `git push origin :refs/tags/vX.Y.Z` -> `git tag -d vX.Y.Z` -> re-tag the fix commit -> push tag -> run Post-Release gate on new pipeline run.
+5. **If tag was already consumed**: Never re-cut; ship the fix as the next patch release.

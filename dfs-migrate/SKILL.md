@@ -3,12 +3,23 @@ name: dfs-migrate
 description: Plan zero-downtime database schema migrations safely. Use when a schema change must ship without taking the service offline.
 license: MIT
 metadata:
-  version: 0.2.0
+  version: 0.3.0
   platforms: linux, macos, windows
   hermes:
-    tags: [database, migration, zero-downtime, ddl, expand-contract, sql]
-    related_skills: [dfs-perf, dfs-team]
+    tags:
+    - database
+    - migration
+    - zero-downtime
+    - ddl
+    - expand-contract
+    - sql
+    related_skills:
+    - dfs-perf
+    - dfs-team
+    - dfs-review
 ---
+
+
 # DFS-MIGRATE: Zero-Downtime Database Schema Migration
 
 Plan and execute production-safe database schema evolutions avoiding metadata locks, replication lag spikes, and service disruptions through the Expand/Contract paradigm.
@@ -22,37 +33,21 @@ Plan and execute production-safe database schema evolutions avoiding metadata lo
 
 ## The 4-Stage Migration Lifecycle
 
-```
-  [Stage 1: Migration Risk Assessment & Table Scale Profiling]
-                               │
-                               ▼
-  [Stage 2: Formulate Expand/Contract Plan (5 Phases)]
-                               │
-                               ▼
-  [Stage 3: Backward Compatibility & Wildcard Verification]
-                               │
-                               ▼
-  [Stage 4: Automated DDL Risk Lint & Execution Artifact Dispatch]
-```
+`Stage 1: Risk Assessment` -> `Stage 2: Expand/Contract Plan` -> `Stage 3: Backward Compatibility` -> `Stage 4: Execution & Lint`
 
-## [NOTE] Automated DDL Risk Linter
+## Automated DDL Risk Linter
 Before executing any migration SQL, run the static lock-hazard auditor:
 ```bash
 python scripts/ddl_lint.py <path_to_migration.sql> --dialect auto
 ```
-The linter detects table lock hazards (synchronous `NOT NULL` additions, un-aliased renames, non-concurrent index creation) and enforces the Expand/Contract alternatives.
+Detects lock hazards (synchronous `NOT NULL`, un-aliased renames, non-concurrent indexes) and enforces Expand/Contract.
 
 ---
 
 ## The Migration Design Procedure
 
 ### Step 1: Migration Risk Assessment
-1. **Scale & Lock Inspection**: Inspect target table scale:
-   ```sql
-   SELECT table_rows, data_length, index_length 
-   FROM information_schema.tables 
-   WHERE table_name = '<target_table>';
-   ```
+1. **Scale & Lock Inspection**: Query table scale (`table_rows`, `data_length`, `index_length`) from `information_schema.tables WHERE table_name = '<target_table>'`.
 2. **DDL Lock Characteristics**:
    - MySQL 8.0+: Prefer `ALGORITHM=INSTANT`, fallback to `ALGORITHM=INPLACE, LOCK=NONE`. Reject `LOCK=SHARED` or `LOCK=EXCLUSIVE` on busy tables.
    - PostgreSQL: Use `CREATE INDEX CONCURRENTLY` and `ADD COLUMN ... NULL`.
@@ -63,7 +58,7 @@ The linter detects table lock hazards (synchronous `NOT NULL` additions, un-alia
 1. Load `templates/migration-plan-schema.md` via `read_file(path='templates/migration-plan-schema.md')`.
 2. Map the change across the 5 phases:
    - **Phase 1 (Expand)**: Add backward-compatible nullable column; deploy dual-writing code.
-   - **Phase 2 (Backfill)**: Chunked asynchronous data migration with pacing.
+   - **Phase 2 (Backfill)**: Chunked asynchronous data migration with pacing (obey the Six Stored-Data Backfill Invariants & Monotonic Capability Predicate in [references/backfill-and-idempotency.md](references/backfill-and-idempotency.md) §1–§2 — gate on target IS NULL, never on COUNT(*) > 0 or a one-shot flag).
    - **Phase 3 (Read Switch)**: Switch query reads to the new column; verify zero parity errors.
    - **Phase 4 (Write Cutover)**: Decommission legacy column writes.
    - **Phase 5 (Contract)**: Drop deprecated column after canary stabilization.
@@ -73,8 +68,9 @@ The linter detects table lock hazards (synchronous `NOT NULL` additions, un-alia
 ### Step 3: Backward Compatibility Verification
 1. Verify that older running versions of the application binary will NOT crash when connected to the updated schema.
 2. Ensure queries use explicit column lists instead of `SELECT *` to prevent wildcard column count mismatch.
-3. **Checkable Completion Criterion**:
-   - Codebase checked for wildcard `SELECT *` queries targeting the altered table; verified zero crashes under version $N-1$ binary.
+3. **Three-Phase Temporal Regression**: Verify Fresh DB -> Partial/Interrupted Re-run (idempotent, honest NULL) -> Legacy Restore per [references/backfill-and-idempotency.md](references/backfill-and-idempotency.md) §3.
+4. **Checkable Completion Criterion**:
+   - Codebase checked for wildcard `SELECT *` queries targeting the altered table; verified zero crashes under version $N-1$ binary; three-phase temporal regression verified.
 
 ### Step 4: Downstream Execution Dispatch & Lint Verification
 1. Run static DDL auditor: `python scripts/ddl_lint.py <path_to_migration.sql> --dialect auto`. Ensure exit code 0.
@@ -86,9 +82,9 @@ The linter detects table lock hazards (synchronous `NOT NULL` additions, un-alia
 
 ## [ANTI] Common Rationalizations & Anti-Patterns
 
-| Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
+| Agent Rationalization | Real Hazard | Defensive Guard (MUST) |
 |---|---|---|
-| *"The table is small in dev, so I'll execute `ALTER TABLE ... ADD COLUMN NOT NULL DEFAULT x` directly."* | **Metadata Lock Outages**: In production with concurrent queries, synchronous NOT NULL locks all table reads/writes. | Enforce Phase 1 Expand: add nullable column first, backfill asynchronously, then contract. |
-| *"Renaming this column is clean and refactors technical debt in one migration."* | **Immediate Production Outage**: In-flight queries using the old column fail immediately during deployment. | Never rename columns in-place. Add new column, dual-write, backfill, switch reads, drop old. |
-| *"We can backfill all 10 million rows in a single UPDATE statement during low traffic."* | **Replication Lag & Lock Escalation**: Monolithic updates bloat undo logs, hold row locks, and break read replicas. | Backfill MUST be chunked (e.g. 1000 rows/batch) with explicit pacing sleep intervals. |
-| *"A rollback plan isn't necessary because adding a nullable column can't break anything."* | **Irreversible State Drift**: If downstream application code errors on the new column, recovery stalls without down SQL. | Every migration step MUST include deterministic rollback SQL in the plan card. |
+| *"Table is small in dev; I'll ADD COLUMN NOT NULL directly."* | **Metadata Lock Outages** | Enforce Phase 1 Expand: nullable first, backfill async, contract later. |
+| *"Renaming this column in-place refactors technical debt."* | **Immediate Outage** | Never rename columns in-place. Add new, dual-write, backfill, cutover, drop old. |
+| *"Backfill all 10M rows in a single UPDATE in off-peak."* | **Replication Lag & Locks** | Backfill MUST be chunked (e.g. 1000 rows/batch) with explicit sleep pacing. |
+| *"Rollback plan unnecessary for adding a nullable column."* | **Irreversible State Drift** | Every migration step MUST include deterministic rollback SQL in plan card. |

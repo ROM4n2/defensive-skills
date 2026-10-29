@@ -3,13 +3,25 @@ name: dfs-tdd
 description: Enforce strict RED-GREEN-REFACTOR TDD and fake-green guards. Use when implementing a feature test-first, or when a green test suite is suspect.
 license: MIT
 metadata:
-  version: 0.3.0
+  version: 0.4.0
   platforms: linux, macos, windows
   hermes:
-    tags: [tdd, red-green-refactor, mutation-testing, fake-green, testing]
-    related_skills: [dfs-plan, dfs-exec, dfs-refactor, dfs-debug]
-    mcp_tools: [get_code_template]
+    tags:
+    - tdd
+    - red-green-refactor
+    - mutation-testing
+    - fake-green
+    - testing
+    related_skills:
+    - dfs-plan
+    - dfs-exec
+    - dfs-refactor
+    - dfs-debug
+    mcp_tools:
+    - get_code_template
 ---
+
+
 # DFS-TDD: Contract-Driven Development & Mutation Defense
 
 Execute Test-Driven Development enforcing **The Iron Law**: Zero production code without a failing test, zero success claims without mutation verification, and zero tolerance for Reward Hacking.
@@ -23,26 +35,12 @@ Execute Test-Driven Development enforcing **The Iron Law**: Zero production code
 
 ## The 5-Step Industrial TDD Lifecycle
 
-```
-       [Step 1: Write Unit Test (RED)]
-                     │
-                     ▼
-       [Step 2: Verify Test Fails with Expected Error]
-                     │
-                     ▼
-  [NOTE] [Step 3: Mutation Verification (Anti-Fake Green)] [NOTE]
-    (Mutate logic -> Assert test fails -> Revert)
-                     │
-                     ▼
-       [Step 4: Write Minimal Production Code (GREEN)]
-                     │
-                     ▼
-       [Step 5: Refactor & Flatten with Guard Clauses]
-```
+`Step 1: RED` -> `Step 2: Confirm Failure` -> `Step 3: Mutation Check` -> `Step 4: GREEN` -> `Step 5: REFACTOR`
 
 ### Step 1: Write the Failing Test (RED)
 - Write concise, behavior-driven unit tests asserting one specific contract.
 - Use Defensive Skills pure test templates (`get_code_template("test-suite", lang="...")`).
+- Enforce the **Four Dead-Test Defenses**, **Bidirectional Format-Contract Round-Trip**, and **Quantity Dual-Extreme Fixtures (`>1` and `<1`)** — load [references/dead-test-and-quantity-guards.md](references/dead-test-and-quantity-guards.md) when testing parsers, static guards, or ratio/share/percent math.
 - **Checkable Completion Criterion**: The test file exists and asserts the unbuilt behavior.
 
 ### Step 2: Run Test & Confirm Failure
@@ -54,11 +52,11 @@ Execute Test-Driven Development enforcing **The Iron Law**: Zero production code
 - **Applicability Scope (When to Mutate)**:
   1. **Mandatory Case**: The test unexpectedly passes on first run (Step 2 passed without code — obvious Fake Green / Tautological Test).
   2. **High-Risk Invariant Case**: Cryptographic logic, concurrent lock handoffs, and security gatekeeper rules.
-  3. **The Four Mandatory Classes (field-derived — mutate these even when the logic looks trivial)**:
-     - **Corruption/duplication guards** — anything whose job is to stop a value being written twice (idempotency keys, accumulate-vs-replace, dedupe predicates). A guard that silently stops guarding doubles data.
-     - **State transitions** — every legal/illegal edge of a state machine. Remove the `WHERE status IN (...)` guard and confirm the illegal-transition test goes red.
-     - **Error classification** — any branch that maps an exception to a retryable vs permanent outcome. Break the mapping and confirm the test that pins it fails.
-     - **Human-input parsing boundaries** — any regex/parser that reads back an artifact a human edited. Loosen the pattern by one character and confirm the "malformed row is rejected" test fails; this is the class that silently ate three human judgements and produced a plausible wrong conclusion.
+  3. **The Four Mandatory Classes (mutate even when logic looks trivial)**:
+     - **Corruption/duplication guards** — idempotency keys, accumulate-vs-replace, dedupe predicates.
+     - **State transitions** — every legal/illegal edge of a state machine (e.g. drop `WHERE status IN (...)`).
+     - **Error classification** — branches mapping errors to retryable vs permanent outcomes.
+     - **Human-input parsing boundaries** — regex/parser reading human-edited artifacts (loosen pattern by 1 char).
   4. **Exempt Case**: Standard linear functions, simple DTO mappers, or obvious bugfixes that already failed Step 2 with the exact expected error message. Do not perform ritualistic mutation for trivial logic.
 - **The Mutation Check**: Intentionally mutate the target function to return a zero-value or throw an error.
 - Verify the test turns RED. If it stays GREEN, the test is not asserting real behavior (Fake Green) and must be rewritten.

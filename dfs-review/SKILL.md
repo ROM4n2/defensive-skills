@@ -3,13 +3,27 @@ name: dfs-review
 description: Review a code diff against 7-language RFC 2119 DFS rules. Use when the user asks for a code review, or before merging a change.
 license: MIT
 metadata:
-  version: 0.3.0
+  version: 0.4.0
   platforms: linux, macos, windows
   hermes:
-    tags: [code-review, rfc-2119, red-card, standards, gatekeeper, subagents]
-    related_skills: [dfs-team, dfs-refactor, dfs-exec, dfs-verify]
-    mcp_tools: [get_rule_snippet, list_standards]
+    tags:
+    - code-review
+    - rfc-2119
+    - red-card
+    - standards
+    - gatekeeper
+    - subagents
+    related_skills:
+    - dfs-team
+    - dfs-refactor
+    - dfs-exec
+    - dfs-verify
+    mcp_tools:
+    - get_rule_snippet
+    - list_standards
 ---
+
+
 # DFS-Review: Adversarial Red/Yellow Card Code Review
 
 Conduct thorough, unsparing code review on a git diff or pull request against Defensive Skills standards, The Ladder of Reuse, and language invariants by dispatching an independent, fresh-context reviewer subagent.
@@ -20,32 +34,16 @@ Conduct thorough, unsparing code review on a git diff or pull request against De
 
 ---
 
-## [NOTE] Before you start — is this the right reviewer?
-
-This skill is the **narrow, deep gate**: one adversarial reviewer, one axis, a diff as input, and a verdict allowed to halt the commit.
-
-- Keep it here for a code diff on a **single surface** — one language, one layer, no schema, UI or availability angle.
-- Hand off to **`/dfs-team`** when the target spans **two or more** domains (database + performance + availability …), or is not a diff at all (a module, a repo, a design, a plan). A swarm covers the breadth; it produces a report, not a halt.
-- Hand off to **`/dfs-grill`** while a design is still being shaped.
-
-Two reviewers on one single-surface diff is waste; one reviewer on a six-domain change is a blind spot.
+## Before you start — is this the right reviewer?
+- Code diff on a **single surface**: stay here (one adversarial reviewer, halt authority).
+- Multi-domain change (≥2 surfaces) or whole repo: hand off to **`/dfs-team`** (breadth report, not halt).
+- Shaping a design before code: hand off to **`/dfs-grill`**.
 
 ---
 
 ## The 4-Step Review Procedure
 
-```
-  [Step 1: Capture & Chunk Git Diff]
-                 │
-                 ▼
-  [Step 2: Retrieve Language Standards (get_rule_snippet)]
-                 │
-                 ▼
-  [Step 3: Dispatch Isolated Reviewer (templates/code-reviewer-prompt.md)]
-                 │
-                 ▼
-  [Step 4: Report Binary Verdict (RED CARD vs CLEAN PASS)]
-```
+`Step 1: Capture Diff` -> `Step 2: Standards` -> `Step 3: Dispatch Reviewer` -> `Step 4: Report Verdict`
 
 ### Step 1 — Capture Git Diff
 1. **Extract Diff**:
@@ -64,12 +62,7 @@ Two reviewers on one single-surface diff is waste; one reviewer on a six-domain 
    - Standard snippets retrieved for every touched file extension and passed to the reviewer scaffold.
 
 ### Step 3 — Adaptive Review Dispatch (阈值自适应审查)
-0. **Attach the Test-Evidence Manifest (MUST)** — before dispatching, hand the reviewer a list of
-   `test name -> what it asserts` for every test the diff adds or changes, plus the mutation
-   self-proofs the builder already ran (with quoted assertions). Then state the scope limit
-   explicitly: **do not re-derive what the manifest already proves.** A reviewer that
-   re-derives covered contracts burns a full dispatch to reproduce the builder's own evidence;
-   the findings that justify the seat live where tests do *not* reach.
+0. **Attach Test-Evidence Manifest (MUST)**: Hand the reviewer `test name -> what it asserts` plus builder mutation self-proofs with quoted assertions. Mandate: **do not re-derive what manifest already proves**; focus on areas tests cannot reach.
 1. **Diff Scope Inspection & Adaptive Dispatch**:
    - **Lightweight Diff (Diff ≤ 20 lines & Docs/Metadata/Constants only)**:
      Orchestrator performs inline self-review against the Red Card rubric directly in-thread, outputting a concise verdict. Eliminates subagent cold-start latency and avoids 429 rate limits for trivial mechanical edits.
@@ -79,6 +72,7 @@ Two reviewers on one single-surface diff is waste; one reviewer on a six-domain 
 2. **Reviewer's mandated focus** (what the manifest cannot cover):
    - **Untested invariants**: error-classification width, cancelled-context teardown, progress semantics, duplicate implementations of one rule (the four classes in `/dfs-grill` Stage 2.5).
    - **Contract breaks**: public signatures, test baselines, packaging/embed guards.
+   - **Red Card #10 & Quantity Boundaries**: Check for ratio-into-share/percent traps, bounded sinks lacking clamping, and vacuous/dead tests per [dfs-tdd/references/dead-test-and-quantity-guards.md](dfs-tdd/references/dead-test-and-quantity-guards.md).
    - **Scope creep**: anything in the diff the task did not ask for.
    - **Residual unknowns**: an explicit list of conclusions the reviewer could *not* physically verify on this host. A silent report is treated as full verification and is the one thing a reviewer must never do.
 3. **Checkable Completion Criterion**:
@@ -87,9 +81,9 @@ Two reviewers on one single-surface diff is waste; one reviewer on a six-domain 
 
 ### Step 4 — Report Verdict & Remedy
 1. **Process Verdict**:
-   - **If Verdict is REJECTED (RED CARD)**: Present findings with exact line numbers, failure scenarios, and minimal fixes. Halt git commit/push until resolved.
+   - **If Verdict is REJECTED (RED CARD)**: Present findings with `file:line`, concrete failure scenario, and minimal fix. Halt git commit/push until resolved.
    - **If Verdict is APPROVED WITH NOTES / CLEAN PASS**: Present verification proof and proceed to commit.
-   - **Disputed / Unverified Findings**: If a reported defect is disputed or suspected of being a model hallucination, invoke `/dfs-verify` to run negative-search proof and condition checks rather than blindly altering code or arguing in prompt prose.
+   - **Disputed Findings**: If a reported defect is disputed or suspected hallucination, invoke `/dfs-verify` for condition checks rather than arguing in prompt prose.
 2. **Checkable Completion Criterion**:
    - Binary decision reached: either a blocking defect list with `file:line` is presented, or explicit merge approval is given.
 

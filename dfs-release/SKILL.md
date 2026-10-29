@@ -3,78 +3,56 @@ name: dfs-release
 description: Draft semantic releases, changelogs, rollback plans, and verify published releases. Use when the user asks to cut a release, tag a version, write a changelog, or check whether a release actually shipped.
 license: MIT
 metadata:
-  version: 0.3.0
+  version: 0.4.0
   platforms: linux, macos, windows
   hermes:
-    tags: [release, semver, changelog, rollback, deployment, git-tag, release-notes]
-    related_skills: [dfs-pipeline, dfs-review, dfs-handoff]
+    tags:
+    - release
+    - semver
+    - changelog
+    - rollback
+    - deployment
+    - git-tag
+    - release-notes
+    related_skills:
+    - dfs-pipeline
+    - dfs-review
+    - dfs-handoff
 ---
+
+
 # DFS-RELEASE: Semantic Versioning, Changelog, Rollback & Post-Release Gate
 
-Standardize the production release lifecycle: pre-flight verification → version bump → changelog + rollback plan → tagging → **post-release verification**.
+Standardize the production release lifecycle: pre-flight verification -> version bump -> changelog + rollback plan -> tagging -> **post-release verification**.
 
-## [MUST] The Pre-Flight Gate Invariant (RFC 2119 MUST)
-> **Verify, on the exact commit you are about to tag: `git status --porcelain` empty AND the project's own gates green (test suite + the artifact/packaging smoke gate, if the repo has one).**
-> "Green on my machine last night" is not evidence; "green on **that commit**" is. Any commit that lands after the audit re-opens the audit.
+## The Pre-Flight Gate Invariant (RFC 2119 MUST)
+> Verify on the exact commit you tag: `git status --porcelain` is empty AND all project gates are green. A green gate certifies ONLY what it executes (e.g. smoke != test suite). Any commit after audit re-opens audit.
 
-### Gate coverage — know what each gate actually runs
-A green gate certifies **only what it executes**. Before tagging, list the gates that will run on the tagged commit and mark which surface each one covers.
-
-- An artifact-smoke job that builds + launches the binary but **does not run the test suite** certifies nothing about tests.
-- N platform jobs each run their own platform's tests ⇒ a macOS-only test defect can hide behind three green platforms.
-- ⇒ If the release pipeline is the **first** place a surface gets tested, you are using production as the test rig.
+---
 
 ## The 5-Stage Release Lifecycle
 
-```
-  [Stage 1: Pre-Flight Conformance Audit & Workspace Hygiene]
-                                │
-                                ▼
-  [Stage 2: Version Bump & Changelog Draft]
-                                │
-                                ▼
-  [Stage 3: Release Notes & Rollback Brief]
-                                │
-                                ▼
-  [Stage 4: Atomic Tagging & Push]
-                                │
-                                ▼
-  [Stage 5: Post-Release Verification & Notes]   ← a pushed tag is not a release
-```
+`Stage 1: Pre-Flight Audit` -> `Stage 2: Version Bump` -> `Stage 3: Notes & Rollback` -> `Stage 4: Tag & Push` -> `Stage 5: Post-Release Verification`
 
 ---
 
 ## Stage 1: Pre-Flight Conformance Audit
-1. Load `templates/release-checklist.md` via `read_file(path='templates/release-checklist.md')`.
-2. Verify:
-   - Clean git state: `git diff --stat` / `git status --porcelain` empty.
-   - Project gates green **on this commit**: `go test -race ./...` / `pytest -q` / `cargo test`, plus the packaging/artifact smoke gate if the repo has one.
-   - Security audit **if the ecosystem has a scanner** (`govulncheck` / `pip-audit` / `cargo audit`): record tool + version. A missing scanner is a **recorded gap**, not a pass.
-3. **Enumerate the version surfaces.** Find *every* place the version lives (package manifest, mobile `versionCode`, cache-buster / `CACHE_NAME`, a UI "current version" label, shields/badges, docs). Confirm the repo has a **single source of truth** and a test pinning the copies to it. A missed surface is a *silent* failure class: the artifact ships claiming version A while the app reports B, and nothing turns red.
-4. **Skips must be explained and baseline-compared** (report `N passed / M skipped`, and why each group skips). A blanket "0 skipped" rule gets ignored or lied about; an *unexplained increase* in skips is the real signal.
-5. **Checkable Completion Criterion**: `git status --porcelain` empty; test + smoke commands exit 0 **and their summaries are recorded in full** (never `| head` / `| tail` the pass/fail summary — truncation hides failures and a pipe eats the upstream exit code); the version-surface list and skip counts are written down.
+1. Load `templates/release-checklist.md` Section A via `read_file(path='templates/release-checklist.md')`.
+2. **Exact CI Command & Target-Set Parity (MUST)**: Copy exact test/linter invocations and directories from `.github/workflows/*.yml`. Verify clean git state, test gates, and security audit.
+3. **Enumerate version surfaces**: Confirm all surfaces derive from a single source of truth pinned by tests.
+4. **Baseline skip comparison**: Record `N passed / M skipped` with skip reasons; record full execution summaries.
 
 ## Stage 2: Version Bump & Changelog Draft
-1. Decide the bump from the commits since the last tag. `scripts/changelog_gen.py --version X.Y.Z` (dry-run by default) is a **drafting aid**, or read the log yourself.
-2. **The generator is mechanical — hand-curated changelogs win.** If the repo's `CHANGELOG.md` has narrative entries, a "latest version" header line, or a README that keeps only the last N release summaries, treat the generated text as **input** and edit by hand. Never let the tool rewrite that file: it will clobber the header and the ordering convention. (`--write` is opt-in; `--version` is mandatory — a silent default writes garbage version headers.)
-3. Bump the version in the single source of truth **and in every surface** from Stage 1.3.
-4. **Checkable Completion Criterion**: all surfaces agree with the source of truth (ideally the repo's own test proves it); the new CHANGELOG entry is non-empty; the bump level matches the commit content — **any backward-incompatible change mandates MAJOR, no exceptions**.
+1. Inspect commits since last tag. Use `scripts/changelog_gen.py --version X.Y.Z` as an aid, but curate CHANGELOG by hand.
+2. Bump version in single source of truth and all surfaces. Breaking changes strictly mandate MAJOR.
 
 ## Stage 3: Release Notes & Rollback Brief
 1. Load `templates/changelog-template.md` via `read_file(path='templates/changelog-template.md')`.
-2. The new entry MUST carry **[MUST] Known Limitations** — what this release does *not* fix, especially anything a user could mistake for a defect or a speed-up. An undeclared known limitation becomes a support ticket or a false promise.
-3. The **[MUST] Rollback** subsection MUST separate the independent axes — "revert the commit" is not a rollback plan:
-   - **Code / artifact**: previous version's package, and whether users *can* downgrade (a mobile `versionCode` is one-way ⇒ uninstall/reinstall — say so).
-   - **Data**: does this release *move* data (new directory / host / format)? Then the old version may not find it — document the manual step and the backup left behind.
-   - **Schema**: additive (new column/index — old code still reads it) vs destructive (needs a down-migration **and** a restore path).
-   - **Config / secrets / channel state** (registry tags, distribution channels).
-4. **Checkable Completion Criterion**: the entry has non-empty Known-Limitations and Rollback subsections; every axis has a command or an explicit "N/A because …".
+2. Must document **Known Limitations** (what is not fixed) and **Rollback Brief** across four independent axes: artifact downgrade, data location/format, schema migrations, and config/channel state.
 
 ## Stage 4: Atomic Tagging & Push
-1. Commit the release (`chore(release): vX.Y.Z` or the repo's convention).
-2. **The tag MUST sit on the commit that carries the bump**, and MUST satisfy the repo's own tag↔version guard if it has one (e.g. a build-time assertion that `tag == "v" + APP_VERSION`). Use an annotated tag (`git tag -a`).
-3. Push the branch and the tag, letting the tag trigger the release pipeline.
-4. **Checkable Completion Criterion**: `git tag -l vX.Y.Z` shows the annotated tag; the tag commit is the bump commit; the tag-triggered pipeline run exists (**record its run id** — you will need it in Stage 5).
+1. Commit bump (`chore(release): vX.Y.Z`). Annotated tag (`git tag -a`) MUST sit on the bump commit.
+2. Push branch and tag; capture pipeline run ID.
 
 ## Stage 5: Post-Release Verification & Notes — do NOT stop at the tag
 1. **Report without blocking the session.** Make a **single** status check and report: run id, per-job conclusions, expected duration, and what happens next. Then hand control back — **never** burn the turn in a 20–40 minute `sleep` poll loop. The user will ask for the result when they want it.
@@ -82,15 +60,11 @@ A green gate certifies **only what it executes**. Before tagging, list the gates
 3. **Verify the published assets**: count, names, sizes, and any signature/content gate (mobile signing, "the archive contains X"). Three assets out of four is a **silent** failure.
 4. **Release notes**: the pipeline's release body is usually **static boilerplate** (it cannot read your CHANGELOG) ⇒ append the version-specific sections yourself:
    `gh release view <tag> --json body` → append 本次重点 (highlights) + known limitations → `gh release edit <tag> --notes-file <f>` → re-read to confirm. Then record this as a standing step **in the repo's own ops doc**, so the next releaser doesn't rediscover it.
-5. **Repo metadata drifts too**: description / homepage / topics (tags) accumulate staleness for years — check them at release time (`gh repo view`).
+5. **Repo Metadata & Declaration-Implementation Reconciliation (MUST)**: Audit README.md and architecture docs against physical codebase reality (recompute LOC, package/module counts, test counts, CLI flags, feature tables); purge declared-but-unbuilt or built-but-undocumented drift before closing release. Check description/homepage/topics via `gh repo view`.
 6. **Record + report**: write the release event into the repo's coordination log (WORKMEMORY / CHANGELOG / release ledger) and give the user the final card: version, tag → commit, asset table, what remains open.
 
-## Post-Tag Failure Recovery (tag exists, pipeline red)
-1. **Do not re-run the red job to "get green", and do not re-tag blindly.** First classify: *flake* or *deterministic*? **Show the arithmetic.** (Example: a printed `1.1e+04` vs a measured `10658.46` is a 3.2% gap against a 3% tolerance — deterministic on that runner, so a retry is a coin flip **that also leaves the defect in the released commit**.)
-2. Fix the root cause on a **new commit** — gate/test defects included: they are release blockers, not nuisances.
-3. **Re-cutting a tag is destructive ⇒ explicit user approval.** It is safe only when all three hold, and you MUST state them out loud: ① no Release was published; ② nobody downloaded/installed that version; ③ no one-way counter (mobile `versionCode`) was distributed.
-4. Re-cut: `git push origin :refs/tags/vX.Y.Z` → `git tag -d vX.Y.Z` → re-tag the fix commit → push the tag, then run Stage 5 again on the new run.
-5. If the tag **was** consumed, do not re-cut — ship the fix as the next patch version.
+## Post-Tag Failure Recovery
+If a pipeline job fails after tagging, do NOT re-run blindly to "get green" and do NOT re-cut without mathematical flake/deterministic proof and explicit user approval. Follow the operational runbook in [templates/release-checklist.md](templates/release-checklist.md) Section C.
 
 ---
 

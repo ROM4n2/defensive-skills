@@ -6,9 +6,9 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Skills-28-4B5563?style=flat-square" alt="Skills" />
-  <img src="https://img.shields.io/badge/Conformance-14%20rules-0969DA?style=flat-square" alt="Conformance rules" />
-  <img src="https://img.shields.io/badge/Tests-109%20passed-2EA44F?style=flat-square" alt="Tests" />
-  <img src="https://img.shields.io/badge/Mutation-26%2F26%20caught-2EA44F?style=flat-square" alt="Mutation harness" />
+  <img src="https://img.shields.io/badge/Conformance-15%20rules-0969DA?style=flat-square" alt="Conformance rules" />
+  <img src="https://img.shields.io/badge/Tests-115%20methods-2EA44F?style=flat-square" alt="Tests" />
+  <img src="https://img.shields.io/badge/Mutation-27%2F27%20probes-2EA44F?style=flat-square" alt="Mutation harness" />
   <img src="https://img.shields.io/badge/Dependencies-0%20(stdlib)-gray?style=flat-square" alt="Zero dependencies" />
   <img src="https://img.shields.io/badge/Python-3.11%20%7C%203.12-3776AB?style=flat-square" alt="Python" />
   <img src="https://img.shields.io/badge/License-MIT-gray?style=flat-square" alt="License MIT" />
@@ -53,7 +53,7 @@ A skill is just a directory containing `SKILL.md`. Copy (or symlink) them into y
 | Hermes | `<hermes profile dir>/skills/` |
 
 ```bash
-# all 24, or only the 6 with no prerequisites; links by default, copies on Windows
+# all 28, or only the 9 with no prerequisites; links by default, copies on Windows
 python install.py --target ~/.codex/skills
 python install.py --target ~/.codex/skills --tier A
 ```
@@ -101,33 +101,33 @@ The "prerequisite" column is **measured**, not decorative — `tests/test_readme
 | Skill | Purpose | Prerequisite | MCP | Bundled |
 |---|---|---|---|---|
 | **chain** `dfs` | Route developer intent to the right Defensive Skills workflow. Use when the user asks for a coding task and you must decide which dfs skill to load, or when it is unclear where to start. | knowledge base | — | refs×6 |
-| **chain** `dfs-plan` | Draft bite-sized TDD implementation plans from specs. Use when the user asks for an implementation plan, or before writing code for a multi-step feature. | knowledge base | omni_search, get_code_template | tpl×1 |
-| **chain** `dfs-exec` | Execute TDD plans via adaptive gear-shifting (Tier 1 Solo-Light, Tier 2 Maker-Checker, Tier 3 Critical-Swarm). Use when an implementation plan exists and the user asks to execute or implement it. | knowledge base | — | tpl×2 |
+| **chain** `dfs-plan` | Draft bite-sized TDD implementation plans from specs. Use when the user asks for an implementation plan, or before writing code for a multi-step feature. | knowledge base | omni_search, get_code_template |tpl×1 refs×1|
+| **chain** `dfs-exec` | Execute TDD plans via adaptive gear-shifting (Tier 1 Solo-Light, Tier 2 Maker-Checker, Tier 3 Critical-Swarm). Use when an implementation plan exists and the user asks to execute or implement it. | knowledge base | — |tpl×2 refs×1|
 | **chain** `dfs-debug` | Execute 4-step systematic root-cause debugging with a reproduction. Use when the user reports a bug, a failing test, or says something is broken. | knowledge base | search_vault, save_inbox_draft | tpl×1 |
 | **chain** `dfs-save` | Harvest non-obvious engineering solutions into 99-Inbox drafts. Use when a debugging session or task just produced a reusable insight worth saving. | knowledge base | search_vault, save_inbox_draft | tpl×1 |
-| **chain** `dfs-handoff` | Generate a session wrap-up and a 1-click continuation card. Use when the user wants to pause, hand off, or resume later in a fresh session. | knowledge base | — | tpl×1 |
-| **chain** `dfs-team` | Audit code, a design, or a plan with a multi-domain subagent swarm, then collapse the findings into a single consensus report. Use when the target spans two or more specialist domains and needs several independent expert reviews. | — | — | tpl×1 |
+| **chain** `dfs-handoff` | Generate a session wrap-up and a 1-click continuation card. Use when the user wants to pause, hand off, or resume later in a fresh session. | knowledge base | — |tpl×1 refs×1|
+| **chain** `dfs-team` | Audit code, a design, or a plan with a multi-domain subagent swarm, then collapse the findings into a single consensus report. Use when the target spans two or more specialist domains and needs several independent expert reviews. | — | — |tpl×1 refs×1|
 | `dfs-adr` | Draft and archive numbered Architecture Decision Records. Use when the user makes an architecture decision or asks to record one. | knowledge base | — | tpl×1 |
-| `dfs-bootstrap` | Initialize a repository with security git hooks and DFS rule anchors. Use when starting a new repo or adding DFS guardrails to an existing one. | knowledge base | — | tpl×2 scripts×1 |
-| `dfs-gate` | Author mechanical gates for recurring defect classes. Use when a defect class has recurred, or an audit finding needs a permanent mechanical check instead of a note. | knowledge base | — | — |
-| `dfs-maintain` | Maintain repo hygiene, prune worktrees, and sync context. Use when a repo has stale worktrees, drifted context files, or needs a scheduled hygiene pass. | — | — | — |
-| `dfs-orchestrate` | Dispatch and verify subagents with file-occupancy guards. Use when several subagents must work in one repo without colliding, or a batch needs a granularity call. | — | — | tpl×1 |
-| `dfs-verify` | Verify unverified audit claims with physical evidence. Use when a report or audit asserts something no probe has confirmed, before anyone acts on it. | — | — | — |
-| `dfs-grill` | Interrogate a proposal's boundaries and undecided points through Dual-Lens Socratic inquiry, ending in an architecture decision record. Use when the user wants an idea, design, or plan challenged or pressure-tested before building. | knowledge base | omni_search | — |
-| `dfs-inbox-consolidate` | Classify and archive 99-Inbox drafts into DFS destinations. Use when the inbox has accumulated drafts and the user asks to file or clean them up. | extra assets | promote_inbox_draft | refs×1 |
+| `dfs-bootstrap` | Initialize a repository with security git hooks and DFS rule anchors. Use when starting a new repo or adding DFS guardrails to an existing one. | knowledge base | — |tpl×2 refs×1 scripts×1|
+| `dfs-gate` | Author mechanical gates for recurring defect classes. Use when a defect class has recurred, or an audit finding needs a permanent mechanical check instead of a note. | knowledge base | — | refs×1 |
+| `dfs-maintain` | Maintain repo hygiene, prune worktrees, and sync context. Use when a repo has stale worktrees, drifted context files, or needs a scheduled hygiene pass. | — | — |refs×1|
+| `dfs-orchestrate` | Dispatch and verify subagents with file-occupancy guards. Use when several subagents must work in one repo without colliding, or a batch needs a granularity call. | — | — | tpl×1 refs×1 |
+| `dfs-verify` | Verify unverified audit claims with physical evidence. Use when a report or audit asserts something no probe has confirmed, before anyone acts on it. | — | — | refs×1 |
+| `dfs-grill` | Interrogate a proposal's boundaries and undecided points through Dual-Lens Socratic inquiry, ending in an architecture decision record. Use when the user wants an idea, design, or plan challenged or pressure-tested before building. | knowledge base | omni_search |refs×1|
+| `dfs-inbox-consolidate` | Classify and archive 99-Inbox drafts into DFS destinations. Use when the inbox has accumulated drafts and the user asks to file or clean them up. | extra assets | promote_inbox_draft |refs×2|
 | `dfs-incident` | Triage a production incident and draft a blameless postmortem. Use when a service is down, degraded, or the user asks for an incident review. | knowledge base | — | tpl×1 |
 | `dfs-interview` | Conduct high-rigor 1v1 technical interview defense drills. Use when the user wants to rehearse explaining or defending their own work. | knowledge base | — | — |
-| `dfs-migrate` | Plan zero-downtime database schema migrations safely. Use when a schema change must ship without taking the service offline. | — | — | tpl×1 scripts×1 |
+| `dfs-migrate` | Plan zero-downtime database schema migrations safely. Use when a schema change must ship without taking the service offline. | — | — | tpl×1 refs×1 scripts×1 |
 | `dfs-onboard` | Rapidly orient an AI agent to develop on an existing codebase. Use when entering an unfamiliar repo and you need to map how it works before editing. | knowledge base | — | — |
 | `dfs-perf` | Profile multi-language benchmarks, races, and query plans. Use when the user reports slowness, a performance regression, or asks for a benchmark. | — | — | tpl×1 scripts×1 |
 | `dfs-pipeline` | Execute an end-to-end Git Worktree multi-skill pipeline. Use when a task spans several DFS skills and each stage needs an isolated worktree. | knowledge base | — | — |
-| `dfs-refactor` | Execute senior-level refactoring with guard-clause flattening. Use when the user asks to clean up, simplify, or restructure existing code. | — | — | — |
+| `dfs-refactor` | Execute senior-level refactoring with guard-clause flattening. Use when the user asks to clean up, simplify, or restructure existing code. | — | — | refs×1 |
 | `dfs-release` | Draft semantic releases, changelogs, rollback plans, and verify published releases. Use when the user asks to cut a release, tag a version, write a changelog, or check whether a release actually shipped. | — | — | tpl×2 scripts×1 |
 | `dfs-research` | Research external sources and sink findings into the Vault. Use when the user asks to investigate a topic and record what was learned. | knowledge base | search_vault, omni_search, get_note, get_rule_snippet, save_inbox_draft | tpl×1 |
 | `dfs-review` | Review a code diff against 7-language RFC 2119 DFS rules. Use when the user asks for a code review, or before merging a change. | knowledge base | get_rule_snippet, list_standards | tpl×1 |
-| `dfs-spark` | Generate a design specification from a fuzzy need through Dual-Lens dialogue, at a size the idea earns. Use when the user has an idea with no design yet and wants it shaped into a spec, a short design note, or a feasibility answer. | knowledge base | omni_search | tpl×1 |
-| `dfs-tdd` | Enforce strict RED-GREEN-REFACTOR TDD and fake-green guards. Use when implementing a feature test-first, or when a green test suite is suspect. | knowledge base | get_code_template | — |
-| `dfs-upgrade` | Assess breaking changes and upgrade risk for a dependency. Use when upgrading a package version and you need to know what will break and in which files. | — | — | tpl×1 |
+| `dfs-spark` | Generate a design specification from a fuzzy need through Dual-Lens dialogue, at a size the idea earns. Use when the user has an idea with no design yet and wants it shaped into a spec, a short design note, or a feasibility answer. | knowledge base | omni_search | tpl×1 refs×1 |
+| `dfs-tdd` | Enforce strict RED-GREEN-REFACTOR TDD and fake-green guards. Use when implementing a feature test-first, or when a green test suite is suspect. | knowledge base | get_code_template | refs×1 |
+| `dfs-upgrade` | Assess breaking changes and upgrade risk for a dependency. Use when upgrading a package version and you need to know what will break and in which files. | — | — |tpl×1 refs×1|
 
 ---
 
@@ -136,7 +136,7 @@ The "prerequisite" column is **measured**, not decorative — `tests/test_readme
 **Don't take this section's word for it — run them.** All ten are zero-dependency; no pytest needed:
 
 ```bash
-python tests/test_skills_conformance.py    # 14 rules × 28 skills                → exit 0
+python tests/test_skills_conformance.py    # 15 rules × 28 skills                → exit 0
 python tests/mutation_check.py             # inject a defect per rule; all must land → exit 0
 python tests/test_knowledge_server.py      # MCP server over real stdio JSON-RPC → exit 0
 python tests/test_vendored_scripts.py      # ledger / transactional archival / rollback → exit 0
@@ -160,7 +160,7 @@ Six deliberate design choices worth calling out:
 * **Referencing something that only resolves on your machine is banned.** Rules 8 and 10 refuse to let `scripts/...` point outside the repo, and refuse hardcoded absolute knowledge-base paths.
 * **Green locally is not the same as a clone that works.** `test_shipped_assets_tracked.py` does not measure the disk; it measures **what a stranger receives**. Nothing under a shipped path may be swallowed by `.gitignore` (build caches excepted), and nothing may be left untracked. It is a back-filled gate: an unanchored `WORKMEMORY/` in `.gitignore` matches at **any depth**, and git's ignore matching is **case-insensitive on Windows**, so it silently swallowed the four `dfs-bootstrap/templates/workmemory/` files — they were never tracked in any commit. Every gate stayed green here, because the files were sitting on disk; a stranger's clone got a `dfs-bootstrap` that exits 2 with `template(s) missing`.
 
-### The 14 conformance rules
+### The 15 conformance rules
 
 | # | Assertion |
 |---|---|
@@ -178,6 +178,7 @@ Six deliberate design choices worth calling out:
 | 12 | MCP-shaped call sites must be canonical; near-miss typos (`serch_vault`) are rejected |
 | 13 | Every shipped `references/` / `templates/` asset is reachable from a body; one that only a program reads must declare its consumer (the declaration self-invalidates) |
 | 14 | A heading claiming `<N>-Stage\|Step\|Phase>` must enumerate exactly N (the arithmetic only — not the meaning) |
+| 15 | Progressive disclosure budget: v0.4.0 refactored `SKILL.md` bodies ≤ 120 lines and ≤ 8,500 bytes, global skills ≤ 180 lines |
 
 ---
 
@@ -206,10 +207,10 @@ Save that as `knowledge.json` in your knowledge-base root to override the defaul
 * **`dfs-bootstrap` Phase 3.5 is ported and cross-platform now.** `dfs-bootstrap/scripts/bootstrap.py` (stdlib) does the whole pass in one shot: verify/extend `.gitignore`, install the secret-scanning hook (**never overwriting** an existing one) and set `core.hooksPath`, inject the rule anchor, scaffold the 4-piece `WORKMEMORY/` set. Idempotent, `--dry-run` previews, and a missing template is **exit 2** rather than a skip. The old Windows-only PowerShell version does not ship (comparison in [`scripts/README.md`](scripts/README.md)).
 * **`vault-healthcheck.py` / `vault-inbox-triage.py` do not ship.** They audit the structure of one specific knowledge base; pointed at anyone else's, they are wrong by construction. They affect `dfs-inbox-consolidate`, the one skill labelled "extra assets" in the table above.
 * **Retrieval is weighted keyword/tag scoring, not BM25 + a graph.** Fine for a knowledge base at note scale; past tens of thousands of notes you want a real ranker (the upgrade point is documented in `mcp/knowledge_server.py`'s module docstring).
-* **Frontmatter follows the Agent Skills open standard: the official `skills-ref validate` passes 24/24.** Only spec fields sit at the top level; every vendor extension moved into the `metadata` extension slot (string values; block-style YAML lists). The trade-off is documented, not hidden: `metadata.disable-model-invocation` is no longer a hard switch in ANY runtime — the safety intent on those 7 skills now rests on the identical file-top banner plus Claude Code's `skillOverrides`; and `metadata.platforms` no longer drives Hermes platform filtering (all 24 skills declare all three platforms, so nothing changes today). The key-by-key map is [`dfs/references/harness-field-mapping.md`](dfs/references/harness-field-mapping.md): which harness honors which key, and — for the keys it does not — the lever that enforces the same intent. `metadata.hermes.mcp_tools` is **not** a harness feature at all: it is this suite's own declaration, checked by the conformance gate.
-* The repo contains **28 skills** (`dfs-agent-sdk` was moved out because it is third-party material and is not published here); the "prerequisite" column measures what each skill actually depends on, and the 6 with no prerequisite work the moment they are installed.
-* **Progressive disclosure here is two tiers, not three.** The skill spec recommends three — `description` (always in the index) → SKILL.md body → `references/` + `scripts/` detail. This suite implements the **first two**: all 28 `description` fields carry an explicit trigger clause (tier 1), and the body carries the full procedure (tier 2). Only `dfs` (×6) and `dfs-inbox-consolidate` (×1) use the third tier; the other 26 skills have no `references/` subdirectory, and no skill uses a nested topic hierarchy. That is deliberate: each skill here is **one stable workflow**, and keeping a body under 500 lines beats inventing levels — split out a third tier when a skill actually needs the depth.
-* **Language policy: English machine surface, bilingual READMEs, English-first bodies.** Every frontmatter field the agent must load to route (`name` / `description` / `mcp_tools`) is already English. 15 of the 24 `SKILL.md` files are pure English; the remaining **1,865 CJK characters** are spread across 9 skills (the largest three: `dfs-inbox-consolidate` 473 / `dfs` 342 / `dfs-grill` 307; the rest are small fragments) — **kept on purpose, not unfinished work**: they are presentation data, not instructions, so they cost the model nothing to understand, while translating them would cost more to maintain than it returns. Issues and PRs in English are welcome.
+* **Frontmatter follows the Agent Skills open standard: the official `skills-ref validate` passes 24/24.** Only spec fields sit at the top level; every vendor extension moved into the `metadata` extension slot (string values; block-style YAML lists). The trade-off is documented, not hidden: `metadata.disable-model-invocation` is no longer a hard switch in ANY runtime — the safety intent on those 7 skills now rests on the identical file-top banner plus Claude Code's `skillOverrides`; and `metadata.platforms` no longer drives Hermes platform filtering (all 28 skills declare all three platforms, so nothing changes today). The key-by-key map is [`dfs/references/harness-field-mapping.md`](dfs/references/harness-field-mapping.md): which harness honors which key, and — for the keys it does not — the lever that enforces the same intent. `metadata.hermes.mcp_tools` is **not** a harness feature at all: it is this suite's own declaration, checked by the conformance gate.
+* The repo contains **28 skills** (`dfs-agent-sdk` was moved out because it is third-party material and is not published here); the "prerequisite" column measures what each skill actually depends on, and the 9 with no prerequisite work the moment they are installed.
+* **Progressive disclosure: full three-tier disclosure landed (v0.4.0).** The skill specification recommends three tiers — `description` (always in the index) → SKILL.md body → `references/` + `scripts/` detailed context. This suite fully implements three-tier disclosure: all 28 `description` fields carry an explicit trigger clause (tier 1); `SKILL.md` bodies are compacted to ≤120 lines and ≤8,500 bytes (tier 2), containing only Leading-Word core constraints and checkable criteria; extended playbooks, deep catalogs, and sizing examples sink into `references/` for on-demand loading (tier 3, shipped across 9 key skills).
+* **Language policy: English machine surface, bilingual READMEs, English-first bodies.** Every frontmatter field the agent must load to route (`name` / `description` / `mcp_tools`) is already English. 13 of the 28 `SKILL.md` files are pure English; the remaining **3,712 CJK characters** are spread across 15 skills (the largest three: `dfs-inbox-consolidate` 856 / `dfs-handoff` 830 / `dfs-save` 545; the rest are small fragments) — **kept on purpose, not unfinished work**: they are presentation data, not instructions, so they cost the model nothing to understand, while translating them would cost more to maintain than it returns. Issues and PRs in English are welcome.
 
 ---
 

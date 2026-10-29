@@ -3,13 +3,26 @@ name: dfs-debug
 description: Execute 4-step systematic root-cause debugging with a reproduction. Use when the user reports a bug, a failing test, or says something is broken.
 license: MIT
 metadata:
-  version: 0.2.0
+  version: 0.3.0
   platforms: linux, macos, windows
   hermes:
-    tags: [debugging, root-cause, reproduction, systematic-debugging, troubleshooting]
-    related_skills: [dfs-tdd, dfs-save, systematic-debugging, dfs-gate, dfs-verify]
-    mcp_tools: [search_vault, save_inbox_draft]
+    tags:
+    - debugging
+    - root-cause
+    - reproduction
+    - systematic-debugging
+    - troubleshooting
+    related_skills:
+    - dfs-tdd
+    - dfs-save
+    - systematic-debugging
+    - dfs-gate
+    - dfs-verify
+    mcp_tools:
+    - search_vault
+    - save_inbox_draft
 ---
+
 # DFS-DEBUG: 4-Step Systematic Root-Cause Debugging
 
 Resolve bugs, race conditions, memory leaks, and runtime panics with zero guesswork using the 4-step root-cause protocol.
@@ -33,24 +46,14 @@ Classify the bug immediately before attempting fixes:
 
 ## The 4-Step Root-Cause Protocol (Track 2)
 
-```
-  [Step 1: Evidence Capture & Minimal Repro (scratch/repro.*)]
-                               │
-                               ▼
-  [Step 2: Vault Pitfall & Intent Mapping (search_vault)]
-                               │
-                               ▼
-  [Step 3: Root-Cause Remediation & Surgical Fix]
-                               │
-                               ▼
-  [Step 4: Regression Lock & Self-Healing Ingestion (/dfs-save)]
-```
+`Step 1: Evidence & Repro` -> `Step 2: Vault Search` -> `Step 3: Surgical Fix` -> `Step 4: Regression Lock`
 
 ### Step 1: Evidence & Minimal Reproduction (MUST)
 1. **Exact Error Log**: Capture full stack trace, error message, and environment context.
 2. **Minimal Repro Script**: Create a standalone reproduction script in `scratch/repro.<lang>` or write a failing test. Load templates from `templates/repro-scaffold.md` via `read_file(path='templates/repro-scaffold.md')` to scaffold reproductions.
 3. **Execute & Confirm Red Repro**: Run repro script in terminal and verify it fails with the exact reported error (non-zero exit code or specific exception).
-4. **Checkable Completion Criterion**:
+4. **Evaluation / Benchmark Wipeout Triage**: If the bug reports 0% recall or evaluation wipeout despite exit 0, falsify the harness first (Corpus, Observation truncation, Span metric) via zero-cost probes per [dfs-verify/references/verification-pitfalls-and-eval-gates.md](dfs-verify/references/verification-pitfalls-and-eval-gates.md) before touching model or retrieval code.
+5. **Checkable Completion Criterion**:
    - Repro script or failing test executed in terminal; physical output exhibits the exact reported error and non-zero exit code.
 
 ### Step 2: Vault Pitfall & Synonym Search

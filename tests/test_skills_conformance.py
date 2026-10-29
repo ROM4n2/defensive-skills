@@ -126,6 +126,41 @@ KNOWN_SKILL_NAMES = set(SKILL_NAMES)
 # Names legitimately outside the DFS suite (external skills referenced by related_skills).
 EXTERNAL_SKILL_ALLOWLIST = {"systematic-debugging", "test-driven-development"}
 
+# Rule 15: Progressive disclosure size budget constants
+V040_DISCLOSURE_SKILLS = {
+    "dfs",
+    "dfs-adr",
+    "dfs-bootstrap",
+    "dfs-debug",
+    "dfs-exec",
+    "dfs-gate",
+    "dfs-grill",
+    "dfs-handoff",
+    "dfs-inbox-consolidate",
+    "dfs-incident",
+    "dfs-interview",
+    "dfs-maintain",
+    "dfs-migrate",
+    "dfs-onboard",
+    "dfs-orchestrate",
+    "dfs-perf",
+    "dfs-pipeline",
+    "dfs-plan",
+    "dfs-refactor",
+    "dfs-release",
+    "dfs-research",
+    "dfs-review",
+    "dfs-save",
+    "dfs-spark",
+    "dfs-tdd",
+    "dfs-team",
+    "dfs-upgrade",
+    "dfs-verify",
+}
+MAX_SKILL_MD_LINES_GLOBAL = 180
+MAX_SKILL_MD_LINES_V040 = 120
+MAX_SKILL_MD_BYTES_V040 = 8500
+
 # Rule 8 exemptions — references to tooling that is deliberately NOT shipped, because it inspects
 # the author's own knowledge base structure and would be wrong-by-default in any other one. Each
 # entry is documented in scripts/README.md under "Optional integrations", and an entry that stops
@@ -896,6 +931,44 @@ class TestSkillsConformance(unittest.TestCase):
             self.fail(
                 f"Rule 14 violation: {len(violations)} heading count(s) that the text "
                 f"contradicts:\n" + "\n".join(violations)
+            )
+
+    def test_rule_15_skill_md_progressive_disclosure_budget(self):
+        """Rule 15: Progressive disclosure size budget for SKILL.md.
+
+        All skills must stay <= 180 lines.
+        Skills refactored for v0.4.0 3-tier progressive disclosure must stay
+        <= 120 lines and <= 8,500 bytes. Extended checklists, examples, and
+        catalogs belong in references/<topic>.md (Tier 3).
+        """
+        violations = []
+        for sdir in self.skill_dirs:
+            skill_md = sdir / "SKILL.md"
+            if not skill_md.is_file():
+                continue
+            content = skill_md.read_bytes()
+            lines = content.decode("utf-8", errors="replace").splitlines()
+            line_count = len(lines)
+            byte_count = len(content)
+
+            if line_count > MAX_SKILL_MD_LINES_GLOBAL:
+                violations.append(
+                    f"  - {sdir.name}/SKILL.md: {line_count} lines (> global limit {MAX_SKILL_MD_LINES_GLOBAL})"
+                )
+
+            if sdir.name in V040_DISCLOSURE_SKILLS:
+                if line_count > MAX_SKILL_MD_LINES_V040:
+                    violations.append(
+                        f"  - {sdir.name}/SKILL.md: {line_count} lines (> v0.4.0 limit {MAX_SKILL_MD_LINES_V040})"
+                    )
+                if byte_count > MAX_SKILL_MD_BYTES_V040:
+                    violations.append(
+                        f"  - {sdir.name}/SKILL.md: {byte_count} bytes (> v0.4.0 limit {MAX_SKILL_MD_BYTES_V040})"
+                    )
+        if violations:
+            self.fail(
+                f"Rule 15 violation: {len(violations)} SKILL.md file(s) exceed progressive disclosure budget:\n"
+                + "\n".join(violations)
             )
 
 
