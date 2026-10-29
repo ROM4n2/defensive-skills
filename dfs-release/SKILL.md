@@ -80,3 +80,10 @@ If a pipeline job fails after tagging, do NOT re-run blindly to "get green" and 
 | *"The pipeline's release body is fine."* | **Misleading release notes**: users read them as the contract, and a missing asset goes unnoticed. | Stage 5.3/5.4: verify assets and append the version-specific sections. |
 | *"Tagged it — the pipeline will handle the rest."* | **Tag ≠ Release**: a red producer job skips the publish job, leaving an orphan tag. | Stage 5.2 + Post-Tag Failure Recovery. |
 | *"I'll poll until the build finishes so I can report the final result."* | **Session hostage**: 20–40 min of the user's turn consumed by waiting. | Single status check + report + hand back; the user asks for the final table. |
+
+---
+
+## Checkable Completion Criterion
+- Tagged commit verified on exact HEAD with `git status --porcelain` empty and pre-flight gates exit 0.
+- Release notes published with highlights, known limitations, and 4-axis rollback brief.
+- Published release assets verified (count, names, sizes non-zero) and CI pipeline green.

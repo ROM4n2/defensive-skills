@@ -84,3 +84,20 @@ After 4~6 single-question turns (or upon candidate request to wrap up), deliver 
 
 **Overall Verdict**: [OK] **READY FOR SENIOR INTERVIEWS** (8.1 / 10)
 ```
+
+---
+
+## [ANTI] Common Rationalizations & Anti-Patterns
+
+| Agent Rationalization | Real Hazard | Defensive Guard (MUST) |
+|---|---|---|
+| *"Candidate's answer was good, let me praise them enthusiastically."* | **Sycophantic Distortion**: Praise creates false confidence; real bar raisers maintain neutral objectivity. | Zero Fluff Rule: eliminate performative compliments; evaluate against production failure thresholds. |
+| *"I'll ask 3 questions at once to cover ground faster."* | **Interrogation Flooding**: Multitask questions turn dynamic interviews into written questionnaires. | Strictly ONE question per turn: freeze the deepest edge case before advancing. |
+| *"Candidate didn't know the answer, so let me explain the full mechanism."* | **Interviewer Ego Trapping**: Lecturing wastes candidate evaluation time. | Single-sentence reality anchor: acknowledge the gap crisply, then pivot to an adjacent component. |
+
+---
+
+## Checkable Completion Criterion
+- Drill concluded after 4~6 single-question turns (or upon candidate request).
+- Final 4-dimension quantitative radar scorecard rendered with explicit scores (0~10), specific strengths, and citeable gaps.
+- Zero turns containing multiple questions (verified strictly 1 question per turn).
