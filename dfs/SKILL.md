@@ -71,3 +71,24 @@ $ <pasted build log>
       a build-time failure, not a live outage                    -> not /dfs-incident
 => route: /dfs-debug
 ```
+
+---
+
+## Shared Architecture References
+
+All DFS skills share the core architecture contracts housed in `dfs/references/`:
+
+| Shared Reference | Scope & Governed Invariant |
+|---|---|
+| [`dfs/references/vault-root-resolution.md`](dfs/references/vault-root-resolution.md) | ADR-0001: Tier 1 (Env) -> Tier 2 (Walk) -> Tier 3 (Local) root resolution |
+| [`dfs/references/subagent-dispatch.md`](dfs/references/subagent-dispatch.md) | Runtime-neutral subagent dispatch protocols (`delegate_task` vs `subagent_type`) |
+| [`dfs/references/a-mac-gate.md`](dfs/references/a-mac-gate.md) | A-MAC admission gate: non-obvious, physically verified, reusable learnings |
+| [`dfs/references/acceptance-recipes.md`](dfs/references/acceptance-recipes.md) | Deterministic physical receipts: snapshots, hash checks, and kill-resume proofs |
+| [`dfs/references/harness-field-mapping.md`](dfs/references/harness-field-mapping.md) | Frontmatter support matrix across Claude Code, Hermes, Codex, and OpenCode |
+| [`dfs/references/mcp-contract.md`](dfs/references/mcp-contract.md) | MCP tool contracts, fallback tables, and high-signal output rules |
+
+---
+
+## Checkable Completion Criterion
+- Ambiguity resolved and exact target skill identified from the 28-skill catalogue.
+- Target skill trigger conditions verified against workspace environment markers.

@@ -96,3 +96,9 @@ Interview and stress-test the developer's proposed plan, architecture, or design
 
 ## Downstream Relay
 Prompt user: `Dual-lens consensus locked and ADR archived. Proceed to /dfs-plan (task breakdown) or /dfs-exec (autonomous multi-agent delivery)?`
+
+---
+
+## Checkable Completion Criterion
+- **Track 1 (Lightweight)**: in-chat consensus locked with an explicit `-> <recommended>` choice confirmed by user (zero ADR generated).
+- **Track 2 (Architectural)**: numbered MADR document (`ADR-000x`) physically written to disk with verified sequential number and locked decisions.

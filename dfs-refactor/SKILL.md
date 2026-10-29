@@ -75,3 +75,11 @@ A deep module has a minimal public interface and high-cohesion internals:
 ## Output Schema: Quantitative Delta Report
 
 Every refactoring deliverable MUST conclude with the Quantitative Delta Report (complexity delta, LOC reduction, deletions, and Green-to-Green preservation) per [references/split-and-seam-safety.md](references/split-and-seam-safety.md) §4.
+
+---
+
+## Checkable Completion Criterion
+- Max indentation depth <= 2 across refactored functions (guard clauses verified).
+- Baseline test pass count conserved: post-refactor pass count >= pre-refactor count N.
+- Zero feature or behavioral additions mixed into the refactoring commit.
+- Quantitative Delta Report delivered per references/split-and-seam-safety.md.

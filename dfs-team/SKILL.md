@@ -71,3 +71,11 @@ Dispatch the relevant specialist seats concurrently with **Strict Dynamic Prunin
 - Report assembled from `templates/swarm-synthesis-report.md` — the template's required sections and the collapse-before-synthesize rule are in [`references/swarm-synthesis.md`](references/swarm-synthesis.md).
 
 ---
+
+## [ANTI] Common Rationalizations & Anti-Patterns
+
+| Agent Rationalization | Real Hazard | Defensive Guard (MUST) |
+|---|---|---|
+| *"This is a major change, so I will dispatch all 6 seats to be thorough."* | **Attention Exhaustion & 429 Trapping**: Irrelevant seats report vacuous findings while taxing context and rate limits. | Mandatory dynamic seat pruning: max 2~3 active seats per swarm based on touched surfaces. |
+| *"A seat found a suspected race, let me report it directly as a P0 blocker."* | **Skeptic Failure & Alarm Fatigue**: Unverified suspicions trigger destructive false-alarm panics. | Adversarial verification: every P0/P1 finding MUST survive an independent skeptic read before report inclusion. |
+| *"Three seats reported the same issue from different angles, so I'll list all three."* | **Duplicate Inflation**: Repetitive citations bloat reports and mask other defects. | Collapse before you synthesize: group findings by root cause, assigning one primary seat owner. |

@@ -74,3 +74,10 @@ Read the `[Tier]` tag from the task header in `implementation_plan.md`:
 | *"Reviewer found an issue in Tier 2, orchestrator will patch it directly."* | **Boundary Violation**: Violates maker-checker context isolation. | Re-dispatch defect list to implementer subagent; re-verify with reviewer. |
 | *"Tests are green and the command exited 0, so the task is accepted."* | **Green-Suite Blindness**: an exit code proves nothing crashed; it never proves the result is right. Blank charts, doubled counters, a refused slot reported as success, and silently dropped human labels all passed a green suite first. | Run the Acceptance Gates above: known-defect-class questions, real-data snapshot / kill-resume / visual recipes, human-artifact safety, and one physically re-done probe. |
 | *"The child described its mutation verification, that counts as evidence."* | **Self-Report Laundering**: the description is the child's claim about its own work. | Re-execute one mutation in the parent tree and quote the failing assertion verbatim before signing off. |
+
+---
+
+## Checkable Completion Criterion
+- **Gear 1 (Solo-Light)**: command exit code 0 + authentic terminal output receipt.
+- **Gear 2 (Maker-Checker)**: independent reviewer subagent emits `APPROVED / CLEAN PASS` + git diff matches task boundary.
+- **Gear 3 (Critical-Swarm)**: HITL human sign-off + dual-signed commit + all applicable acceptance gates verified.
