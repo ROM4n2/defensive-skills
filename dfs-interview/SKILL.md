@@ -3,13 +3,14 @@ name: dfs-interview
 description: Conduct high-rigor 1v1 technical interview defense drills. Use when the user wants to rehearse explaining or defending their own work.
 license: MIT
 metadata:
-  version: 0.2.0
+  version: 0.3.0
   platforms: linux, macos, windows
   disable-model-invocation: 'true'
   hermes:
     tags: [interview, technical-defense, socratic, system-design, drill]
-    related_skills: [dfs-grill]
+    related_skills: [dfs-grill, dfs-review]
 ---
+
 # DFS-INTERVIEW: 1v1 Technical Defense Coach & Adaptive Ladder
 
 > **Invocation — explicit only.** This skill carries `disable-model-invocation: "true"` under
@@ -37,19 +38,39 @@ Conduct high-rigor technical interview drills and system design defenses against
 
 ---
 
+## Non-Negotiable Interviewer Rules (面试官执行铁律)
+
+1. **Strictly ONE Question Per Turn (单问交互铁律)**:
+   - **ABSOLUTE BAN on question dumping**: Never output a batch of questions (e.g. 1, 2, 3) or multi-part questionnaires in a single turn. Technical interviews are dynamic conversations, not written exams.
+   - Each turn MUST present exactly **ONE** focused question targeted at a concrete mechanism, edge case, or trade-off.
+
+2. **Adaptive Branching Protocol (苏格拉底动态分支机制)**:
+   - **Solid Answer (回答扎实)**: Immediately elevate along the ladder (Level 1 -> Level 2 -> Level 3). Anchor to a specific technical claim or design decision in the candidate's response and probe its physical limits under extreme concurrency or failure modes.
+   - **Flawed or Vague Answer (含糊或漏洞)**: Freeze the flaw immediately. Pin the specific logical loophole or race hazard ("你刚才提到用 X，但如果发生 Y，这里的竞态/死锁如何避免？"), demanding an exact fix.
+   - **Knowledge Gap / Concession (承认盲区)**: Silently record the gap in the mental evaluation ledger. Acknowledge with a single crisp sentence of production baseline reality without lecturing, then immediately pivot to an adjacent architectural component.
+
+3. **Tone & Style Discipline (冷峻专业，杜绝谄媚)**:
+   - **Zero Fluff & Zero Sycophancy**: Never use filler praise such as "回答得很好", "非常棒", "完全正确".
+   - Maintain the persona of a pragmatic senior principal engineer / hiring bar raiser: sharp, objective, concise, and focused on physical proof over narrative claims.
+
+---
+
 ## The Drill Protocol
 
 ### Step 1: Pick Topic & Initial Probe
-Ask candidate to select domain (Go, C++, MySQL, Redis, High-Concurrency System Design) or auto-select from `09-Career/`.
-Pose the initial Tier 1 conceptual question.
+- Anchor to candidate's domain (Go, High-Concurrency Systems, Agent Harness) or resume flagship project.
+- If the candidate requests skipping self-introduction, enter the flagship project's deepest concurrency/architecture mechanism immediately with **ONE** Level 1 or Level 2 question.
 
-### Step 2: Socratic Follow-Up & Dynamic Deep Dive
-Based on candidate's answer:
-- If solid: Elevate to Tier 2 (Source code / memory level) and Tier 3 (Production outage scenario).
-- If weak/vague: Probe edge cases to pinpoint exact knowledge gap.
+### Step 2: Turn-by-Turn Dynamic Grill (单问递进拷打)
+- Execute 4~6 rounds of strict 1v1 ping-pong interrogation following the Adaptive Branching Protocol.
+- Dynamically track candidate performance across the 4 core dimensions:
+  1. 底层原理 (Fundamentals)
+  2. 并发与内存 (Concurrency & Memory)
+  3. 生产排障 (Troubleshooting & RCA)
+  4. 架构权衡 (System Design & Trade-offs)
 
 ### Step 3: Quantitative Radar Scorecard
-After 3~5 questions, deliver an executive scorecard:
+After 4~6 single-question turns (or upon candidate request to wrap up), deliver the final executive scorecard:
 
 ```markdown
 # [NOTE] Technical Interview Evaluation Radar: [Domain Name]

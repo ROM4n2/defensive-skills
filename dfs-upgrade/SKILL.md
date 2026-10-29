@@ -13,6 +13,8 @@ metadata:
 
 Systematically assess breaking changes, deprecation ladders, and local call-site impacts before modifying manifests, package lockfiles, or production imports.
 
+> **Detailed playbook**: this skill's long-form sections were moved to [`references/upgrade-example.md`](references/upgrade-example.md). Load it when you need the full procedure, the worked example, or the field evidence — the constraints above are self-sufficient without it.
+
 ## [MUST] The Verification-Before-Manifest Invariant (RFC 2119 MUST)
 > **NO package manifest (`package.json`, `go.mod`, `Cargo.toml`, `requirements.txt`) or lockfile shall be edited before all intermediate breaking deltas are mapped against physical codebase call sites with binary verification.**
 > Jumping major versions without auditing intermediate deprecations violates the Intermediate Hop Ladder.
@@ -114,20 +116,3 @@ Ground upstream deltas against concrete local workspace files:
 | *"We probably don't use this deleted method."* | Guesswork causes production runtime panics. | Every delta must have a physical `file:line` pointer or a zero-hit grep receipt. |
 
 ---
-
-## [NOTE] Worked Example — Upgrading a Client Library
-
-Input: *"We need to upgrade github.com/alice/httpclient from v1.3.0 to v2.1.0."*
-
-1. **Discovery**: Current `v1.3.0`, target `v2.1.0`. Intermediate span: `[v1.4.0, v2.0.0, v2.1.0]`.
-2. **Changelog Delta**:
-   - `BC-01` (`v1.4.0`): Added `httpclient.DoWithContext(ctx, req)` and deprecated `httpclient.Do(req)`.
-   - `BC-02` (`v2.0.0`): Removed `httpclient.Do(req)`. `Client` struct constructor requires options builder.
-3. **Impact Surface**:
-   - `internal/gateway/fetcher.go:34`: Uses deprecated `Do(req)` (HIGH).
-   - `pkg/auth/client.go:82`: Uses raw `Client{}` literal instead of options builder (HIGH).
-   - Zero-hit receipt: `rg 'LegacyTransport'` returned exit 1 (not used).
-4. **Hop Strategy**:
-   - Hop 1: Bump to `v1.4.0`, switch all call sites to `DoWithContext`, verify tests pass.
-   - Hop 2: Bump to `v2.1.0`, adopt options builder, verify all tests pass.
-5. **Output**: Record findings in `templates/impact-report-template.md` and hand over to `/dfs-plan`.

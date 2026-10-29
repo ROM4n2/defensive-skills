@@ -21,6 +21,8 @@ metadata:
 > here. When you need to know which harness actually honors a given frontmatter key — and what
 > to use in its place where one is ignored — read `dfs/references/harness-field-mapping.md`.
 
+> **Detailed playbook**: this skill's long-form sections were moved to [`references/archival-workflow.md`](references/archival-workflow.md). Load it when you need the full procedure, the worked example, or the field evidence — the constraints above are self-sufficient without it.
+
 ## [MUST] The Transactional Archival Invariant (RFC 2119 MUST)
 > **NO draft shall be deleted from `99-Inbox/` until its target note write is committed and verified.**
 > Always run `--dry-run` before `--execute`. Never guess destinations for ambiguous drafts.
@@ -34,41 +36,11 @@ metadata:
 
 ---
 
-## 1. 功能概述
-
-将 `99-Inbox/` 中的草稿笔记按 frontmatter tags 自动分类并归档到 Vault 正式目录。
-
-**路由规则**：
-
-| Tag 匹配 | 目标类型 | 目标路径 |
-|----------|---------|---------|
-| `lang/python`, `lang/go`, ... | dual-version | `03-Languages/{LANG}/{LANG}-STANDARDS.md` + CHEATSHEET 同步检测 |
-| `topic/git`, `topic/error-handling`, ... | rule-append | `01-Rules/{TARGET}.md` |
-| `topic/architecture`, `topic/refactoring`, ... | source-article | `06-Sources/Articles/{TITLE}.md` |
-| `topic/linguistics` + `project/delector` | project | `08-Projects/DeLector/{TITLE}.md` |
-| `category/pattern` | **pattern-card** | `01-Rules/{NAME}.md`（独立卡，命名不带日期；与 `category/rules` 并列） |
-| 无匹配 + source-notes | source-article | `06-Sources/Articles/{TITLE}.md` |
-
-> **pattern vs troubleshooting（2026-10-17 补入）**：`category/pattern` = 可复用的**成功做法**（"做对了什么"）⇒ 独立成卡；`category/troubleshooting` = 事故复盘 ⇒ **合并进对应规则的 §n**（不新建卡）。两类都晋级，别只处理事故类，否则"做法"永远失传。首张实例：`01-Rules/REFACTOR-SAFETY-NET.md`。
-
----
-
 ## 1b. 「归档目标」优先与路由对账 (MUST)
 脚本判定是**建议**不是真值：`analyze_draft()` 按 `tags` **列表顺序取首个命中**（同 tag 序列、不同归属的草稿只有一个出口），未注册 tag 则静默落 `fallback.default`（`01-Rules/CODING-UNIVERSAL.md`），**不报错**。
 - **逐篇对账 (MUST)**：`--dry-run` 后 MUST 把每篇的脚本判定与**草稿正文自述的「归档目标」**对照；不一致即走 §2c 人工落位，MUST NOT 接受脚本判定。
 - **多段 frontmatter (MUST)**：只取 canonical 段（外层），MUST NOT 把正文内重复的 YAML 段追加进规则文件。
 - **补盲区 (MUST)**：发现未注册 tag ⇒ 补 `scripts/routing.example.json`（本仓随包的示例路由表；派生你自己的 `routing.json`），再把新条目登记进你的路由加载测试（§5 冻结集合防线），补完做变异自证（删条目 ⇒ 必红）。
-
-## 2. 使用方式
-```bash
-python scripts/vault-inbox-consolidate.py --dry-run                # 预览模式 (默认)
-python scripts/vault-inbox-consolidate.py --dry-run --file <name>  # 预览单文件
-python scripts/vault-inbox-consolidate.py --execute               # 执行归档 (原子写入+原件移除)
-python scripts/vault-inbox-consolidate.py --execute --file <name>  # 执行单文件
-python scripts/vault-inbox-consolidate.py --dry-run --json        # JSON 格式输出
-```
-
----
 
 ## 2b. 单篇晋级路径 (MCP)
 
@@ -141,11 +113,3 @@ python scripts/vault-healthcheck.py
 | *"I'll modify notes in `99-Inbox/` directly without committing the transaction."* | **Broken Ingestion State**: leaving partial writes or unmanaged orphans. | Use transactional tools (`vault-inbox-consolidate.py` or `promote_inbox_draft`). |
 
 ---
-
-## 6. 关联工具
-
-- Inbox 超龄扫描：`python scripts/vault-inbox-triage.py`
-- 全库健康巡检：`python scripts/vault-healthcheck.py`
-- 规则时效闸：作者版 `vault-rule-freshness --strict`，需自备等价物（见 `scripts/README.md`）
-- Vault 结构规范：[[01-Rules/VAULT-STRUCTURE]]
-- CC Switch 管理规范：[[05-Tools/CC-SWITCH-GUIDE]]
