@@ -6,9 +6,9 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Skills-28-4B5563?style=flat-square" alt="Skills" />
-  <img src="https://img.shields.io/badge/Conformance-14%20rules-0969DA?style=flat-square" alt="Conformance rules" />
-  <img src="https://img.shields.io/badge/Tests-109%20passed-2EA44F?style=flat-square" alt="Tests" />
-  <img src="https://img.shields.io/badge/Mutation-26%2F26%20caught-2EA44F?style=flat-square" alt="Mutation harness" />
+  <img src="https://img.shields.io/badge/Conformance-15%20rules-0969DA?style=flat-square" alt="Conformance rules" />
+  <img src="https://img.shields.io/badge/Tests-115%20methods-2EA44F?style=flat-square" alt="Tests" />
+  <img src="https://img.shields.io/badge/Mutation-27%2F27%20probes-2EA44F?style=flat-square" alt="Mutation harness" />
   <img src="https://img.shields.io/badge/Dependencies-0%20(stdlib)-gray?style=flat-square" alt="Zero dependencies" />
   <img src="https://img.shields.io/badge/Python-3.11%20%7C%203.12-3776AB?style=flat-square" alt="Python" />
   <img src="https://img.shields.io/badge/License-MIT-gray?style=flat-square" alt="License MIT" />
@@ -209,11 +209,11 @@ python tests/test_shipped_assets_tracked.py # 随包资产真被 git 跟踪（�
 * **`dfs-bootstrap` Phase 3.5 已完成跨平台移植。** `dfs-bootstrap/scripts/bootstrap.py`（stdlib）一次跑完：校验并补齐 `.gitignore`、安装密钥扫描钩子（**绝不覆写**已有钩子）并设置 `core.hooksPath`、注入规则锚点、下发 `WORKMEMORY/` 四件套；幂等，`--dry-run` 可预览，模板缺失即 **exit 2** 而不是跳过。原先那版 Windows-only PowerShell 不随包（对照见 [`scripts/README.md`](scripts/README.md)）。
 * **`vault-healthcheck.py` / `vault-inbox-triage.py` 不随包。** 它们体检的是特定知识库的结构，换成别人的库天生就是错的——受影响的是 `dfs-inbox-consolidate`（即表格里唯一标为「需额外资产」的技能）。
 * **检索是加权关键词/标签打分，不是 BM25 + 图谱。** 对笔记量级的知识库足够；上万篇就该换真正的排序器（升级点写在 `mcp/knowledge_server.py` 的模块注释里）。
-* **frontmatter 遵循 Agent Skills 开放标准：官方 `skills-ref validate` 对 28 个技能 28/28 通过。** 顶层只有规范字段，厂商扩展全部收进 `metadata` 扩展槽（字符串值，列表用 block YAML）。代价也写明：`metadata.disable-model-invocation` 不再被任何 harness 当硬开关执行——7 个技能的安全意图靠文件顶部的统一横幅 + Claude Code `skillOverrides` 兜底；`metadata.platforms` 对 Hermes 的平台过滤失效（当前 24 个技能都声明全平台，零实际影响）。逐条映射见 [`dfs/references/harness-field-mapping.md`](dfs/references/harness-field-mapping.md)：哪个 harness 认哪个键、不认时用什么等效杠杆。注意 `metadata.hermes.mcp_tools` **不是任何 harness 的功能**——它是本套件自己的声明，由一致性门禁校验。
+* **frontmatter 遵循 Agent Skills 开放标准：官方 `skills-ref validate` 对 28 个技能 28/28 通过。** 顶层只有规范字段，厂商扩展全部收进 `metadata` 扩展槽（字符串值，列表用 block YAML）。代价也写明：`metadata.disable-model-invocation` 不再被任何 harness 当硬开关执行——7 个技能的安全意图靠文件顶部的统一横幅 + Claude Code `skillOverrides` 兜底；`metadata.platforms` 对 Hermes 的平台过滤失效（当前 28 个技能都声明全平台，零实际影响）。逐条映射见 [`dfs/references/harness-field-mapping.md`](dfs/references/harness-field-mapping.md)：哪个 harness 认哪个键、不认时用什么等效杠杆。注意 `metadata.hermes.mcp_tools` **不是任何 harness 的功能**——它是本套件自己的声明，由一致性门禁校验。
 * **投放箱不是知识库。** 完全没有知识库时草稿能存能列，但**归档（晋级）必须有一个知识库根**——`--execute` 在没有根时会 exit 2，而不是猜一个目标目录。这是刻意的：归档是"删原件 + 写正式目录"，目标都不能猜。
 * 仓库内含 **28 个技能**（`dfs-agent-sdk` 已移出——它是第三方语料，不随本仓库发布）；表格的「前置」列把每个技能的依赖实测标出，最轻的 9 个零前置技能装完即用。
 * **渐进式披露：三级披露全面落地（v0.4.0）。** Skill 规范推荐「`description`（始终在索引里）→ SKILL.md 正文 → `references/`＋`scripts/` 详细资料」的三级披露。本套件全面落实三级披露：28 个技能的 `description` 全部携带显式触发子句（第一级）；`SKILL.md` 正文作为第二级全面瘦身至 ≤120 行且 ≤8,500 字节，仅承载 Leading Words 核心约束与二元完成判据；长篇案例、排障手册、深入契约全量下沉至 `references/` 按需挂载（第三级，9 个高阶与核心技能已挂载 `references/`）。
-* **语言策略：英文机器面、双语 README、正文英文优先。** agent 路由时必然加载的 frontmatter（`name` / `description` / `mcp_tools`）已全英文；`SKILL.md` 正文 15/24 为纯英文，残余 **1,865 个汉字**分布在 9 个技能里（最大三处：`dfs-inbox-consolidate` 473 / `dfs` 342 / `dfs-grill` 307，其余为零星片段）——**刻意保留，不是未完工**：面板数据不参与指令，对模型理解无影响，翻译的收益远小于它带来的维护成本。提 issue / PR 用英文即可。
+* **语言策略：英文机器面、双语 README、正文英文优先。** agent 路由时必然加载的 frontmatter（`name` / `description` / `mcp_tools`）已全英文；`SKILL.md` 正文 13/28 为纯英文，残余 **4,304 个汉字**分布在 15 个技能里（最大三处：`dfs-handoff` 1,212 / `dfs-inbox-consolidate` 1,045 / `dfs-save` 545，其余为零星片段）——**刻意保留，不是未完工**：面板数据不参与指令，对模型理解无影响，翻译的收益远小于它带来的维护成本。提 issue / PR 用英文即可。
 
 ---
 
