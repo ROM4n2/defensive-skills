@@ -27,4 +27,4 @@
 ### 5. [STEP] 1-Click Continuation Prompt
 > "Resume `{project_name}` at `{next_task}`. Read `WORKMEMORY/INDEX.md` (HOT: 文件清单 + Active handoffs),
 > `work.log` tail 50; for prior work on a topic `grep -i '<关键词>' WORKMEMORY/INDEX-topics.md` (WARM,
-> 主题索引 + 蒸馏登记); then `python scripts/vault_exec_state.py resume`."
+> 主题索引 + 蒸馏登记); then, from the `dfs-handoff` Skill directory, run `python ../dfs-exec/scripts/vault_exec_state.py resume`."
