@@ -1,24 +1,36 @@
 ---
 name: dfs-pipeline
 description: Execute an end-to-end Git Worktree multi-skill pipeline. Use when a task spans several DFS skills and each stage needs an isolated worktree.
+disable-model-invocation: true
 license: MIT
 metadata:
   version: 0.2.0
   platforms: linux, macos, windows
-  disable-model-invocation: 'true'
   hermes:
-    tags: [pipeline, git-worktree, multi-skill, orchestrator, autonomous]
-    related_skills: [dfs-spark, dfs-grill, dfs-adr, dfs-plan, dfs-exec, dfs-perf, dfs-team, dfs-save, dfs-orchestrate, dfs-maintain, dfs-verify]
+    tags:
+    - pipeline
+    - git-worktree
+    - multi-skill
+    - orchestrator
+    - autonomous
+    related_skills:
+    - dfs-spark
+    - dfs-grill
+    - dfs-adr
+    - dfs-plan
+    - dfs-exec
+    - dfs-perf
+    - dfs-team
+    - dfs-save
+    - dfs-orchestrate
+    - dfs-maintain
+    - dfs-verify
 ---
 # DFS-PIPELINE: End-to-End Autonomous Engineering Pipeline
 
-> **Invocation — explicit only.** This skill carries `disable-model-invocation: "true"` under
-> `metadata`, the Agent Skills extension slot, which no harness enforces as a hard switch
-> (Claude Code honored it only at the old top-level location; Hermes never implemented it), so
-> the same rule is stated here in the file itself: do not auto-select this skill
-> on your own — wait until the user asks for it, or until an already-running DFS skill routes
-> here. When you need to know which harness actually honors a given frontmatter key — and what
-> to use in its place where one is ignored — read `dfs/references/harness-field-mapping.md`.
+> **Invocation — explicit only.** This skill carries top-level `disable-model-invocation: true`.
+> Invoke it only for an explicit end-to-end delivery request. It changes branches, worktrees,
+> implementation files, and integration state; do not auto-select it for general coding.
 
 Orchestrate the full development lifecycle with Git Worktree branch isolation, multi-subagent task dispatching (`/dfs-exec`), performance profiling, multi-expert review, and automated knowledge harvesting.
 

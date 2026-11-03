@@ -1,22 +1,20 @@
 ---
 name: dfs-bootstrap
 description: Initialize a repository with security git hooks and DFS rule anchors. Use when starting a new repo or adding DFS guardrails to an existing one.
+disable-model-invocation: true
 license: MIT
 metadata:
   version: 0.2.3
   platforms: linux, macos, windows
-  disable-model-invocation: 'true'
   hermes:
     tags: [bootstrap, git-hooks, security, pre-commit, repo-init]
     related_skills: [dfs-onboard, dfs-save, dfs-pipeline, dfs-gate]
 ---
 # DFS-BOOTSTRAP: Repository Security & Knowledge Anchoring
 
-> **Invocation — explicit only.** `disable-model-invocation: true` is honored by Claude Code and ignored
-> elsewhere, so the same rule is stated here in the file itself: do not auto-select this skill
-> on your own — wait until the user asks for it, or until an already-running DFS skill routes
-> here. When you need to know which harness actually honors a given frontmatter key — and what
-> to use in its place where one is ignored — read `dfs/references/harness-field-mapping.md`.
+> **Invocation — explicit only.** This skill carries top-level `disable-model-invocation: true`.
+> Invoke it only when the user explicitly asks for repository initialization or another DFS Skill
+> routes here. It writes repository files and security hooks; do not auto-select it for general coding.
 
 Initialize any new or existing repository (`<project-root>`) with zero-leak secret detection git hooks and 3-line Defensive Skills knowledge anchors.
 

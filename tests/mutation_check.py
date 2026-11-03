@@ -60,8 +60,8 @@ MUTATIONS = [
     ("rule_3_description_period_termination",
      "dfs-team/SKILL.md", lambda t: set_description(t, "Use when implementing a feature test-first")),
     ("rule_4_router_disable_model_invocation",
-     "dfs/SKILL.md", lambda t: re.sub(r"^  disable-model-invocation: [\"']?true[\"']?$",
-                                      "  disable-model-invocation: 'false'", t, count=1, flags=re.M)),
+     "dfs-pipeline/SKILL.md", lambda t: re.sub(r"^disable-model-invocation: [\"']?true[\"']?$",
+                                      "disable-model-invocation: 'false'", t, count=1, flags=re.M)),
     # Rule 8 needs its own mutation now that the baseline is empty: while B4 was open the gate
     # merely *expected* rule_8 to fail, which proves nothing about the check itself. The injected
     # pointer is deliberately NOT in OPTIONAL_SCRIPT_POINTERS, so it also proves the exemption list
@@ -168,7 +168,7 @@ MUTATIONS += [
     # tree ('true' / "true"), so the probe accepts both instead of silently mutating nothing.
     ("03_the_disable_model_invocation_roster_matches_reality",
      "dfs-pipeline/SKILL.md",
-     lambda t: re.sub(r"^  disable-model-invocation: [\"']true[\"']\n", "", t, count=1, flags=re.M)),
+     lambda t: re.sub(r"(?m)^disable-model-invocation:\s*(?:'true'|\"true\"|true)\r?\n", "", t, count=1)),
     # Catalogue drift, one word: every README description is re-derived from the skill's own
     # frontmatter, so a paraphrase that "reads the same" is still a lie the gate can name.
     ("02_descriptions_and_mcp_columns_match_frontmatter",
@@ -179,7 +179,7 @@ MUTATIONS += [
     ("01_table_matches_the_tree_in_both_directions",
      "README.md", lambda t: t.replace(
          "| `dfs-research` |",
-         "| `dfs-ghost` | Does not exist. Use when you want a gate to fail. | — | — | — |\n"
+         "| `dfs-ghost` | Does not exist. Use when you want a gate to fail. | No |\n"
          "| `dfs-research` |", 1)),
 ]
 

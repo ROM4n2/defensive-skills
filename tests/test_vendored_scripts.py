@@ -20,7 +20,7 @@ import unittest
 
 REPO = pathlib.Path(__file__).resolve().parents[1]
 SCRIPTS = REPO / "scripts"
-EXEC_STATE = SCRIPTS / "vault_exec_state.py"
+EXEC_STATE = REPO / "dfs-exec" / "scripts" / "vault_exec_state.py"
 CONSOLIDATE = SCRIPTS / "vault-inbox-consolidate.py"
 
 sys.path.insert(0, str(SCRIPTS))

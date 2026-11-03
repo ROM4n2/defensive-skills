@@ -114,62 +114,27 @@ def badges(doc: pathlib.Path) -> dict[str, str]:
 
 class ClaimedCounts(unittest.TestCase):
     def test_badges_match_measured_reality(self):
-        """The three count badges must equal what the tree actually contains."""
-        rules = count_rule_methods()
+        """Validation text uses measured counts without shield badges."""
         methods = count_test_methods()
         mutations = count_mutations()
-        expected = {
-            "Skills": str(len(skill_dirs())),
-            "Conformance": f"{rules}%20rules",
-            "Tests": f"{methods}%20methods",
-            "Mutation": f"{mutations}%2F{mutations}%20probes",
-        }
-        problems = []
-        for name in ("README.md", "README.en.md"):
-            found = badges(REPO / name)
-            for key, want in expected.items():
-                got = found.get(key)
-                if got != want:
-                    problems.append(f"  - {name}: badge {key!r} says {got!r}, tree measures {want!r}")
-        if problems:
-            self.fail(
-                "Badge drift — the README advertises numbers the tree does not support:\n"
-                + "\n".join(problems)
-            )
-
-    def test_language_stats_match_the_tree(self):
-        """The CJK total, the pure-English count and the skill total in the prose paragraph."""
-        total_cjk, pure_english, per = cjk_stats()
-        skills = len(per)
-        if skills != len(skill_dirs()):
-            self.fail(f"internal: cjk_stats saw {skills} skills, tree has {len(skill_dirs())}")
-
-        top3 = sorted(per.items(), key=lambda kv: -kv[1])[:3]
-        problems = []
+        skills = len(skill_dirs())
         for name in ("README.md", "README.en.md"):
             text = (REPO / name).read_text(encoding="utf-8")
-            # Thousands separators are a presentation choice ("4,304" vs "4304"), so the
-            # comparison runs on a comma-stripped copy. The DISPLAYED number is what matters,
-            # not which way it was punctuated.
-            flat = text.replace(",", "")
-            if f"{total_cjk} CJK" not in flat and f"{total_cjk} 个汉字" not in flat:
-                problems.append(
-                    f"  - {name}: CJK total not stated as {total_cjk} "
-                    f"(measured {total_cjk}; current prose says something else)"
-                )
-            for ratio in (f"{pure_english} of the {skills}", f"{pure_english}/{skills}"):
-                if ratio in text:
-                    break
+            self.assertNotIn("img.shields.io", text)
+            self.assertIn(f"{methods - 1} passed, 1 skipped", text)
+            self.assertIn(f"{skills}/28", text)
+            if name == "README.md":
+                self.assertIn(f"{mutations} 个注入缺陷全部被捕获", text)
             else:
-                problems.append(
-                    f"  - {name}: pure-English ratio not stated as "
-                    f"{pure_english}/{skills}"
-                )
-            for skill, n in top3:
-                if skill not in text:
-                    problems.append(f"  - {name}: top CJK skill {skill} ({n}) not named")
-        if problems:
-            self.fail("Language-stats drift:\n" + "\n".join(problems))
+                self.assertIn(f"All {mutations} injected defects caught", text)
+
+    def test_language_stats_match_the_tree(self):
+        """README does not carry low-value CJK or pure-English marketing metrics."""
+        for name in ("README.md", "README.en.md"):
+            text = (REPO / name).read_text(encoding="utf-8")
+            self.assertNotIn("个汉字", text)
+            self.assertNotIn("CJK characters", text)
+            self.assertNotIn("pure-English", text)
 
     def test_skill_count_claims_match_the_tree(self):
         """Claims about the WHOLE tree must equal its skill count.
@@ -202,26 +167,19 @@ class ClaimedCounts(unittest.TestCase):
             self.fail("Skill-count drift:\n" + "\n".join(problems))
 
     def test_zero_prerequisite_claim_matches_the_tier_measurement(self):
-        """Every 'N with no prerequisite' claim must equal the measured tier-A population."""
-        measured = tier_a_count()
-        patterns = [
-            ("README.md", re.compile(r"最轻的\s*(\d+)\s*个零前置")),
-            ("README.en.md", re.compile(r"(\d+)\s+with\s+no\s+prerequisite", re.I)),
-        ]
-        problems = []
-        for name, pat in patterns:
+        """The explicit-invocation roster in prose matches frontmatter."""
+        expected = {"dfs-bootstrap", "dfs-inbox-consolidate", "dfs-incident", "dfs-pipeline"}
+        measured = set()
+        for d in skill_dirs():
+            head = (d / "SKILL.md").read_text(encoding="utf-8").split("---", 2)[1]
+            if re.search(r"(?m)^disable-model-invocation:\s*true\s*$", head):
+                measured.add(d.name)
+        self.assertEqual(measured, expected)
+        for name in ("README.md", "README.en.md"):
             text = (REPO / name).read_text(encoding="utf-8")
-            found = [int(m.group(1)) for m in pat.finditer(text)]
-            if not found:
-                problems.append(f"  - {name}: zero-prerequisite claim not found")
-            for claimed in found:
-                if claimed != measured:
-                    problems.append(
-                        f"  - {name}: claims {claimed} zero-prerequisite skills, "
-                        f"tier measurement says {measured}"
-                    )
-        if problems:
-            self.fail("Tier claim drift:\n" + "\n".join(problems))
+            for skill in expected:
+                self.assertIn(f"`{skill}`", text)
+            self.assertIn("disable-model-invocation", text)
 
 
 if __name__ == "__main__":

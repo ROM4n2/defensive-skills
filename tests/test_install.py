@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """`install.py` — tier-aware installation into a harness skills directory.
 
-Drives the real CLI against a temp directory: the deliverable is what lands on disk. The tier filter
-is checked against an independent parse of the README table (the manifest), not against install.py's
-own parser, so a bug in either one shows up as a disagreement.
+Drives the real CLI against a temp directory. Tier expectations come from an independent tree
+measurement, not from README or install.py's own parser.
 """
 
+import importlib.util
 import os
 import pathlib
 import re
@@ -22,17 +22,13 @@ TREE = sorted(p.name for p in REPO.glob("dfs*") if p.is_dir())
 
 
 def readme_tiers() -> dict[str, str]:
-    """Independent parse of the prerequisite column — deliberately not install.py's regex."""
-    text = (REPO / "README.md").read_text(encoding="utf-8")
-    out = {}
-    for line in text.splitlines():
-        cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        if len(cells) < 3 or not line.strip().startswith("|"):
-            continue
-        name = cells[0].replace("**主链**", "").strip().strip("`")
-        if name in TREE:
-            out[name] = cells[2]
-    return out
+    """Independent tier measurement shared with the catalogue tests."""
+    spec = importlib.util.spec_from_file_location(
+        "_readme_table", REPO / "tests" / "test_readme_skill_table.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return {name: values["tier"] for name, values in module.skill_measurements().items()}
 
 
 def run_install(target: pathlib.Path, *args: str) -> subprocess.CompletedProcess:
@@ -52,8 +48,8 @@ class InstallTest(unittest.TestCase):
         """Anti-vacuity: if this parse found nothing, every assertion below would be meaningless."""
         tiers = readme_tiers()
         self.assertEqual(set(tiers), set(TREE), "README prerequisite column and the tree disagree")
-        self.assertEqual(sorted(set(tiers.values())), sorted(["—", "需额外资产", "需知识库"]),
-                         "unexpected prerequisite labels in README.md")
+        self.assertEqual(sorted(set(tiers.values())), ["A", "B", "C"],
+                         "unexpected prerequisite tiers in the tree measurement")
 
     def test_01_installs_every_skill_in_copy_mode(self):
         proc = run_install(self.target, "--mode", "copy")
@@ -64,7 +60,7 @@ class InstallTest(unittest.TestCase):
             self.assertTrue((self.target / name / "SKILL.md").is_file(), f"{name}/SKILL.md missing")
 
     def test_02_tier_filter_selects_exactly_the_labelled_skills(self):
-        for tier, label in (("A", "—"), ("C", "需额外资产")):
+        for tier, label in (("A", "A"), ("C", "C")):
             with self.subTest(tier=tier):
                 shutil.rmtree(self.target, ignore_errors=True)
                 expected = sorted(n for n, lab in readme_tiers().items() if lab == label)

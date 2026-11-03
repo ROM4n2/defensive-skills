@@ -477,20 +477,17 @@ class TestSkillsConformance(unittest.TestCase):
             )
 
     def test_rule_4_router_disable_model_invocation(self):
-        """Rule 4: router skill 'dfs' must carry the disable-model-invocation flag.
-
-        Since 2026-10 the flag rides in `metadata` (`disable-model-invocation: "true"`), the
-        Agent Skills extension slot, rather than a non-spec top-level key. The harness-neutral
-        enforcement is the file-top banner pinned by test_harness_field_mapping.test_06.
-        """
-        router_dirs = [d for d in self.skill_dirs if d.name == "dfs"]
-        self.assertTrue(router_dirs, "Router skill 'dfs' not found among skill directories")
-        fm, _ = parse_skill_file(router_dirs[0])
-        self.assertIs(
-            fm.get("disable-model-invocation"), True,
-            "Router skill 'dfs' must carry disable-model-invocation (metadata string \"true\" "
-            f"or the legacy top-level key), got {fm.get('disable-model-invocation')!r}",
-        )
+        """Rule 4: the explicit-invocation roster matches the current four disabled skills."""
+        expected = {"dfs-bootstrap", "dfs-inbox-consolidate", "dfs-incident", "dfs-pipeline"}
+        measured = set()
+        for sdir in self.skill_dirs:
+            fm, _ = parse_skill_file(sdir)
+            if fm.get("disable-model-invocation") is True:
+                measured.add(sdir.name)
+        self.assertEqual(measured, expected)
+        for name in ("dfs", "dfs-interview", "dfs-handoff"):
+            fm, _ = parse_skill_file(next(d for d in self.skill_dirs if d.name == name))
+            self.assertFalse(fm.get("disable-model-invocation", False), f"{name} must remain model-invocable")
 
     def test_rule_5_context_pointers_resolve_physically(self):
         """Rule 5: templates/ and references/ pointers must resolve on disk."""

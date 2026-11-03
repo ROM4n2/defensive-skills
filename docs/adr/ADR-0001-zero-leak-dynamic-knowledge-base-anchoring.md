@@ -18,7 +18,7 @@ audience: both
 ## 1. Context and Problem Statement
 When scaffolding a new or existing repository via `dfs-bootstrap`, the generator injects knowledge-base anchors into `AGENTS.md`, `CLAUDE.md`, and `WORKMEMORY/PROTOCOL.md`.
 
-Previously, `dfs-bootstrap/scripts/bootstrap.py` resolved `$WIKI_PATH` or `$OBSIDIAN_VAULT_PATH` at **scaffolding time** and baked the resolved absolute path (e.g. `D:/Obsidian/Coding/...`) directly into git-tracked files.
+Previously, `dfs-bootstrap/scripts/bootstrap.py` resolved `$WIKI_PATH` or `$OBSIDIAN_VAULT_PATH` at **scaffolding time** and baked the resolved absolute path (represented here as `{vault_root}/...`) directly into git-tracked files.
 
 This introduced critical architectural issues:
 1. **PII and Host Leakage**: Local filesystem structures, drive letters, and usernames are committed into git, violating zero-PII policies for open-source and collaborative repositories.

@@ -25,11 +25,10 @@ CHAIN = ["dfs", "dfs-plan", "dfs-exec", "dfs-debug", "dfs-save", "dfs-handoff", 
 TAXONOMY_DIRS = ["01-Rules", "03-Languages", "09-Career", "99-Inbox", "Templates/code"]
 SCRIPT_REF = re.compile(r"scripts/([A-Za-z0-9_.\-]+\.(?:py|ps1|sh))")
 ROW = re.compile(
-    r"^\|\s*(?:\*\*(?:主链|chain)\*\*\s+)?`(?P<name>dfs[a-z0-9-]*)`\s*\|(?P<desc>[^|]*)\|"
-    r"(?P<tier>[^|]*)\|(?P<mcp>[^|]*)\|(?P<assets>[^|]*)\|\s*$",
+    r"^\|\s*`(?P<name>dfs[a-z0-9-]*)`\s*\|(?P<desc>[^|]*)\|(?P<explicit>[^|]*)\|\s*$",
     re.M,
 )
-TIER_LABEL = {"A": {"—"}, "B": {"需知识库", "knowledge base"}, "C": {"需额外资产", "extra assets"}}
+EXPLICIT_ROSTER = {"dfs-bootstrap", "dfs-inbox-consolidate", "dfs-incident", "dfs-pipeline"}
 
 # Build/editor artifacts are git-ignored but still sit on disk, and this gate measures the DISK.
 # Counting them made the assertion order-dependent: one background `mypy` run left
@@ -98,6 +97,7 @@ def skill_measurements() -> dict[str, dict]:
             "mcp": mcp_tools,
             "tier": tier,
             "assets": assets,
+            "disabled": bool(re.search(r"(?m)^disable-model-invocation:\s*true\s*$", head)),
         }
     return out
 
@@ -107,9 +107,7 @@ def parse_table(readme: pathlib.Path) -> dict[str, dict]:
     for m in ROW.finditer(readme.read_text(encoding="utf-8")):
         rows[m.group("name")] = {
             "desc": m.group("desc").strip(),
-            "tier": m.group("tier").strip(),
-            "mcp": m.group("mcp").strip(),
-            "assets": m.group("assets").strip(),
+            "explicit": m.group("explicit").strip().strip("*"),
         }
     return rows
 
@@ -133,38 +131,30 @@ class ReadmeSkillTableTest(unittest.TestCase):
 
     def test_02_descriptions_and_mcp_columns_match_frontmatter(self):
         for name, row in self.zh.items():
-            with self.subTest(skill=name, column="description"):
-                self.assertEqual(row["desc"], self.measured[name]["desc"], "README description drifted from SKILL.md")
-            with self.subTest(skill=name, column="mcp"):
-                expected = ", ".join(self.measured[name]["mcp"]) or "—"
-                self.assertEqual(row["mcp"], expected, "README MCP column drifted from the declared contract")
+            self.assertEqual(row["desc"], self.measured[name]["desc"], "README description drifted from SKILL.md")
+            expected = "是" if self.measured[name]["disabled"] else "否"
+            self.assertEqual(row["explicit"], expected, f"README explicit-only flag drifted for {name}")
         for name, row in self.en.items():
             self.assertEqual(row["desc"], self.measured[name]["desc"], f"README.en.md description drifted for {name}")
+            expected = "Yes" if self.measured[name]["disabled"] else "No"
+            self.assertEqual(row["explicit"], expected, f"README.en.md explicit-only flag drifted for {name}")
 
     def test_03_prerequisite_tier_matches_measured_coupling(self):
-        for table, rows in (("README.md", self.zh), ("README.en.md", self.en)):
-            for name, row in rows.items():
-                tier = self.measured[name]["tier"]
-                self.assertIn(row["tier"], TIER_LABEL[tier],
-                              f"{table}: {name} is labelled '{row['tier']}' but measures as tier {tier}")
+        measured = {name for name, values in self.measured.items() if values["disabled"]}
+        self.assertEqual(measured, EXPLICIT_ROSTER)
 
     def test_04_asset_column_matches_the_directories(self):
-        for name, row in self.zh.items():
-            assets = self.measured[name]["assets"]
-            # fixed order, not alphabetical: the table reads tpl → refs → scripts
-            expected = " ".join(f"{k}×{assets[k]}" for k in ("tpl", "refs", "scripts") if k in assets) or "—"
-            self.assertEqual(row["assets"].split(), expected.split(),
-                             f"README asset column drifted for {name}: table={row['assets']!r} tree={expected!r}")
+        self.assertIn("| Skill | 用途 | 仅显式调用 |", (REPO / "README.md").read_text(encoding="utf-8"))
+        self.assertIn("| Skill | Purpose | Explicit only |", (REPO / "README.en.md").read_text(encoding="utf-8"))
 
     def test_05_headings_and_badge_state_the_real_count(self):
-        total, chain = len(self.tree), len(set(CHAIN) & self.tree)
+        total = len(self.tree)
         zh = (REPO / "README.md").read_text(encoding="utf-8")
         en = (REPO / "README.en.md").read_text(encoding="utf-8")
-        for text, doc in ((zh, "README.md"), (en, "README.en.md")):
-            self.assertIn(f"Skills-{total}", text, f"{doc} badge does not say {total} skills")
-            self.assertIn(str(total), text)
-        self.assertIn(f"（{total} 个 · 主链 {chain} 个）", zh, "README.md catalogue heading is stale")
-        self.assertIn(f"({total} skills · {chain} on the main chain)", en, "README.en.md heading is stale")
+        self.assertIn(f"技能清单（{total} 个）", zh)
+        self.assertIn(f"Skill catalogue ({total})", en)
+        for text in (zh, en):
+            self.assertNotIn("img.shields.io", text, "README must not carry shield badges")
 
 
     def test_06_ignored_build_artifacts_do_not_move_the_asset_count(self):
