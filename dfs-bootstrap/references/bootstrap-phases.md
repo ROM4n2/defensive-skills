@@ -4,6 +4,11 @@ Loaded on demand by `dfs-bootstrap/SKILL.md`. These sections were moved here ver
 
 ---
 
+### Phase 0: Git Initialization (MUST — 此步不得跳过)
+1. If `<project-root>` has no `.git`, run `git init`. Confirm with `git rev-parse --is-inside-work-tree` and `git symbolic-ref --short HEAD`; any failure stops the bootstrap before files or hooks are changed.
+2. Before Phase 4 commit probes, require `git config --global --get user.name` and `git config --global --get user.email` to be non-empty. If either is missing, stop and ask the user to run `git config --global user.name "<name>"` or `git config --global user.email "<email>"`; never modify global config silently.
+3. Enter Phase 1 only after repository confirmation. Dry-run describes `git init`; apply performs it.
+
 ### Phase 1: Security Git Hooks & .gitignore Protection (MUST)
 1. Verify `.gitignore` contains all sensitive patterns (list MUST stay in sync with `REQUIRED_IGNORES` in `scripts/bootstrap.py` — it is the single source of truth):
    ```gitignore

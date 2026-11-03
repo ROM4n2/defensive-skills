@@ -114,6 +114,28 @@ def resolve_vault_root(explicit: str | None) -> str | None:
     return None
 
 
+def ensure_git_repository(target: pathlib.Path, dry_run: bool) -> None:
+    """Bootstrap is project initialization: no repository means git init, never a silent skip."""
+    if (target / ".git").exists():
+        say("OK", "git repository already initialized")
+        return
+    if dry_run:
+        say("DRY", f"would run: git -C {target} init")
+        say("DRY", "would confirm the initial branch with git symbolic-ref --short HEAD")
+        return
+    proc = subprocess.run(["git", "-C", str(target), "init"], capture_output=True, text=True)
+    if proc.returncode != 0:
+        say("ERR", f"git init failed: {proc.stderr.strip()}")
+        say("ERR", f"next step: run `git -C {target} init`, then rerun bootstrap")
+        raise SystemExit(2)
+    branch = subprocess.run(["git", "-C", str(target), "symbolic-ref", "--short", "HEAD"], capture_output=True, text=True)
+    if branch.returncode != 0 or not branch.stdout.strip():
+        say("ERR", f"could not confirm the initial branch: {branch.stderr.strip()}")
+        say("ERR", f"next step: run `git -C {target} symbolic-ref --short HEAD`, then rerun bootstrap")
+        raise SystemExit(2)
+    say("GIT", f"initialized repository on branch {branch.stdout.strip()}")
+
+
 def ensure_gitignore(target: pathlib.Path, dry_run: bool) -> list[str]:
     path = target / ".gitignore"
     existing = path.read_text(encoding="utf-8", errors="replace").splitlines() if path.exists() else []
@@ -128,9 +150,6 @@ def ensure_gitignore(target: pathlib.Path, dry_run: bool) -> list[str]:
 
 
 def install_hook(target: pathlib.Path, dry_run: bool) -> None:
-    if not (target / ".git").exists():
-        say("SKIP", "not a git repository — skipping the pre-commit hook")
-        return
     if not (TEMPLATES / "githooks-pre-commit.sh").is_file():
         say("ERR", f"hook template missing: {TEMPLATES / 'githooks-pre-commit.sh'}")
         raise SystemExit(2)
@@ -293,6 +312,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         say("OK", f"knowledge base root (explicit): {vault_root}")
 
+    ensure_git_repository(target, args.dry_run)
     ensure_gitignore(target, args.dry_run)
     install_hook(target, args.dry_run)
     inject_anchors(target, vault_root, args.dry_run)
