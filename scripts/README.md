@@ -1,156 +1,65 @@
-# scripts/ — shipped engine scripts
+# Shipped scripts
 
-Four scripts are shipped here because shipped skills invoke them by path. Everything is standard
-library only, and all of them resolve the knowledge root by the same contract the MCP server uses
-(`--vault-path` / `--root` → `$WIKI_PATH` → `$OBSIDIAN_VAULT_PATH` → upward marker search).
+All shipped scripts use the Python standard library.
 
-The fifth shipped program lives with its skill instead: **`dfs-bootstrap/scripts/bootstrap.py`** —
-the cross-platform workspace bootstrap (`.gitignore` guards, secret-scanning hook, rule anchors,
-`WORKMEMORY/` scaffold). It reads the templates next to it, so it stays inside the skill directory.
-`tests/test_bootstrap_script.py` drives it against a temp repo.
+## Ledger CLI
 
-| Script | Invoked by | What it does |
+The ledger has one home: [`dfs-exec/scripts/vault_exec_state.py`](../dfs-exec/scripts/vault_exec_state.py).
+
+| Caller | Working directory | Command |
 |---|---|---|
-| `vault_exec_state.py` | `dfs-exec`, `dfs-handoff` | Persistent execution ledger (`.vault-exec-ledger.json`) with crash recovery: `init` / `start-task` / `complete-task` / `resume` / `status` / `reset` |
-| `vault-inbox-consolidate.py` | `dfs-inbox-consolidate` | Batch-classifies inbox drafts by frontmatter tag and archives them in one transaction (`--dry-run` default, `--execute` / `--apply` to commit, `--inbox <dir>` to read a queue from anywhere) |
-| `vault_transaction.py` | imported by the above | Generic multi-file atomic replace + rollback primitive (lock, SHA-256 precondition, journal, backup) — a library, no CLI |
-| `routing.example.json` | read by the consolidator | Starter tag → destination routing table. Copy it to `routing.json` and edit |
+| `dfs-exec` | `dfs-exec/` | `python scripts/vault_exec_state.py <command>` |
+| `dfs-plan` | `dfs-plan/` | `python ../dfs-exec/scripts/vault_exec_state.py <command>` |
+| `dfs-handoff` | `dfs-handoff/` | `python ../dfs-exec/scripts/vault_exec_state.py resume` |
 
-Run them against a knowledge base:
+Commands: `init`, `start-task`, `complete-task`, `resume`, `status`, and `reset`. The ledger file is `.vault-exec-ledger.json` in the selected workdir.
+
+Read-only status check:
 
 ```bash
-python scripts/vault_exec_state.py init --plan-file implementation_plan.md   # writes the ledger in cwd
-python scripts/vault-inbox-consolidate.py --vault-path <kb root> --dry-run
-python scripts/vault-inbox-consolidate.py --vault-path <kb root> --execute --json
+python dfs-exec/scripts/vault_exec_state.py --workdir <workdir> status --json
 ```
 
-`routing.json` is git-ignored. The shipped `routing.example.json` is used when it is absent, so the
-consolidator works out of the box — it will route unmatched drafts to `06-Sources/` until you edit
-it. Route types: `rule-append` (append to one rules file), `source-article` (one new note in a
-directory), `dual` (append to a STANDARDS file and flag its CHEATSHEET as stale), `project` (new
-note under a project directory).
+## Inbox archival
 
-### `--inbox`: consuming a queue that is not `<root>/99-Inbox`
-
-A drop box (see `mcp/README.md` § Root resolution) lives outside the knowledge base, so `--inbox`
-has to work from anywhere — including with no root at all:
+| Path | Purpose |
+|---|---|
+| `scripts/vault-inbox-consolidate.py` | Classify and archive drafts transactionally |
+| `scripts/vault_transaction.py` | Atomic replace, rollback, journal, and backup support |
+| `scripts/routing.example.json` | Example tag-to-destination routing table |
 
 ```bash
-# no knowledge base yet: list what is waiting, file nothing
-python scripts/vault-inbox-consolidate.py --inbox .dfs-inbox
-
-# later, with a root: file the same drafts, and remove the originals from the drop box
-python scripts/vault-inbox-consolidate.py --inbox .dfs-inbox --vault-path <kb root> --execute
+python scripts/vault-inbox-consolidate.py --vault-path <knowledge-root> --dry-run
+python scripts/vault-inbox-consolidate.py --vault-path <knowledge-root> --execute --json
 ```
 
-Three rules make that safe rather than convenient:
+Use `--inbox <dir>` for a queue outside the knowledge base. Listing works without a root; `--execute` requires one. A failed or skipped draft is not deleted, and same-run destination collisions are refused.
 
-* **Listing needs no root; filing does.** `--execute` without a resolvable root exits 2 — archiving
-  means "write a destination + delete the original", and neither end may be guessed.
-* **A named root is never second-guessed.** If `$WIKI_PATH`/`--vault-path` resolve to nothing, the
-  tool says so and exits 2. It does not silently fall back to a drop box the way the server does.
-* **The transaction's path bound is extended explicitly, not dismantled.** `stage_deletion` refuses
-  any path outside `vault_root` — except a root the *caller* declared via `VaultTransaction(...,
-  extra_roots=[...])`, which the consolidator passes only for the `--inbox` directory. Writes still
-  never leave the root. `tests/test_vendored_scripts.py::TestDeletionBounds` pins all three
-  behaviors, including the refusal, so the bound cannot be quietly relaxed.
+Copy `routing.example.json` to `routing.json` to customize routing. `routing.json` is git-ignored.
 
-### Archival semantics: a refused draft is never deleted
+## Bootstrap
 
-The consolidator files drafts in one transaction. Two rules decide what survives, and both exist
-because the alternative silently loses content:
+[`dfs-bootstrap/scripts/bootstrap.py`](../dfs-bootstrap/scripts/bootstrap.py) reads templates from its own Skill directory.
 
-- **A target collision is refused, not resolved.** Two drafts whose titles slugify to the same
-  destination (`06-Sources/WINDOWS-GBK-乱码修复.md`) would otherwise queue two writes to one path,
-  and the in-memory plan keeps only the last — the first draft's text disappearing from the inbox
-  *and* from the archive. Such a draft comes back as `action: conflict`, its original stays in the
-  inbox, and the run reports it. Rename one, or merge them by hand.
-  (An *existing* target on disk is still overwritten — that is a re-archive, and the transaction
-  snapshots the old file first. Only same-run collisions are refused.)
-- **The original is deleted only when the archival actually succeeded** (`ok` and not `skip`). A
-  failed or skipped draft keeps its file: otherwise "not archived" silently becomes "content gone".
+Behavior:
 
-### Backup retention is explicit
+- Run `git init` when `.git` is missing and confirm the initial branch. Initialization failure stops the run.
+- Install `.githooks/pre-commit` and set `core.hooksPath`; existing hooks are preserved.
+- Write `.gitignore`, anchors, and the five WORKMEMORY files without overwriting existing work.
+- Support `--dry-run`; missing templates exit 2.
 
-`vault_transaction.py` keeps a durable journal per transaction and a backup directory holding the
-original bytes of every overwritten or deleted file. The journal stays forever (it is the record,
-and holds hashes, not content); **the backup directories grow one full copy per transaction**, so
-cleaning them up is a call you make, not a default:
+## Deliberately unshipped
 
-```python
-from vault_transaction import prune_backups
-prune_backups(vault_root, keep_last=1)   # drop every backup but the newest; journals untouched
-```
-
-It is not automatic because a backup is the only copy of the original content — deleting them by
-default would quietly remove the ability to recover. `rollback()` after a prune fails loudly rather
-than raising a bare `FileNotFoundError`.
-
-## Optional integrations (deliberately NOT shipped)
-
-These are referenced by skills but are **not** in this repo, because each one inspects a knowledge
-base's own structure and would be wrong-by-default anywhere else. The conformance gate carries them
-in `OPTIONAL_SCRIPT_POINTERS` (explicit and self-invalidating — an entry that stops being referenced
-fails Rule 8), so a dangling reference can never hide behind them:
-
-| Reference | Status | What you need instead |
-|---|---|---|
-| `scripts/vault-healthcheck.py` | not shipped | A repo-wide health/structure check is knowledge-base-specific: write one for your own layout, or drop the step |
-| `scripts/vault-inbox-triage.py` | not shipped | Age-based inbox triage; the consolidator's `--dry-run` report covers the common case |
-
-The Windows-only PowerShell bootstrap that used to be a declared gap here is **no longer a gap**:
-`dfs-bootstrap` ships a cross-platform port (`dfs-bootstrap/scripts/bootstrap.py`) and no longer
-references anything outside the repo, so its entry was removed from `OPTIONAL_SCRIPT_POINTERS`
-rather than kept as a permanent exemption. That removal is what the stale-exemption check is for —
-leaving it behind would have turned a real fix into a silent mute.
-
-## Port divergences from the private vault tree
-
-The private tree is the live source for the author's own knowledge base; this repo is the public
-port. Three marks make every divergence greppable — `grep -rn "DFS-PORT\|ponytail:" scripts/ *.md`:
-
-* **`vault-inbox-consolidate.py` (2 marks)** — DFS-PORT 1/2: falls back to `routing.example.json`
-  when no local `routing.json` exists (upstream had one hardcoded path). DFS-PORT 2/2: root
-  resolution is the shared contract and fails loudly with exit 2 when nothing resolves, instead of
-  silently defaulting to `<script>/../..` and reporting "no inbox drafts" for a directory that was
-  never a knowledge base.
-* **`vault_exec_state.py`, `vault_transaction.py`** — content-identical to the private originals.
-  The repository stores LF for `*.py` (see `.gitattributes`), so a byte-level comparison against a
-  CRLF working copy differs by line endings only; verify with
-  `git show HEAD:scripts/<file> | tr -d '\r' | sha256sum`.
-* **`dfs-bootstrap/SKILL.md`, `dfs-onboard/SKILL.md`** — the vault-side `search-vault.py` CLI is
-  replaced by the `search_vault` MCP tool plus the `mcp/README.md` fallback table; both files also
-  drop a hardcoded projects-root assumption (`D:\Code\{project}`) for a neutral placeholder.
-  `dfs-bootstrap` additionally gains `scripts/bootstrap.py` + `templates/workmemory/`, which the
-  private tree does not have (it still runs the PowerShell original).
-* **`vault_transaction.py` gains `extra_roots`** — a caller-declared exception to the deletion bound,
-  needed so `--inbox <dir outside the root>` can remove the draft it just filed. Default behavior is
-  unchanged (no extra roots → the same refusal), and writes are never allowed outside the root.
-
-## Divergences introduced by the 2026-10-20 port
-
-The published tree is now the author's live suite (1 router + 27 sub-skills, all de-emoji'd to
-`[MUST]` / `[ANTI]` / `[NOTE]` / `[STEP]` / `[MAP]` markers), with the publication conventions
-re-applied. Four things deliberately differ from the private tree:
-
-* **`dfs-agent-sdk` is not published.** It is third-party documentation derived from another
-  repository (`buchidonggua/dg-ai-notes`'s `dg-piagent` skill), not this project's work, and it once
-  accounted for 90% of the repo's bytes without touching the argument this repo makes.
-* **`scripts/sync-workmemory-template.py` is not published.** It is the one-way vault → skill
-  template sync; it inspects a specific knowledge-base layout. The published
-  `dfs-bootstrap/templates/workmemory/` copies ARE the reference here, and `bootstrap.py` scaffolds
-  all five of them.
-* **`dfs-inbox-consolidate` ships `scripts/routing.example.json`**, not the author's `routing.json`:
-  the routing table encodes one knowledge base's topic taxonomy, so the shipped file is an example
-  to copy and extend. The router-loader test the private tree runs is likewise vault-side.
-* **`vault-rule-freshness` is named as a capability, not a path.** The freshness check reads a
-  specific vault's standards tree; the skill now says so instead of pointing at a file that cannot
-  resolve outside the author's machine.
+| Item | Reason |
+|---|---|
+| `scripts/vault-healthcheck.py` | Depends on one knowledge base's layout |
+| `scripts/vault-inbox-triage.py` | Depends on one knowledge base's inbox policy |
+| `scripts/sync-workmemory-template.py` | Synchronizes a private vault layout; bundled templates are the public source |
 
 ## Tests
 
 ```bash
-python tests/test_vendored_scripts.py      # ledger + transaction + archival + deletion bounds (17)
-python tests/test_bootstrap_script.py      # bootstrap.py against a temp repo: idempotency, no clobber
-python tests/test_skills_conformance.py    # 14 rules over all 28 skills, incl. these pointers
+python tests/test_vendored_scripts.py
+python tests/test_bootstrap_script.py
+python tests/test_skills_conformance.py
 ```

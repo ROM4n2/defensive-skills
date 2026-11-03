@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """Install the Defensive Skills into a harness skills directory.
 
-Tiers come from `README.md`'s catalogue table rather than a third copy of the rule: that table is
-verified against the tree by `tests/test_readme_skill_table.py`, so it is the manifest. One place
-defines what a skill depends on, and a gate keeps it true.
+Prerequisite tiers are derived from the skill tree itself, so README remains a reader guide rather
+than a machine manifest. `tests/test_readme_skill_table.py` independently applies the same rule.
 
-    python install.py --target ~/.codex/skills              # all 23
-    python install.py --target ~/.claude/skills --tier A    # only the 5 with no prerequisites
+    python install.py --target ~/.codex/skills
+    python install.py --target ~/.claude/skills --tier A
     python install.py --target ./vendor/skills --mode copy --dry-run
 
 Exit codes: 0 installed, 2 bad usage/precondition, 3 refused to overwrite.
@@ -22,29 +21,43 @@ import shutil
 import sys
 
 REPO = pathlib.Path(__file__).resolve().parent
-ROW = re.compile(
-    r"^\|\s*(?:\*\*(?:主链|chain)\*\*\s+)?`(?P<name>dfs[a-z0-9-]*)`\s*\|[^|]*\|(?P<tier>[^|]*)\|",
-    re.M,
-)
-LABEL_TO_TIER = {"—": "A", "需知识库": "B", "knowledge base": "B", "需额外资产": "C", "extra assets": "C"}
+TAXONOMY_DIRS = ("01-Rules", "03-Languages", "09-Career", "99-Inbox", "Templates/code")
+SCRIPT_REF = re.compile(r"scripts/([A-Za-z0-9_.\-]+\.(?:py|ps1|sh))")
 
 
-def tiers_from_readme() -> dict[str, str]:
-    readme = REPO / "README.md"
-    if not readme.is_file():
-        print(f"[ERR] {readme} not found — run this from a DFS checkout", file=sys.stderr)
-        raise SystemExit(2)
+def shipped_script_names() -> set[str]:
+    names = {p.name for p in (REPO / "scripts").glob("*")}
+    for d in REPO.glob("dfs*"):
+        if (d / "scripts").is_dir():
+            names |= {p.name for p in (d / "scripts").glob("*")}
+    return names
+
+
+def tiers_from_tree() -> dict[str, str]:
+    shipped = shipped_script_names()
     tiers = {}
-    for m in ROW.finditer(readme.read_text(encoding="utf-8")):
-        label = m.group("tier").strip()
-        if label not in LABEL_TO_TIER:
-            print(f"[ERR] unrecognised prerequisite label {label!r} for {m.group('name')} in README.md",
-                  file=sys.stderr)
-            raise SystemExit(2)
-        tiers[m.group("name")] = LABEL_TO_TIER[label]
+    for d in sorted(p for p in REPO.glob("dfs*") if p.is_dir()):
+        texts = {"SKILL.md": (d / "SKILL.md").read_text(encoding="utf-8", errors="replace")}
+        for sub in ("templates", "references"):
+            sub_dir = d / sub
+            if sub_dir.is_dir():
+                for f in sorted(sub_dir.rglob("*.md")):
+                    texts[f"{sub}/{f.name}"] = f.read_text(encoding="utf-8", errors="replace")
+        blob = "\n".join(texts.values())
+        head = texts["SKILL.md"].split("---", 2)[1]
+        inline = re.search(r"mcp_tools:\s*\[(.*?)\]", head, re.S)
+        block = re.search(r"(?ms)^[ \t]+mcp_tools:[ \t]*\r?\n((?:[ \t]+-[ \t]+.+(?:\r?\n|$))+)", head)
+        mcp_tools = bool((inline and inline.group(1).strip()) or block)
+        private_refs = {s for s in SCRIPT_REF.findall(blob) if s not in shipped}
+        if private_refs:
+            tier = "C"
+        elif mcp_tools or any(token in blob for token in TAXONOMY_DIRS) or "{vault_root}" in blob:
+            tier = "B"
+        else:
+            tier = "A"
+        tiers[d.name] = tier
     if len(tiers) < 20:
-        print(f"[ERR] parsed only {len(tiers)} skill rows from README.md — refusing to install a partial set",
-              file=sys.stderr)
+        print(f"[ERR] found only {len(tiers)} skills on disk — refusing to install a partial set", file=sys.stderr)
         raise SystemExit(2)
     return tiers
 
@@ -82,7 +95,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args(argv)
 
-    tiers = tiers_from_readme()
+    tiers = tiers_from_tree()
     wanted = sorted(n for n, t in tiers.items() if args.tier == "all" or t == args.tier)
     if not wanted:
         print(f"[ERR] no skills match tier {args.tier}", file=sys.stderr)
