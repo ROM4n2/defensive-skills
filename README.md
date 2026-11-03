@@ -102,7 +102,7 @@ python scripts/vault-inbox-consolidate.py --vault-path <知识库根> --dry-run
 |---|---|---|---|---|
 | **主链** `dfs` | Route developer intent to the right Defensive Skills workflow. Use when the user asks for a coding task and you must decide which dfs skill to load, or when it is unclear where to start. | 需知识库 | — | refs×6 |
 | **主链** `dfs-plan` | Draft bite-sized TDD implementation plans from specs. Use when the user asks for an implementation plan, or before writing code for a multi-step feature. | 需知识库 | omni_search, get_code_template |tpl×1 refs×1|
-| **主链** `dfs-exec` | Execute TDD plans via adaptive gear-shifting (Tier 1 Solo-Light, Tier 2 Maker-Checker, Tier 3 Critical-Swarm). Use when an implementation plan exists and the user asks to execute or implement it. | 需知识库 | — |tpl×2 refs×1|
+| **主链** `dfs-exec` | Execute TDD plans via adaptive gear-shifting (Tier 1 Solo-Light, Tier 2 Maker-Checker, Tier 3 Critical-Swarm). Use when an implementation plan exists and the user asks to execute or implement it. | 需知识库 | — |tpl×2 refs×1 scripts×1|
 | **主链** `dfs-debug` | Execute 4-step systematic root-cause debugging with a reproduction. Use when the user reports a bug, a failing test, or says something is broken. | 需知识库 | search_vault, save_inbox_draft | tpl×1 |
 | **主链** `dfs-save` | Harvest non-obvious engineering solutions into 99-Inbox drafts. Use when a debugging session or task just produced a reusable insight worth saving. | 需知识库 | search_vault, save_inbox_draft | tpl×1 |
 | **主链** `dfs-handoff` | Generate a session wrap-up and a 1-click continuation card. Use when the user wants to pause, hand off, or resume later in a fresh session. | 需知识库 | — |tpl×1 refs×1|
@@ -213,7 +213,7 @@ python tests/test_shipped_assets_tracked.py # 随包资产真被 git 跟踪（�
 * **投放箱不是知识库。** 完全没有知识库时草稿能存能列，但**归档（晋级）必须有一个知识库根**——`--execute` 在没有根时会 exit 2，而不是猜一个目标目录。这是刻意的：归档是"删原件 + 写正式目录"，目标都不能猜。
 * 仓库内含 **28 个技能**（`dfs-agent-sdk` 已移出——它是第三方语料，不随本仓库发布）；表格的「前置」列把每个技能的依赖实测标出，最轻的 9 个零前置技能装完即用。
 * **渐进式披露：三级披露全面落地（v0.4.0）。** Skill 规范推荐「`description`（始终在索引里）→ SKILL.md 正文 → `references/`＋`scripts/` 详细资料」的三级披露。本套件全面落实三级披露：28 个技能的 `description` 全部携带显式触发子句（第一级）；`SKILL.md` 正文作为第二级全面瘦身至 ≤120 行且 ≤8,500 字节，仅承载 Leading Words 核心约束与二元完成判据；长篇案例、排障手册、深入契约全量下沉至 `references/` 按需挂载（第三级，9 个高阶与核心技能已挂载 `references/`）。
-* **语言策略：英文机器面、双语 README、正文英文优先。** agent 路由时必然加载的 frontmatter（`name` / `description` / `mcp_tools`）已全英文；`SKILL.md` 正文 13/28 为纯英文，残余 **3,712 个汉字**分布在 15 个技能里（最大三处：`dfs-inbox-consolidate` 856 / `dfs-handoff` 830 / `dfs-save` 545，其余为零星片段）——**刻意保留，不是未完工**：面板数据不参与指令，对模型理解无影响，翻译的收益远小于它带来的维护成本。提 issue / PR 用英文即可。
+* **语言策略：英文机器面、双语 README、正文英文优先。** agent 路由时必然加载的 frontmatter（`name` / `description` / `mcp_tools`）已全英文；`SKILL.md` 正文 13/28 为纯英文，残余 **3,718 个汉字**分布在 15 个技能里（最大三处：`dfs-inbox-consolidate` 856 / `dfs-handoff` 830 / `dfs-save` 545，其余为零星片段）——**刻意保留，不是未完工**：面板数据不参与指令，对模型理解无影响，翻译的收益远小于它带来的维护成本。提 issue / PR 用英文即可。
 
 ---
 
