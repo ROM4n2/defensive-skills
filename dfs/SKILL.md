@@ -1,24 +1,23 @@
 ---
 name: dfs
-description: Route developer intent to the right Defensive Skills workflow. Use when the user asks for a coding task and you must decide which dfs skill to load, or when it is unclear where to start.
+description: Route developer intent to the right Defensive Skills workflow. Use only when the user explicitly asks which DFS workflow to use, how this DFS process works, or asks for help choosing a DFS skill; do not use for general coding tasks.
 license: MIT
 metadata:
   version: 0.2.0
   platforms: linux, macos, windows
-  disable-model-invocation: 'true'
   hermes:
     tags: [router, navigation, workflow, dfs]
     related_skills: [dfs-plan, dfs-exec, dfs-save, dfs-handoff, dfs-bootstrap, dfs-onboard, dfs-maintain, dfs-spark, dfs-debug]
 ---
 # Defensive Skills Master Router & Environment Detector
 
-> **Invocation — explicit only.** This skill carries `disable-model-invocation: "true"` under
-> `metadata`, the Agent Skills extension slot, which no harness enforces as a hard switch
-> (Claude Code honored it only at the old top-level location; Hermes never implemented it), so
-> the same rule is stated here in the file itself: do not auto-select this skill
-> on your own — wait until the user asks for it, or until an already-running DFS skill routes
-> here. When you need to know which harness actually honors a given frontmatter key — and what
-> to use in its place where one is ignored — read `dfs/references/harness-field-mapping.md`.
+> **Invocation — model-invocable for DFS routing questions.** Select this Skill only when
+> the user explicitly asks which DFS workflow to use, how this DFS process works, or asks for
+> help choosing a DFS skill. Do not select it for general coding tasks.
+>
+> **Hard boundary (MUST)**: this Skill only explains DFS workflows and selects a downstream
+> Skill. It MUST NOT directly create, modify, or delete business files, and it MUST NOT execute
+> the selected implementation or maintenance workflow itself.
 
 Intelligently detect workspace environment state and route developer intent to the optimal Defensive Skill.
 

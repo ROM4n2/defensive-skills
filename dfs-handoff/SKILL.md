@@ -5,7 +5,6 @@ license: MIT
 metadata:
   version: 0.3.0
   platforms: linux, macos, windows
-  disable-model-invocation: 'true'
   author: Defensive Skills contributors
   hermes:
     tags: [handoff, session-end, continuation-card, workmemory]
@@ -13,11 +12,9 @@ metadata:
 ---
 # DFS-HANDOFF: Session Wrap-up & 1-Click Agent Handoff (v3)
 
-> **Invocation — explicit only.** `disable-model-invocation: true` is honored by Claude Code and ignored
-> elsewhere, so the same rule is stated here in the file itself: do not auto-select this skill
-> on your own — wait until the user asks for it, or until an already-running DFS skill routes
-> here. When you need to know which harness actually honors a given frontmatter key — and what
-> to use in its place where one is ignored — read `dfs/references/harness-field-mapping.md`.
+> **Invocation — model-invocable for session wrap-up.** Select this Skill when the user wants
+> to pause, hand off, or resume later in a fresh session. The no-auto-maintain and no-auto-push
+> restrictions remain; write handoff artifacts only according to project conventions.
 
 Capture working state at the end of a session, land user corrections before they evaporate, harvest uncommitted learnings to `99-Inbox/`, verify clean git status, and generate a token-budgeted continuation card for the next agent session.
 

@@ -1,24 +1,29 @@
 ---
 name: dfs-incident
 description: Triage a production incident and draft a blameless postmortem. Use when a service is down, degraded, or the user asks for an incident review.
+disable-model-invocation: true
 license: MIT
 metadata:
   version: 0.2.0
   platforms: linux, macos, windows
-  disable-model-invocation: 'true'
   hermes:
-    tags: [incident-response, postmortem, sre, blameless, 5-whys, root-cause]
-    related_skills: [dfs-debug, dfs-save, dfs-team]
+    tags:
+    - incident-response
+    - postmortem
+    - sre
+    - blameless
+    - 5-whys
+    - root-cause
+    related_skills:
+    - dfs-debug
+    - dfs-save
+    - dfs-team
 ---
 # DFS-INCIDENT: Production Incident Response & Blameless Postmortem
 
-> **Invocation — explicit only.** This skill carries `disable-model-invocation: "true"` under
-> `metadata`, the Agent Skills extension slot, which no harness enforces as a hard switch
-> (Claude Code honored it only at the old top-level location; Hermes never implemented it), so
-> the same rule is stated here in the file itself: do not auto-select this skill
-> on your own — wait until the user asks for it, or until an already-running DFS skill routes
-> here. When you need to know which harness actually honors a given frontmatter key — and what
-> to use in its place where one is ignored — read `dfs/references/harness-field-mapping.md`.
+> **Invocation — explicit only.** This skill carries top-level `disable-model-invocation: true`.
+> Invoke it only for an active incident or explicit postmortem request. It can change production
+> traffic, deployment, and incident records; do not auto-select it for general coding.
 
 Coordinate rapid incident containment (mitigation before analysis), build forensic event timelines, uncover systemic root causes with 5-Whys, and archive blameless postmortems to prevent repeat failures.
 

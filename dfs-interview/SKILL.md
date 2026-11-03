@@ -5,7 +5,6 @@ license: MIT
 metadata:
   version: 0.3.0
   platforms: linux, macos, windows
-  disable-model-invocation: 'true'
   hermes:
     tags: [interview, technical-defense, socratic, system-design, drill]
     related_skills: [dfs-grill, dfs-review]
@@ -13,13 +12,11 @@ metadata:
 
 # DFS-INTERVIEW: 1v1 Technical Defense Coach & Adaptive Ladder
 
-> **Invocation — explicit only.** This skill carries `disable-model-invocation: "true"` under
-> `metadata`, the Agent Skills extension slot, which no harness enforces as a hard switch
-> (Claude Code honored it only at the old top-level location; Hermes never implemented it), so
-> the same rule is stated here in the file itself: do not auto-select this skill
-> on your own — wait until the user asks for it, or until an already-running DFS skill routes
-> here. When you need to know which harness actually honors a given frontmatter key — and what
-> to use in its place where one is ignored — read `dfs/references/harness-field-mapping.md`.
+> **Invocation — model-invocable.** This read-only, conversational Skill may be selected when
+> the user wants to rehearse explaining or defending their own work.
+>
+> **Hard boundary (MUST)**: ask exactly one focused question per turn. Never create, modify,
+> or delete files or repository state; questions, answers, and scorecards remain in conversation.
 
 Conduct high-rigor technical interview drills and system design defenses against Defensive Skills knowledge assets (`09-Career/`, `03-Languages/`, `04-Systems/`).
 

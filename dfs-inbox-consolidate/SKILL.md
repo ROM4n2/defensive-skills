@@ -1,11 +1,11 @@
 ---
 name: dfs-inbox-consolidate
 description: Classify and archive 99-Inbox drafts into DFS destinations. Use when the inbox has accumulated drafts and the user asks to file or clean them up.
+disable-model-invocation: true
 license: MIT
 metadata:
   version: 0.3.0
   platforms: linux, macos, windows
-  disable-model-invocation: 'true'
   hermes:
     mcp_tools: [promote_inbox_draft]
     tags: [inbox-processing, archival, knowledge-management, triage]
@@ -13,13 +13,9 @@ metadata:
 ---
 # DFS-INBOX-CONSOLIDATE: Inbox Draft Archival Pipeline
 
-> **Invocation — explicit only.** This skill carries `disable-model-invocation: "true"` under
-> `metadata`, the Agent Skills extension slot, which no harness enforces as a hard switch
-> (Claude Code honored it only at the old top-level location; Hermes never implemented it), so
-> the same rule is stated here in the file itself: do not auto-select this skill
-> on your own — wait until the user asks for it, or until an already-running DFS skill routes
-> here. When you need to know which harness actually honors a given frontmatter key — and what
-> to use in its place where one is ignored — read `dfs/references/harness-field-mapping.md`.
+> **Invocation — explicit only.** This skill carries top-level `disable-model-invocation: true`.
+> Invoke it only when the user explicitly asks to consolidate drafts or another DFS Skill routes
+> here. It can move and delete inbox files; do not auto-select it for general coding.
 
 > **Detailed playbook**: this skill's long-form sections were moved to [`references/archival-workflow.md`](references/archival-workflow.md). Load it when you need the full procedure, the worked example, or the field evidence — the constraints above are self-sufficient without it.
 
