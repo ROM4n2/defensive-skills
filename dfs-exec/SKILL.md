@@ -57,6 +57,8 @@ Read the `[Tier]` tag from the task header in `implementation_plan.md`:
 ---
 
 ## State Ledger CLI Integration
+From the `dfs-exec` Skill directory, require `scripts/vault_exec_state.py`. If it is missing, stop with `[ERROR] dfs-exec is missing its bundled Ledger CLI; do not fall back.`
+
 - Initialize Ledger: `python scripts/vault_exec_state.py init --plan-file implementation_plan.md`
 - Start Task: `python scripts/vault_exec_state.py start-task --task-id Task-1`
 - Complete Task: `python scripts/vault_exec_state.py complete-task --task-id Task-1 --commit <hash> --reviewer <PASS|SELF-VERIFIED>`

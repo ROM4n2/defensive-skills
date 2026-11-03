@@ -52,7 +52,7 @@ Ask: *Did this session discover any non-obvious bugs, workarounds, or reusable p
 - If no: Proceed to Phase 2.
 
 ### Phase 2: Ground-Truth State Capture
-1. Git Status & Maintenance: Run `/dfs-maintain` to prune lingering subagent worktrees, clear git locks, and re-sync repository baselines; capture `git status --short` & `git log -n 1 --oneline`.
+1. Git Status (read-only by default): capture `git status --short` & `git log -n 1 --oneline`; do not auto-route to `/dfs-maintain`. Invoke `/dfs-maintain` separately only when the user explicitly asks for cleanup.
 2. Test Evidence: Run test suite (`pytest`, `go test ./...`) and record passing count.
 3. Ledger Status: Inspect `.vault-exec-ledger.json` for remaining tasks.
 

@@ -36,7 +36,7 @@ metadata:
 ## The Loop
 
 ### 1. Partition by FILE before dispatch
-- **Exclusive ownership per file**: Measure spread, assign exclusive file ownership in plan/handoff, and serialize same-file workstreams (see `dfs-maintain`).
+- **Canonical file-occupancy contract**: Measure per-file spread, assign exclusive ownership per FILE (never per task name), publish the own/forbidden table in plan/handoff, and serialize workstreams that require the same file. Other Skills cite this contract rather than redefining it.
 - **Contract amendments**: Re-check file allocation immediately whenever follow-up scope touches new files.
 
 ### 2. Brief construction

@@ -78,7 +78,8 @@ Produce structured, deterministic implementation plans where every task includes
    - Every active task carries its Files, its Interfaces, and its Subagent Prompt Scaffold.
    - Every task left in **Fog of War** explicitly names the unknown blocking it.
 2. **Ledger Integration**:
-   - Initialize ledger: `python scripts/vault_exec_state.py init --plan-file implementation_plan.md`.
+   - **Bundled CLI precondition**: from the `dfs-plan` Skill directory, require `../dfs-exec/scripts/vault_exec_state.py` to exist and be a file. If it is missing, stop with `[ERROR] Ledger CLI not found: ../dfs-exec/scripts/vault_exec_state.py; the dfs-exec Skill is missing its bundled CLI.` Never silently fall back.
+   - Initialize ledger: `python ../dfs-exec/scripts/vault_exec_state.py init --plan-file implementation_plan.md`.
 3. **Relay to Downstream Skills**:
    - Prompt user: `Plan generated with subagent prompt scaffolds. Initialize ledger and execute with /dfs-exec?`
 4. **Checkable Completion Criterion**:

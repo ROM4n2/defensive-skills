@@ -15,7 +15,7 @@ Input spec: *"Add a ledger resume command to the execution engine."* -> `impleme
 ### Task 2: Ledger resume loader [Mode: AFK] [Role: TDD Builder]
 
 **Files:**
-- Modify: `scripts/vault_exec_state.py`
+- Modify: `../dfs-exec/scripts/vault_exec_state.py`
 - Test: `tests/test_vendored_scripts.py`
 
 **Interfaces:**

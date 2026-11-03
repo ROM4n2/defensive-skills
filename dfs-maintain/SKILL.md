@@ -17,7 +17,7 @@ Standard operating procedure for periodic repository maintenance, subagent workt
 - When asked to perform routine or periodic codebase maintenance (`常规维护`, `清理仓库`).
 - When CI/CD runs repeatedly fail due to pipeline coupling, 404 external links, or runner blocks.
 - When cleaning up accumulated `.worktrees/` and subagent branches after multi-agent workflows.
-- **Before dispatching two or more workstreams in parallel against the same repository** — the file-occupancy partition is planned here (see the Concurrent Workstream File-Occupancy Partitioning Rule), because measuring it before dispatch is what prevents same-file collisions and merge-time surprises.
+- When maintenance must account for active parallel workstreams — use `/dfs-orchestrate` for the actual file-occupancy partition, not this maintenance Skill.
 - When automated candidate PRs or abandoned branches stall scheduled discovery pipelines.
 - When synchronizing `.agent-context.md` or repository baselines after a large milestone.
 
@@ -47,7 +47,7 @@ git fetch --prune origin
 ### Step 3: Worktree Pruning & Unmerged Artifact Salvage (MUST)
 Subagents running in isolated git worktrees (`.worktrees/subagent-*`) often leave accumulated directories and unmerged branches. **Salvage before prune** — the order is the whole rule, and reversing it destroys deliverables permanently.
 
-**Concurrent Workstream File-Occupancy Partitioning Rule (do this BEFORE dispatch)**: independence of *intent* is not independence of *files*. Measure each workstream's per-file spread and assign **exclusive ownership per FILE**, never per task name; serialize the two when they genuinely need one file. A partition decided at merge time is not a partition.
+**Maintenance check (not the partition authority)**: before pruning, read the active workstream's own/forbidden file table and apply `/dfs-orchestrate`'s canonical file-occupancy contract. Verify that no live child still owns or writes files in the target worktree; if the table is missing or ownership is unclear, stop cleanup and route back to `/dfs-orchestrate`. Do not create or reassign a partition during maintenance.
 
 ```bash
 git branch --no-merged master      # 1. salvage check FIRST
@@ -71,10 +71,11 @@ When the codebase has evolved across multiple sessions, project-level context fi
 The local/CI split rule, the removed-anchor rule, and why provenance must sit next to every number are in the playbook.
 
 ### Step 5: Full Clean Baseline Verification
-Ensure the master working tree is clean and 100% green.
+Ensure the master working tree is clean and 100% green. **Push authorization gate (MUST)**: execute `git push origin master` only when the user explicitly requests a push; otherwise skip that command and continue with local verification.
 ```bash
 git status
 pnpm test  # or pytest / cargo test / go test ./...
+# Only with the user's explicit push request:
 git push origin master
 gh run watch <run-id>
 ```
@@ -91,4 +92,4 @@ Eleven rationalizations are catalogued with their hazard and guard in the playbo
 |---|---|---|
 | *"I'll force-delete all subagent branches with `git branch -D`."* | **Silent Deliverable Loss**: unmerged audit reports and findings are permanently destroyed. | Always run `git branch --no-merged master` before deleting branches. |
 | *"I'll just run `rm -rf .worktrees` without removing worktrees via git."* | **Git Index Corruption**: stale lockfiles and phantom references remain. | `git worktree remove --force` then `git worktree prune -v`. |
-| *"These workstreams are independent, so they can run in parallel as-is."* | **Same-File Collision**: logical independence says nothing about file overlap. | Measure per-file spread and assign exclusive file ownership before dispatch. |
+| *"These workstreams are independent, so they can run in parallel as-is."* | **Same-File Collision**: logical independence says nothing about file overlap. | Apply `/dfs-orchestrate`'s file-occupancy contract before dispatch; during maintenance, verify the existing table before pruning. |

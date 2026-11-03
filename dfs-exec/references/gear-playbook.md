@@ -26,6 +26,7 @@ Loaded on demand by `dfs-exec/SKILL.md`. These sections were moved here verbatim
      - Reviewer checks diff against RFC 2119 standards and returns binary verdict: `PASS` or `REVISE`.
   3. **Step 3: Atomic Git Commit & State Ledger Update**
      - `git commit -m "feat(<scope>): complete Task N"`.
+     - From the `dfs-exec` Skill directory, confirm `scripts/vault_exec_state.py` exists; if missing, stop with `[ERROR] Ledger CLI not found: scripts/vault_exec_state.py; the dfs-exec Skill is missing its bundled CLI.` Never silently fall back.
      - `python scripts/vault_exec_state.py complete-task --task-id <id> --reviewer PASS`.
 
 ---

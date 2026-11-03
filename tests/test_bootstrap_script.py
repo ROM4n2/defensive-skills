@@ -121,11 +121,16 @@ class BootstrapScriptTest(unittest.TestCase):
         self.assertIn("preserved", proc.stdout)
         self.assertIn("project gatekeeper", hook.read_text(encoding="utf-8"))
 
-    def test_07_non_git_target_skips_the_hook(self):
+    def test_07_non_git_target_is_initialized_before_hook_install(self):
         proc = run_bootstrap(self.target)
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
-        self.assertIn("not a git repository", proc.stdout)
-        self.assertFalse((self.target / ".githooks").exists())
+        self.assertIn("initialized repository on branch", proc.stdout)
+        self.assertNotIn("skipping the pre-commit hook", proc.stdout)
+        self.assertTrue((self.target / ".git").exists(), "git init did not create repository metadata")
+        self.assertTrue((self.target / ".githooks" / "pre-commit").is_file(), "hook not installed after git init")
+        cfg = subprocess.run(["git", "-C", str(self.target), "config", "core.hooksPath"],
+                             capture_output=True, text=True)
+        self.assertEqual(cfg.stdout.strip(), ".githooks")
 
     # --- phase 3/3.5/3.6: anchors + WORKMEMORY -------------------------
     def test_08_anchors_and_workmemory_are_scaffolded_once(self):

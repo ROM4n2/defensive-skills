@@ -68,7 +68,7 @@ Dispatch `/dfs-exec` inside the isolated worktree directory, tracking tasks via 
 2. Run multi-expert audit via `/dfs-team`.
 3. If `/dfs-team` outputs UNVERIFIED findings or disputed claims: Route to `/dfs-verify` to obtain physical negative-search proof and verify reachability before accepting or rejecting findings.
 4. If the pipeline uncovers a recurring defect pattern: Invoke `/dfs-gate` to convert the rule into an automated pre-commit or CI mechanical gate with mutation proof.
-5. If all P0/P1 issues resolved: Merge worktree branch to master and invoke `/dfs-maintain` to prune worktrees (inner-first), unregister git metadata, and clean repository loose objects.
+5. If all P0/P1 issues resolved: open a PR for the worktree branch and merge through that PR after required checks; never push directly to `main`/`master`. Then invoke `/dfs-maintain` to prune worktrees (inner-first), unregister git metadata, and clean repository loose objects.
 6. Call `/dfs-save` to harvest session learnings.
 - **Checkable Completion Criterion**:
   - Consensus report from `/dfs-team` free of unresolved P0/P1 blockers (all UNVERIFIED claims resolved via `/dfs-verify`); worktree merged and pruned via `/dfs-maintain`.

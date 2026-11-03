@@ -22,7 +22,10 @@ Initialize any new or existing repository (`<project-root>`) with zero-leak secr
 
 > **Detailed playbook**: this skill's long-form sections were moved to [`references/bootstrap-phases.md`](references/bootstrap-phases.md). Load it when you need the full procedure, the worked example, or the field evidence — the constraints above are self-sufficient without it.
 
-## The 4-Phase Bootstrap Protocol
+## The 5-Phase Bootstrap Protocol
+
+### Phase 0: Git Initialization (MUST — 此步不得跳过)
+Run `git init` when `.git` is missing; confirm the repository and initial branch before any write, and stop on failure. Before Phase 4 commits, require non-empty global `user.name` and `user.email`; missing values must be set by the user. Apply MUST perform initialization; dry-run only previews it. See `references/bootstrap-phases.md` for verification commands.
 
 ### Phase 1: Security Git Hooks & .gitignore Protection (MUST)
 Verify `.gitignore` covers every sensitive pattern, install `.githooks/pre-commit` from
@@ -46,7 +49,7 @@ Create/Update project-level `CLAUDE.md` and `.agent-rules.md` in repository root
 ### Phase 3.5: WORKMEMORY Scaffold & Agent Distillation (MUST)
 Run the mechanical scaffold, then distill the primer:
 
-1. Run `python3 dfs-bootstrap/scripts/bootstrap.py` (idempotent — it scaffolds `WORKMEMORY/` **5-piece set** (`INDEX.md` + **`INDEX-topics.md`** + `PROTOCOL.md` + `PROJECT_OVERVIEW.md` + `work.log`) from `Templates/workmemory/`, injects anchors, and skips existing state). `notes/` (oversized-event bodies >4KB) is created on first use — no need to pre-create.
+1. Preview with `python3 dfs-bootstrap/scripts/bootstrap.py --target <project-root> --dry-run`; after reviewing the output, apply with `python3 dfs-bootstrap/scripts/bootstrap.py --target <project-root>` (idempotent — it scaffolds `WORKMEMORY/` **5-piece set** (`INDEX.md` + **`INDEX-topics.md`** + `PROTOCOL.md` + `PROJECT_OVERVIEW.md` + `work.log`), injects anchors, and skips existing state). The script resolves `templates/` relative to its own location, so templates are read from this Skill directory. `notes/` (oversized-event bodies >4KB) is created on first use — no need to pre-create.
    - `templates/workmemory/INDEX-topics.md` is the WARM topic index the scaffold drops in alongside the hot `INDEX.md`; `notes/` is created on first use.
    - **Hot-index discipline (2026-10-17)**: `INDEX.md` is the per-session HOT layer — it MUST hold only Configuration / 文件清单 / Active handoffs. Topic index and distillation registry live in `INDEX-topics.md` (WARM, loaded on `grep` hit). Never grow `INDEX.md` with topic tables; that cost is paid by **every** new session.
    - **The embedded copies are the published source**: a published skill cannot bundle a whole knowledge base, so `dfs-bootstrap/templates/workmemory/` IS the reference here — edit it directly, and if you keep a private vault `Templates/workmemory/`, treat the vault as the copy. No sync program ships with this repo (the author's one-way sync script inspects a specific vault layout), so there is nothing to run and no drift to check.

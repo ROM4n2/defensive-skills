@@ -17,7 +17,7 @@ Standard operating procedure for periodic repository maintenance, subagent workt
 - When asked to perform routine or periodic codebase maintenance (`常规维护`, `清理仓库`).
 - When CI/CD runs repeatedly fail due to pipeline coupling, 404 external links, or runner blocks.
 - When cleaning up accumulated `.worktrees/` and subagent branches after multi-agent workflows.
-- **Before dispatching two or more workstreams in parallel against the same repository** — the file-occupancy partition is planned here (see the Concurrent Workstream File-Occupancy Partitioning Rule in Step 3), because measuring it before dispatch is what prevents same-file collisions and merge-time surprises.
+- When maintenance must account for active parallel workstreams — use `/dfs-orchestrate` for the actual file-occupancy partition, not this maintenance Skill.
 - When automated candidate PRs or abandoned branches stall scheduled discovery pipelines.
 - When synchronizing `.agent-context.md` or repository baselines after a large milestone.
 
@@ -49,8 +49,8 @@ git fetch --prune origin
 ### Step 3: Worktree Pruning & Unmerged Artifact Salvage (MUST)
 Subagents running in isolated git worktrees (`.worktrees/subagent-*`) often leave accumulated directories and unmerged branches.
 
-- **Concurrent Workstream File-Occupancy Partitioning Rule (do this BEFORE dispatch)**: independence of *intent* is not independence of *files*. Two logically unrelated workstreams routinely both need the same shared module — a giant test file, a monolith's probe suite, a shared conftest — and two worktrees editing one file produce an unmergeable branch no matter how clean each side is on its own. Before dispatching parallel workstreams, measure each one's file spread (per candidate file: `grep -rc '<token>' <dir>/ | sort -t: -k2 -rn`, plus the workstream's own declared test list) and assign **exclusive ownership per FILE**, never per task name. Then publish an explicit own/forbidden file table in every plan and in every handoff, because the subagents cannot see each other and will happily walk into each other's files. When two workstreams genuinely need one file, **serialize** them — the second dispatches only after the first is merged and its commits are present in the tree — rather than letting both edit it.
-- **Partition, do not just plan to resolve**: a partition decided at merge time is not a partition. The measurement is cheap (a few greps) and the cost of skipping it is a rebase-and-re-review cycle on work that was already signed off.
+- **File-occupancy authority**: `/dfs-orchestrate` owns the canonical contract for measuring per-file spread, assigning exclusive ownership, publishing the own/forbidden table, and serializing same-file workstreams. This playbook does not redefine that mechanism.
+- **Maintenance check before pruning**: read the active workstream's own/forbidden table and verify that no live child still owns or writes files in the target worktree. If the table is missing or ownership is unclear, stop cleanup and route back to `/dfs-orchestrate`; maintenance never creates or reassigns a partition.
 
 ```bash
 # 1. MUST check for unmerged work BEFORE deleting any branch
@@ -105,10 +105,11 @@ When the codebase has evolved across multiple sessions, project-level context fi
 3. Track project-specific gotchas in `.agents/skills/<project>-gotchas/SKILL.md` rather than polluting global cross-session memory.
 
 ### Step 5: Full Clean Baseline Verification
-Ensure the master working tree is clean and 100% green:
+Ensure the master working tree is clean and 100% green. **Push authorization gate (MUST)**: execute `git push origin master` only when the user explicitly requests a push; otherwise skip that command and continue with local verification.
 ```bash
 git status
 pnpm test  # or pytest / cargo test / go test ./...
+# Only with the user's explicit push request:
 git push origin master
 gh run watch <run-id>
 ```
@@ -131,4 +132,4 @@ gh run watch <run-id>
 | *"We merged all features, no need to update context docs."* | **Context Drift**: Future agents read stale test commands, wrong file counts, and outdated architectural constraints. | Refresh `.agent-context.md` with physical test counts captured on the current date. |
 | *"It's in a test-residue or `.bak` directory, so it's disposable junk."* | **Irreversible Data Loss**: Residue directories often hold recent development iterations or single copies of schema experiments that have not been backfilled. | Perform read-only schema and row-count comparison against canonical backups before deletion. |
 | *"Git will automatically run gc in the background when loose objects exceed the limit."* | **Unchecked Disk & Git Bloat**: On Windows/MSYS, `gc.auto` background detachment routinely fails silently or stays unconfigured, allowing loose objects to bloat unchecked. | Check `git count-objects -v` and run plain `git gc` without `--prune=now`. |
-| *"These workstreams are independent, so they can run in parallel as-is."* | **Same-File Collision**: logical independence says nothing about file overlap; two worktrees editing one shared module cannot be merged. | Measure each workstream's per-file hit spread and assign exclusive file ownership before dispatch; publish an own/forbidden table in every plan and handoff. |
+| *"These workstreams are independent, so they can run in parallel as-is."* | **Same-File Collision**: logical independence says nothing about file overlap; two worktrees editing one shared module cannot be merged. | Apply `/dfs-orchestrate`'s canonical file-occupancy contract before dispatch; before pruning, verify its own/forbidden table and confirm there are no live owners in the target worktree. |
