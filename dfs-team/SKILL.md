@@ -64,7 +64,6 @@ Dispatch the relevant specialist seats concurrently with **Strict Dynamic Prunin
 | Code Quality & Standards | `code-reviewer` | Red/Yellow cards, Ladder of Reuse, YAGNI, dead-green tests, **hardcoded secret** | — |
 | SRE & Availability | `sre-resilience` | Timeouts, retries, failure modes, resource bounds | runtime secret exposure → `code-reviewer` |
 | Codebase recon (optional) | `codebase-researcher` | Pre-flight inventory when the target scope is unclear | — |
-| Code-structure recon (optional) | `codegraph-explorer` | Call chains and impact pre-recon when the target involves "who calls X / what breaks if W changes" | — |
 
 **Checkable Completion Criterion**:
 - Active specialist seats dispatched in parallel; receipts collected with line citations and primary domain ownership.

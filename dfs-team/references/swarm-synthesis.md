@@ -68,7 +68,7 @@ second pair is a genuine shared concept, and it now has a declared owner.
 A seat reporting **outside** its Owns column is a signal: the target contains something the roster has
 no owner for. Say so, instead of letting the nearest seat absorb it.
 
-If the target scope is vague, run `codebase-researcher` first. If the target involves call-chain or impact questions, run `codegraph-explorer` first (in parallel with `codebase-researcher` when both apply), then fan out the specialists against what the recon found.
+If the target scope is vague, run `codebase-researcher` first, then fan out the specialists against what the recon found.
 
 ---
 
