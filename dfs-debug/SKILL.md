@@ -1,6 +1,6 @@
 ---
 name: dfs-debug
-description: Execute 4-step systematic root-cause debugging with a reproduction. Use when the user reports a bug, a failing test, or says something is broken.
+description: "Use when debugging a reproducible failure or stack trace."
 license: MIT
 metadata:
   version: 0.3.0
@@ -33,8 +33,9 @@ Classify the bug immediately before attempting fixes:
 
 | Track | Bug Nature | Protocol | Overhead |
 |---|---|---|:---:|
-| **Track 1: Trivial/Obvious (Fast-Path)** | Syntax errors, typos, missing imports, path formatting, config mismatches, obvious null pointers. | **Surgical Fix + Existing Test Suite**: Fix inline, run existing tests/linter to verify exit 0. **DO NOT** create ad-hoc `scratch/repro.*` scripts or pollute test suites with trivial typo tests. | ~30s |
-| **Track 2: Deep/Systematic (Full Protocol)** | Concurrency races, deadlocks, state machine corruptions, memory leaks, silent data corruptions. | **The Mandatory 4-Step Protocol**: Standalone `scratch/repro.*` reproduction, `search_vault` mapping, surgical remediation, and permanent regression test lock + A-MAC ingestion. | Deep |
+| **Track 1: Trivial** | Syntax errors, typos, missing imports, path formatting, config mismatches, obvious null pointers. | **Surgical Fix + Existing Test Suite**: Fix inline, run existing tests/linter to verify exit 0. **DO NOT** create ad-hoc `scratch/repro.*` scripts or pollute test suites with trivial typo tests. | ~30s |
+| **Track 1.5: Contract** | 缺陷能用静态断言表达：漏了某次调用、wiring 接错、模板里出现禁止的标签、路由未注册、切句后没重渲染。 | **失败测试本身就是复现**：直接写 `tests/test_<topic>.py`，跑红 → 修 → 跑绿。不建 `scratch/`，Step 1 与 Step 4 是同一个文件。 | ~5min |
+| **Track 2: Deep/Systematic** | Concurrency races, deadlocks, state machine corruptions, memory leaks, silent data corruptions. | **The Mandatory 4-Step Protocol**: Standalone `scratch/repro.*` reproduction, `search_vault` mapping, surgical remediation, and permanent regression test lock + A-MAC ingestion. | Deep |
 
 ---
 
@@ -49,6 +50,7 @@ Classify the bug immediately before attempting fixes:
 `Step 1: Evidence & Repro` -> `Step 2: Vault Search` -> `Step 3: Surgical Fix` -> `Step 4: Regression Lock`
 
 ### Step 1: Evidence & Minimal Reproduction (MUST)
+0. **先定复现的形态**（Track 1.5 判据）：如果失败能用静态断言表达——某次调用在不在、模板里有没有禁用标签、路由注册没注册——就把那条断言直接写进 `tests/test_<topic>.py`，跳过 `scratch/`。先写 `scratch/` 再在 Step 4 重写成测试，是同一份内容的两次产出，不是多一层安全。只有必须靠运行期状态才现形的缺陷，才用 `scratch/repro.<lang>`。
 1. **Exact Error Log**: Capture full stack trace, error message, and environment context.
 2. **Minimal Repro Script**: Create a standalone reproduction script in `scratch/repro.<lang>` or write a failing test. Load templates from `templates/repro-scaffold.md` via `read_file(path='templates/repro-scaffold.md')` to scaffold reproductions.
 3. **Execute & Confirm Red Repro**: Run repro script in terminal and verify it fails with the exact reported error (non-zero exit code or specific exception).
@@ -71,11 +73,11 @@ Classify the bug immediately before attempting fixes:
    - Repro script or failing test from Step 1 re-run and returns exit code 0; surrounding regression test suite remains 100% green.
 
 ### Step 4: Regression Lock & Self-Healing Ingestion (MUST)
-1. **Promote to Permanent Regression Test**: Move reproduction script into permanent unit test suite under `tests/`.
+1. **Promote to Permanent Regression Test**: Move reproduction script into permanent unit test suite under `tests/`. Track 1.5 skips this move — the failing test written in Step 1 is already the permanent lock.
 2. **Automated Self-Healing Loop (A-MAC Gate)**:
    If the bug stems from a non-intuitive root cause (concurrency race condition, unexpected API signature drift, hidden runtime trap, or memory leak):
    - Automatically compose a draft that satisfies the A-MAC gate (`dfs/references/a-mac-gate.md`), appending the Execution Receipt that this step produces.
-   - Dispatch `save_inbox_draft(title=..., content=..., tags=...)` or persist directly to `99-Inbox/YYYY-MM-DD-{kebab-topic}.md`.
+   - Dispatch `save_inbox_draft(title=..., content=..., tags=..., description=..., verified=...)` — `description` 是场景触发句，`verified` 是复核日期，两者为必填参数。
    - Announce: `[PASS] Non-intuitive pitfall self-healed: persisted to 99-Inbox/ with regression proof.`
 3. **Recurring Defect Mechanical Gate (Zero Repeat Bugs)**:
    If the root cause stems from a recurring defect pattern across the codebase (e.g. unchecked error returns, missing context timeouts, missing locks, anti-pattern file mutations), invoke `/dfs-gate` to convert the rule into an automated pre-commit or CI mechanical gate with mutation proof.

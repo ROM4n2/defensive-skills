@@ -1,6 +1,6 @@
 ---
 name: dfs-team
-description: Audit code, a design, or a plan with a multi-domain subagent swarm, then collapse the findings into a single consensus report. Use when the target spans two or more specialist domains and needs several independent expert reviews.
+description: "Use when auditing with a multi-domain expert panel."
 license: MIT
 metadata:
   version: 0.2.0

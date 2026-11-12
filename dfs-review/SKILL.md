@@ -1,6 +1,6 @@
 ---
 name: dfs-review
-description: Review a code diff against 7-language RFC 2119 DFS rules. Use when the user asks for a code review, or before merging a change.
+description: "Use when reviewing a diff against RFC 2119 rules."
 license: MIT
 metadata:
   version: 0.4.0
@@ -55,7 +55,7 @@ Conduct thorough, unsparing code review on a git diff or pull request against De
 ### Step 2 — Retrieve Applicable Language Standards
 1. **Pull Authoritative RFC 2119 Rubric**:
    - The 7-language RFC 2119 rules live in the Vault. Retrieve the current version so review never drifts out of date:
-     - `get_rule_snippet(rule, section)`: pull the specific section for each language the diff touches.
+     - `get_rule_snippet(rule, section)`: pull the specific section for each language the diff touches. **No MCP?** Read the rule file directly from the knowledge-base path the caller supplied.
      - `list_standards()`: enumerate available language standards when diff spans unfamiliar files.
    - Pass retrieved rule text to the reviewer subagent as the authoritative rubric. Never restate rules from memory.
 2. **Checkable Completion Criterion**:
@@ -75,7 +75,12 @@ Conduct thorough, unsparing code review on a git diff or pull request against De
    - **Red Card #10 & Quantity Boundaries**: Check for ratio-into-share/percent traps, bounded sinks lacking clamping, and vacuous/dead tests per [dfs-tdd/references/dead-test-and-quantity-guards.md](dfs-tdd/references/dead-test-and-quantity-guards.md).
    - **Scope creep**: anything in the diff the task did not ask for.
    - **Residual unknowns**: an explicit list of conclusions the reviewer could *not* physically verify on this host. A silent report is treated as full verification and is the one thing a reviewer must never do.
-3. **Checkable Completion Criterion**:
+3. **Multi-Round Review Lenses (多轮透镜去相关)**:
+   - **Round 1 (Artifact Lens)**: Read diff cold before author's summary; prevents sycophantic framing.
+   - **Round 2 (Execution Lens)**: Checkout worktree and physically execute tests/boundaries, verifying physical repeatability.
+   - **Round 3+ (Contract Lens)**: Re-read original task spec and previous `RED CARD` items, verifying exact item closure.
+   - **Lens Variation for Parallel Reviewers**: When dispatching concurrent reviewers via `delegate_task`, assign distinct lenses (e.g. diff-only vs checkout-and-run) rather than duplicate briefs to catch orthogonal defect classes.
+4. **Checkable Completion Criterion**:
    - Structured verdict (`RED CARD` or `CLEAN PASS`) returned with zero performative compliments.
    - Manifest attached, scope limit stated, residual-unknowns list present.
 

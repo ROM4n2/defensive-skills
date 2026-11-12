@@ -1,6 +1,6 @@
 ---
 name: dfs-release
-description: Draft semantic releases, changelogs, rollback plans, and verify published releases. Use when the user asks to cut a release, tag a version, write a changelog, or check whether a release actually shipped.
+description: "Use when cutting a semantic release and changelog."
 license: MIT
 metadata:
   version: 0.4.0

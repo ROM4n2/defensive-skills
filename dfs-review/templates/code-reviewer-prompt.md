@@ -36,18 +36,18 @@ You report findings; you do NOT fix them. Lead with the worst finding. No openin
 - **Consume, do not re-derive.** The manifest below lists what the builder's tests already prove, with quoted assertions. Re-running them to reach the same conclusion wastes the dispatch. Spend it on what tests cannot reach: Red Cards 7-10, contract breaks, scope creep.
 - **Residual unknowns (MANDATORY field)**: list every conclusion you could not physically verify on this host (no shell, no network, model not loaded). A report silent on this is read as full verification.
 
-<test_evidence_manifest>
+[Test Evidence Manifest]
 {tests_and_what_they_prove}
-</test_evidence_manifest>
+[/Test Evidence Manifest]
 
-<diff_to_review>
+[Diff Content]
 {git_diff_content}
-</diff_to_review>
+[/Diff Content]
 
-<agent_status>
+[Agent Status]
 Role: Adversarial Code Reviewer | Target: Pre-Merge Quality Gate
 Invariants: Anti-Sycophancy | Red/Yellow Card Protocol Enforced
-</agent_status>
+[/Agent Status]
 """,
     context="Adversarial Red/Yellow card code review. Return structured findings with failure scenarios.",
     toolsets=["terminal", "file"]

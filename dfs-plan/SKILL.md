@@ -1,6 +1,6 @@
 ---
 name: dfs-plan
-description: Draft bite-sized TDD implementation plans from specs. Use when the user asks for an implementation plan, or before writing code for a multi-step feature.
+description: "Use when drafting a bite-sized TDD implementation plan."
 license: MIT
 metadata:
   version: 0.3.0

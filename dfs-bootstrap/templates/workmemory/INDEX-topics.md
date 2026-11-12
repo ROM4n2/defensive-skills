@@ -1,5 +1,5 @@
-
 # WORKMEMORY INDEX-TOPICS — {{PROJECT_NAME}}（WARM 层）
+
 
 > 本文件 2026-10-17 由 `INDEX.md` 拆出：**热层 MUST 保持极小**，主题索引与蒸馏登记下沉到这里按需加载。
 > 用法：`grep -i "<关键词>" WORKMEMORY/INDEX-topics.md` → 只加载命中的 archive 分片 / vault 路径，

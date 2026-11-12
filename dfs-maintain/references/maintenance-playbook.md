@@ -23,7 +23,7 @@ Standard operating procedure for periodic repository maintenance, subagent workt
 
 ---
 
-## The 5-Step Maintenance Protocol
+## The 6-Step Maintenance Protocol
 
 ### Step 1: CI/CD Pipeline Health Audit
 Audit recent automated pipeline runs before touching files:
@@ -116,6 +116,28 @@ gh run watch <run-id>
 - **Checkable Completion Criterion**: `git status` reports working tree clean; local test suite exits 0; remote GitHub Actions CI run completes with `success`.
 - **Line-Ending Contract Check**: in repos that pin `text=auto eol=crlf` (or any explicit CRLF contract for logs/protocol files), re-verify after every programmatic edit: build the new text with explicit `\r\n` (e.g. `"\r\n".join(lines)`) or normalize with `re.sub(rb'(?<!\r)\n', b'\r\n', data)`, then assert the lone-LF count is 0 — `len([1 for i,b in enumerate(d) if b==0x0A and (i==0 or d[i-1]!=0x0D)])`. Python triple-quoted literals and shell heredocs inject LF-only newlines, so an append that looks clean silently breaks the contract; re-check, never assume.
 
+### Step 6: Terminal-Project Consolidation & Link-Aware Doc Archival (MUST)
+When a project reaches terminal delivery (submission accepted, released, or archived), collapse the branch graph and move completed phase docs into their archive tree. Both are irreversible-looking moves that fail silently if done by hand.
+
+**Branch consolidation to a single branch of record:**
+```bash
+git merge-base --is-ancestor <record> <delivery>   # record must be a pure ancestor (ff-only merge exists)
+git checkout <record> && git merge --ff-only <delivery>
+git branch --no-merged <record>                    # candidates that are NOT ancestors
+git branch -d <merged-branches>                    # safe: fully contained
+# for each --no-merged candidate: prove superseded, tag it, then delete
+git diff --quiet <branch>:<file> <record>:<file>   # empty == byte-identical (superseded)
+git tag -a archive/<name> <branch-tip> -m "<verdict/reason>"
+git tag -d <branch>                                # only after the tag exists
+```
+- **Superseded-Experiment Archive-Tag Rule**: `--no-merged` does not mean "unique work". An experiment branch is often *superseded* — its unique files are byte-identical to (or an earlier draft of) files the record branch already carries under a different path. Prove it per file with `git diff --quiet <branch>:<file> <record>:<file>` (an empty diff is the evidence), then preserve the tip as an **annotated** `archive/<name>` tag carrying the verdict, and only then `git branch -D`. A tag keeps the commits reachable via `git rev-list --all` without leaving a live branch the dispatcher will pick up. Never `-D` a genuinely-unmerged branch that carries unsalvaged deliverables.
+- **Post-Consolidation Reachability Check**: after pruning, confirm no pre-consolidation tip was lost — for every deleted branch's recorded tip sha, `git merge-base --is-ancestor <sha> <record>` must succeed or the sha must be reachable through an `archive/*` tag. Treat `git fsck` dangling objects as expected residue, not corruption.
+
+**Link-aware document archival:**
+- **Relative-Link Repoint Rule**: moving completed docs into an `archive/` subtree repoints nothing automatically; every relative markdown link in the moved files, **and** every link elsewhere that targeted them, silently breaks. Do it deterministically after the move: for each tracked `*.md`, resolve each `](target)` against its **pre-move** directory, map through the move table, re-relativize against the **new** directory, and rewrite. Skip edits whose only change is a trailing slash on a directory link (relativizing strips it and would churn unrelated links). Verify with a full-repo scan that refuses `broken != 0` — one leftover literal placeholder from before the move is the only acceptable residual, and it must be named, not hidden by the count.
+- **Byte-Level Doc Edits for CRLF/EOL Contracts**: a repo may pin `eol=lf` yet hold CRLF files in the worktree; a text-mode rewrite de-CRLFs the whole file and shows up as a whole-file diff. Edit such docs in bytes, matching each file's own EOL, and read back `bareLF == 0` — see Step 5's line-ending contract check.
+- **Generator-Owned Status Fields**: a status string inside a generated artifact (receipt JSON/MD, changelog) belongs to its emitter. Change the emitting script and re-run it; never hand-patch the output, or the next regeneration silently reverts the status to the stale value.
+
 ---
 
 ## [ANTI] Common Rationalizations & Anti-Patterns
@@ -133,3 +155,5 @@ gh run watch <run-id>
 | *"It's in a test-residue or `.bak` directory, so it's disposable junk."* | **Irreversible Data Loss**: Residue directories often hold recent development iterations or single copies of schema experiments that have not been backfilled. | Perform read-only schema and row-count comparison against canonical backups before deletion. |
 | *"Git will automatically run gc in the background when loose objects exceed the limit."* | **Unchecked Disk & Git Bloat**: On Windows/MSYS, `gc.auto` background detachment routinely fails silently or stays unconfigured, allowing loose objects to bloat unchecked. | Check `git count-objects -v` and run plain `git gc` without `--prune=now`. |
 | *"These workstreams are independent, so they can run in parallel as-is."* | **Same-File Collision**: logical independence says nothing about file overlap; two worktrees editing one shared module cannot be merged. | Apply `/dfs-orchestrate`'s canonical file-occupancy contract before dispatch; before pruning, verify its own/forbidden table and confirm there are no live owners in the target worktree. |
+| *"`--no-merged` flagged it, so it must hold unique work I have to keep."* | **Branch-Graph Bloat**: a superseded experiment branch keeps a live ref, confuses the dispatcher, and hides that its work already landed elsewhere. | Prove *superseded* with `git diff --quiet <branch>:<file> <record>:<file>` (empty == identical); if superseded, preserve the tip as an annotated `archive/<name>` tag, then `git branch -D`. |
+| *"I'll just hand-edit the status string in the generated receipt."* | **Silent Status Revert**: the next regeneration restores the old value and the hand-edit vanishes with no error. | Change the *emitting script* and re-run it; never patch generated output. |

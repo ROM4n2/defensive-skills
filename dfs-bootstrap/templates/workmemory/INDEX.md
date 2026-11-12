@@ -1,5 +1,5 @@
-
 # WORKMEMORY INDEX — {{PROJECT_NAME}}
+
 
 > **本文件是 HOT 索引，MUST 保持极小**——只放：配置 / 文件清单 / Active handoffs / 已归档 handoffs。
 > 主题索引与蒸馏登记**不在这里** ⇒ 见 `INDEX-topics.md`（WARM 层，`grep` 命中才加载）。

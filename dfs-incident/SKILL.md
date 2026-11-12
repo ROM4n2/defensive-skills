@@ -18,12 +18,16 @@ metadata:
     - dfs-debug
     - dfs-save
     - dfs-team
+    - dfs-gate
 ---
+
+
 # DFS-INCIDENT: Production Incident Response & Blameless Postmortem
 
-> **Invocation — explicit only.** This skill carries top-level `disable-model-invocation: true`.
-> Invoke it only for an active incident or explicit postmortem request. It can change production
-> traffic, deployment, and incident records; do not auto-select it for general coding.
+> **Invocation — explicit only.** This skill carries top-level `disable-model-invocation: true`,
+> which the current Trae harness reads. The restriction remains: do not auto-select this skill;
+> wait until the user asks for it, or until an already-running DFS skill routes here. Other
+> harnesses may ignore the field — read `dfs/references/harness-field-mapping.md`.
 
 Coordinate rapid incident containment (mitigation before analysis), build forensic event timelines, uncover systemic root causes with 5-Whys, and archive blameless postmortems to prevent repeat failures.
 

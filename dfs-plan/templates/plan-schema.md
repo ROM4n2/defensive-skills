@@ -34,6 +34,12 @@ Every generated `implementation_plan.md` MUST adhere strictly to the following s
 - Consumes: `func ExistingHelper(ctx context.Context) (Data, error)`
 - Produces: `func NewService(cfg Config) (*Service, error)`
 
+**SSOT Effect:** *(MANDATORY when the task emits or consumes any number that reaches a figure, table, report or PDF; write `—` only for tasks that touch no numeric output)*
+- Reads: `data/results_summary.json#task1_underwriting.Florida_USA.stackelberg.optimal_discount_delta`
+- Writes: `data/results_summary.json#task4_st_marks.bcr`
+- Params read: `PARAMS["discount_rate"]`
+- Hardcoded-literal exemption: `none | <whitelisted pattern + justification>`
+
 **Injected Instincts (Compile-Time Rule Injection):**
 - [ ] `[Instinct: Concurrency]`: Pass `context.Context` down call chains; verify zero Goroutine leaks with `-race`.
 - [ ] `[Instinct: Zero-Lock DDL]`: (If touching SQL) Follow Expand/Contract ladder; run `scripts/ddl_lint.py`.

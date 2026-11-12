@@ -1,14 +1,23 @@
 ---
 name: dfs-onboard
-description: Rapidly orient an AI agent to develop on an existing codebase. Use when entering an unfamiliar repo and you need to map how it works before editing.
+description: "Use when onboarding an agent to an unfamiliar codebase."
 license: MIT
 metadata:
-  version: 0.3.0
+  version: 0.3.1
   platforms: linux, macos, windows
   hermes:
-    tags: [onboarding, codebase-discovery, architecture-mapping, baseline-testing]
-    related_skills: [dfs-bootstrap, dfs-tdd]
+    tags:
+    - onboarding
+    - codebase-discovery
+    - architecture-mapping
+    - baseline-testing
+    related_skills:
+    - dfs-bootstrap
+    - dfs-tdd
+    - dfs-plan
 ---
+
+
 # DFS-ONBOARD: Codebase Takeover & Context Anchor
 
 Quickly orient an AI Agent on an unfamiliar or existing repository (`<your projects root>/{project}`) to establish immediate development readiness with verified test baselines and architecture invariants.
@@ -17,15 +26,15 @@ Quickly orient an AI Agent on an unfamiliar or existing repository (`<your proje
 
 ### Phase 1: Ground Truth Baseline & Verification Commands (MUST)
 1. **Identify Build & Test Tooling**:
-   - Go: `go test ./...`
-   - Python: `pytest`
+   - Go: `go test ./...` (or `(cd <subservice> && go test ./...)` if `go.mod` is in a subfolder)
+   - Python: `pytest` (or `PYTHONPATH=<subservice> python3 -m pytest <subservice>` if modules aren't installed into root venv)
    - Rust: `cargo test`
    - TypeScript/Node: `npm test` or `pnpm test`
    - C/C++: `ctest` or `make test`
 2. **Execute Baseline Test Suite**:
    Run the test command immediately in terminal:
    - Record exact passing test count (e.g. `[PASS] 124 passed in 2.3s`).
-   - If pre-existing failures occur: Record them as **Pre-Existing Broken Baselines** to prevent blaming subsequent changes.
+   - If pre-existing failures occur: Verify execution path / `PYTHONPATH` before classifying them as **Pre-Existing Broken Baselines**.
    - **Shared-workdir guard (multi-agent repos)**: run `git branch --show-current` right before and after the baseline; another session's `checkout -b` can switch the tree mid-run and silently invalidate the baseline.
 
 ---
@@ -78,7 +87,7 @@ Write `.agent-context.md` in project root:
   (DFS-PORT: the private vault-side `search-vault.py` CLI is not shipped with this repo)
 ```
 
-**Pre-generation guard (MUST)**: check the repo first — if `.agent-context.md` was deliberately removed before (e.g. it duplicated `AGENTS.md` / a shared-memory directory), or the repo documents an equivalent machine-readable anchor, **do NOT recreate it**; follow the repo's existing convention and note the substitution in your handoff.
+**Pre-generation guard (MUST)**: check the repo first — if `.agent-context.md` was deliberately removed before (e.g. it duplicated `AGENTS.md` / a shared-memory directory), or the repo documents an equivalent machine-readable anchor (e.g. gitignored `AGENTS.md` / `CLAUDE.md` / `WORKMEMORY`), **do NOT recreate it**; follow the repo's existing convention, refresh the existing anchors in-place, and note the substitution in your handoff.
 
 Prompt human partner: `Codebase onboarded. Test baseline verified ({pass_count} passed). Ready to develop?`
 ---
@@ -106,3 +115,4 @@ When an invariants/anchor file already exists, the second onboarding is a **diff
 | *"I will infer the project architecture from memory without running tests."* | **Ground-Truth Drift**: Assumptions about outdated dependencies or broken build environments lead to broken plans. | Run existing build and test commands immediately; capture authentic baseline passing counts before writing code. |
 | *"I'll explore the whole repository deeply before answering the user."* | **Context Bloat & Token Depletion**: Indiscriminate deep reads consume context without producing actionable value. | Follow the 3-phase rapid onboarding ladder: identify framework, read entry points, run test suite, and record in `.agent-context.md`. |
 | *"If .agent-context.md was deleted before, I should recreate it anyway."* | **Repository Convention Violation**: Recreating intentionally pruned or substituted files creates duplicate drift. | Follow the Pre-generation Guard: if `.agent-context.md` was deliberately removed or substituted, follow existing conventions. |
+| *"I ran pytest from repo root and it failed with ModuleNotFoundError, so the baseline is broken."* | **False-Positive Baseline Failure**: In monorepos, subprojects expect `PYTHONPATH=<service>` or execution within their subfolder. | Always check package layout before recording broken baselines. |

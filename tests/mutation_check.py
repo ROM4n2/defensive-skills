@@ -172,8 +172,8 @@ MUTATIONS += [
     # Catalogue drift, one word: every README description is re-derived from the skill's own
     # frontmatter, so a paraphrase that "reads the same" is still a lie the gate can name.
     ("02_descriptions_and_mcp_columns_match_frontmatter",
-     "README.md", lambda t: t.replace("or check whether a release actually shipped.",
-                                      "or check whether a release shipped.", 1)),
+     "README.md", lambda t: t.replace("Use when cutting a semantic release and changelog.",
+                                      "Use when cutting a semantic release.", 1)),
     # Catalogue drift, one entry: a row with no skill behind it. A phantom row is a promise to the
     # reader that `install.py` cannot keep.
     ("01_table_matches_the_tree_in_both_directions",

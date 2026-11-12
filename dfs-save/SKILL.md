@@ -1,79 +1,63 @@
 ---
 name: dfs-save
-description: Harvest non-obvious engineering solutions into 99-Inbox drafts. Use when a debugging session or task just produced a reusable insight worth saving.
+description: "Use when harvesting a reusable insight into the vault."
 license: MIT
 metadata:
-  version: 0.2.0
+  version: 0.3.0
   platforms: linux, macos, windows
   hermes:
-    tags: [knowledge-harvesting, inbox, a-mac, karpathy-mode, learnings]
-    related_skills: [dfs-inbox-consolidate, dfs-handoff]
-    mcp_tools: [search_vault, save_inbox_draft]
+    tags:
+    - knowledge-harvesting
+    - inbox
+    - a-mac
+    - dedup-gate
+    related_skills:
+    - dfs-inbox-consolidate
+    - dfs-handoff
+    - dfs-debug
+    mcp_tools:
+    - save_inbox_draft
+    - search_vault
 ---
-# DFS-SAVE: Karpathy-Mode Knowledge Harvester & Ingestion Gate
 
-Harvest non-obvious engineering solutions, environment gotchas, and architectural patterns discovered during coding sessions into `99-Inbox/` with **pre-save deduplication check** and **A-MAC quality validation**.
+# DFS-SAVE — 沉淀闸门
 
-## [MUST] The A-MAC Ingestion Invariant (RFC 2119 MUST)
-> **NO draft shall be persisted to `99-Inbox/` without passing the pre-save similarity check and the A-MAC Quality Gate.**
-> Trivial one-off fixes (e.g. typos, single-line syntax fixes) fail A-MAC and MUST NOT be saved.
+一道闸门定生死：过了就落盘，过不了就扔掉。本 skill 只做一件事——把会话里非直觉的收获压成一张 `99-Inbox/` 草稿。
+## [MUST] 两条闸门
 
----
+> **去重闸门**：没跑 `find_similar_drafts(...)` 拿到裁决，不得落盘。
+> **结构闸门**：四节缺一不得落盘；typo、单行语法修复、一次性调试记录一律不落盘。
 
-## [NOTE] This skill, or `/dfs-inbox-consolidate` / `/dfs-handoff`?
+## Step 1 — 分流：这次做对了什么？
 
-| | this skill | `/dfs-inbox-consolidate` | `/dfs-handoff` |
+先定分支，再动笔：
+
+| 分支 | 判据 | tags | 归档目标写法 |
 |---|---|---|---|
-| The ask | **harvest** — capture a single discovered insight | **consolidate** — batch-classify inbox drafts into Vault | **handoff** — wrap up active session state |
-| Output | a new `99-Inbox/` draft note | filed notes in `01-Rules/`, `03-Languages/`, etc. | a continuation card |
-| Feeds | `99-Inbox/` | knowledge vault destinations | next session |
+| **pattern**（做对了什么） | 可复用的做法/模式，下次还想照做 | `category/pattern` | `新增 <规则> §n` |
+| **troubleshooting**（踩了什么坑） | 事故复盘、失败根因 | `category/troubleshooting` | `并入 <规则> §n（补实例，勿另立新规）` |
 
----
+每会话至少自问一次「哪一步**做对了**」。只收事故 = 做法永远失传。
 
-## The 3-Step Harvesting Workflow
+**完成判据**：分支已定，且写出「归档目标」一句话——没有归属的草稿是悬空知识。
 
-```
-  [Step 1: Novelty Check & Similarity Search (search_vault)]
-                               │
-                               ▼
-  [Step 2: A-MAC Quality Gate & Structured Draft Composition]
-                               │
-                               ▼
-  [Step 3: Call MCP Tool & Persist Physical Receipt]
+## Step 2 — 去重闸门：`find_similar_drafts`
+
+```text
+find_similar_drafts(title="<拟用标题>", content="<拟用正文>")
 ```
 
-### Step 1: Novelty & Similarity Check
-1. **Pre-Save Deduplication Check**:
-   - Query `search_vault(query="<topic_keywords>")` before composing a draft.
-   - If an existing note addresses the identical problem with >70% similarity, propose appending to or updating the existing note instead of creating a duplicate draft.
-2. **Checkable Completion Criterion**:
-   - `search_vault` has executed and returned results; similarity is verified <70%, or explicit user agreement to update existing note is recorded.
+返回二元裁决 + 相似度（0.6×标题覆盖 + 0.4×正文 Jaccard）。按裁决走：
 
-### Step 2: Compose Draft File
-1. **A-MAC Quality Gate Evaluation**:
-   - The field schema lives in `dfs/references/a-mac-gate.md`. Reject trivial one-off bug fixes.
-   - Load the draft structure specification via `read_file(path='templates/draft-template.md')`.
-2. **Required Document Structure**:
-   - **Frontmatter**: Valid YAML with `created: YYYY-MM-DD`, `type: source-notes`, `status: draft`, `tags: [...]`, and `source: "..."`.
-   - **1. 现象与成因分析 (Symptom & Root Cause)**: Deceptive symptoms, broken state, and true root cause.
-   - **2. 终极解决方案 (Permanent Solution & Code)**: Minimal, clean, reproducible code fix.
-   - **3. 防御性工程规范 (Defensive Rule)**: Universal rule to prevent recurrence in other projects.
-   - **4. 确定性评估信号 (Deterministic Evaluation Signals)**: Tool results count, error receipts, and environment state checks.
-3. **Checkable Completion Criterion**:
-   - Draft content adheres to `templates/draft-template.md`, includes all 4 mandatory sections, and has zero unpopulated placeholders.
+| verdict | 动作 |
+|---|---|
+| `DUPLICATE`（≥0.70） | 合并进已有笔记，**不新建**。确需独立卡时，把用户同意的原话记进草稿正文。 |
+| `NEAR_DUPLICATE`（0.45~0.70） | 读那篇笔记：同一问题则合并；不同则在正文写明与它的**边界差异**。 |
+| `NOVEL`（<0.45） | 新建。 |
 
-### Step 2b: 草稿类型判定 — **成功做法也要沉淀**（2026-10-17 补入）
+要同时看库里已有结论文本，再补一次 `search_vault(query="<主题词>")`——它答的是「已有结论是什么」，不是「是否重复」。
 
-1. **判定这是 pattern 还是 troubleshooting**：
-   - **pattern（做对了什么）**：可复用的**做法/模式**（如"重构前先立双向对账安全网 + 逐切片扫查"）⇒ tags 加 `category/pattern`，`type: pattern`，路由 `01-Rules/`（独立卡，命名不带日期）。
-   - **troubleshooting（踩了什么坑）**：事故复盘/失败根因 ⇒ `category/troubleshooting`，通常**合并进对应规则的 §n** 而非新建卡。
-   - [NOTE] **只沉淀事故是缺口**：多数会话的草稿全是事故驱动，导致"做法"永远失传。Ask 自己："这次有哪一步**做对了**、下次还想照做？"有 ⇒ 立 pattern 卡。
-2. **Frontmatter 必带（在既有字段之外）**：
-   - `description: "<一句话触发条件：什么场景该读本条>"` —— 用于相关性过滤，**MUST NOT** 写成标题复述。
-   - `verified: YYYY-MM-DD` —— 最近一次人工复核日期（与 `updated` 不同：改错别字不算复核）。
-   - 正文**必须写明「归档目标」**：`并入 <规则> §n（补实例，勿另立新规）` 或 `新增 <规则> §n`。没有归档目标的草稿是悬空知识。
-3. **Checkable Completion Criterion**：
-   - 已判定 pattern/troubleshooting、frontmatter 含 `description` + `verified`、正文含归档目标。
+**边界（别把闸门当作全库保证）**：比对粒度是**文档级**（文档 frontmatter 标题 + 正文 Jaccard）。已被并入某条大规则 §n 的内容，查不到标题级重复——那一段的重复由 `/dfs-inbox-consolidate` 在归档时判。本闸门守的是"再写一张重复草稿"。
 
 ### Step 3: Call MCP Tool & Persist Physical Receipt
 1. **Persist Draft**:
@@ -89,16 +73,47 @@ Harvest non-obvious engineering solutions, environment gotchas, and architectura
    - MCP call returns success with absolute path printed in terminal output.
    - 落盘文件的 frontmatter YAML 可解析且 8 个必备键齐全（物理回读，非工具自报）。
 
----
 
-## [ANTI] Common Rationalizations & Anti-Patterns
+## Step 3 — 结构闸门：四节 + 触发句
 
-| Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
+正文四节，缺一即退回（结构见 `templates/draft-template.md`）：
+
+1. **现象与成因分析** — 症状、误导性归因（含被排除的错误假设）、真根因。
+2. **终极解决方案** — 最小可复现代码/命令。
+3. **防御性工程规范** — 一条能迁移到其他项目的规则，附判据。
+4. **确定性评估信号** — 工具调用次数、错误回执原文、环境状态。
+
+`description` 是**触发句**，回答「什么场景该读这条」，不是标题复述：
+- 好：`当正文每句都被强制另起一行、或行内流被莫名断开时读这条。`
+- 坏：`HTML5 Phrasing Content 陷阱` —— 这是主题，检索不到场景。
+
+**完成判据**：四节齐全、无未填占位符、`description` 写的是场景而非主题。
+
+
+## Step 4 — 落盘并取回执
+
+```text
+save_inbox_draft(
+  title="...", content="...", tags=["category/pattern", "topic/..."],
+  source="Session Discovery (<项目/PR 线索>)",
+  description="<场景触发句>", verified="YYYY-MM-DD"
+)
+```
+
+- `content` **不带** YAML frontmatter：工具负责生成，以 `---` 开头会被直接拒写。
+- `description` / `verified` 是**参数**，不写进正文。工具把它们写进 frontmatter，写入前用 `yaml.safe_load` 自检必备键，失败则拒写。
+
+**完成判据**（物理回读，不信工具自报）：`read_file` 前 12 行，`yaml.safe_load` 后 `{title, created, type, status, tags, source, description, verified}` 齐全。
+通过后向用户报：`[PASS] Knowledge harvested and persisted to 99-Inbox/ (passed A-MAC gate).`
+
+
+## [ANTI]
+
+| 借口 | 危害 | 守卫 |
 |---|---|---|
-| *"Fixed a typo in line 12, let me create an inbox draft."* | **Inbox Noise Pollution**: diluting vault value with trivial churn. | Reject trivial fixes at the A-MAC gate; only harvest non-obvious, reusable learnings. |
-| *"I already know this is a novel solution, so I can skip search_vault."* | **Fragmented Duplication**: duplicate notes drift out of sync across the vault. | Mandatory pre-save `search_vault` execution before drafting. |
-| *"I'll write free-form text without YAML frontmatter."* | **Ingestion Failure**: `dfs-inbox-consolidate` fails to parse or route unstructured notes. | Frontmatter MUST include `created`, `type: source-notes`, `status: draft`, and taxonomy `tags`. |
-| *"I'll invent new ad-hoc tags."* | **Taxonomy Drift**: orphaned tags that match no consolidation routing rules. | Align tags with existing vault taxonomy (`category/*`, `topic/*`, `tool/*`). |
-| *"Only the bug/failure is worth saving; the thing that went right is obvious."* | **Practice Amnesia**: 可复用的成功做法从不入库，每次都从事故重新学。 | 每会话至少自问一次"哪一步做对了"；是 ⇒ 立 `category/pattern` 卡。 |
-| *"归档时再想放哪，草稿里先不写。"* | **Stranded Knowledge**: 草稿没有归属，晋级时被猜路由或长期滞留 Inbox。 | 正文 MUST 写「归档目标」：并入 `X §n`（补实例）或新增 `X §n`。 |
-| *"I'll skip description/verified; the title is enough."* | **Retrieval Miss & Silent Staleness**: 后续检索靠标题碰运气；旧结论没有失效机制（曾出现"登记表挂着待修、其实早已落地"把两个 agent 带偏一整轮的 A4 类事故）。 | Frontmatter MUST 带 `description`（触发句）与 `verified`（复核日期）。 |
+| 「改了个 typo，建个卡吧」 | Inbox 噪声稀释库价值 | 过不了结构闸门；只收非直觉、可迁移的收获 |
+| 「我确信这是新的，跳过去重」 | 重复笔记各自漂移 | 去重闸门先于动笔，verdict 是硬证据 |
+| 「标题够说明一切，description 随便填」 | 检索靠碰运气 | `description` 必须是场景触发句；标题复述被拒写 |
+| 「只记 bug 就行，做对的部分是常识」 | 做法失传，每次都从事故重学 | 每会话至少产出一张 `category/pattern` |
+| 「放哪等晋级时再想」 | 草稿长期滞留 Inbox | 正文 MUST 写归档目标 `并入 X §n` / `新增 X §n` |
+| 「工具没写 description，保存后再 patch 回去」 | 补丁漏一次就永久缺字段 | 字段走参数，拒写而非事后修补 |

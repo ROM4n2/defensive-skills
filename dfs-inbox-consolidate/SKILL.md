@@ -1,9 +1,9 @@
 ---
 name: dfs-inbox-consolidate
-description: Classify and archive 99-Inbox drafts into DFS destinations. Use when the inbox has accumulated drafts and the user asks to file or clean them up.
-disable-model-invocation: true
+description: "Use when routing 99-Inbox drafts to their homes."
 license: MIT
 metadata:
+disable-model-invocation: true
   version: 0.3.0
   platforms: linux, macos, windows
   hermes:
@@ -13,9 +13,10 @@ metadata:
 ---
 # DFS-INBOX-CONSOLIDATE: Inbox Draft Archival Pipeline
 
-> **Invocation — explicit only.** This skill carries top-level `disable-model-invocation: true`.
-> Invoke it only when the user explicitly asks to consolidate drafts or another DFS Skill routes
-> here. It can move and delete inbox files; do not auto-select it for general coding.
+> **Invocation — explicit only.** This skill carries top-level `disable-model-invocation: true`,
+> which the current Trae harness reads. The restriction remains: do not auto-select this skill;
+> wait until the user asks for it, or until an already-running DFS skill routes here. Other
+> harnesses may ignore the field — read `dfs/references/harness-field-mapping.md`.
 
 > **Detailed playbook**: this skill's long-form sections were moved to [`references/archival-workflow.md`](references/archival-workflow.md). Load it when you need the full procedure, the worked example, or the field evidence — the constraints above are self-sufficient without it.
 
@@ -25,10 +26,8 @@ metadata:
 
 ---
 
-## Scope Detection (MUST - 执行前第一步)
-在任何操作前，先解析当前 Vault 根目录（遵循 Tier 1 环境变量 `$WIKI_PATH` / `$OBSIDIAN_VAULT_PATH` 或向父目录上溯探测 `AGENTS.md`）。
-- **检测到 Vault**: 执行脚本为 `{vault_root}/scripts/vault-inbox-consolidate.py`
-- **未检测到 Vault**: 报错退出，严禁盲目执行归档
+## Execution Path (MUST)
+Run `{vault_root}/scripts/vault-inbox-consolidate.py` with `{vault_root}` supplied by `$WIKI_PATH`. Always use the transactional dry-run/execute flow below.
 
 ---
 
@@ -36,7 +35,7 @@ metadata:
 脚本判定是**建议**不是真值：`analyze_draft()` 按 `tags` **列表顺序取首个命中**（同 tag 序列、不同归属的草稿只有一个出口），未注册 tag 则静默落 `fallback.default`（`01-Rules/CODING-UNIVERSAL.md`），**不报错**。
 - **逐篇对账 (MUST)**：`--dry-run` 后 MUST 把每篇的脚本判定与**草稿正文自述的「归档目标」**对照；不一致即走 §2c 人工落位，MUST NOT 接受脚本判定。
 - **多段 frontmatter (MUST)**：只取 canonical 段（外层），MUST NOT 把正文内重复的 YAML 段追加进规则文件。
-- **补盲区 (MUST)**：发现未注册 tag ⇒ 补 `scripts/routing.example.json`（本仓随包的示例路由表；派生你自己的 `routing.json`），再把新条目登记进你的路由加载测试（§5 冻结集合防线），补完做变异自证（删条目 ⇒ 必红）。
+- **补盲区 (MUST)**：发现未注册 tag ⇒ 补路由表（`routing.json`）并在其加载器测试的 `NEW_ROUTES` 登记（§5 冻结集合防线），补完做变异自证（删条目 ⇒ 必红）。
 
 ## 2b. 单篇晋级路径 (MCP)
 

@@ -1,6 +1,6 @@
 ---
 name: dfs-exec
-description: Execute TDD plans via adaptive gear-shifting (Tier 1 Solo-Light, Tier 2 Maker-Checker, Tier 3 Critical-Swarm). Use when an implementation plan exists and the user asks to execute or implement it.
+description: "Use when executing a TDD plan with subagents."
 license: MIT
 metadata:
   version: 0.3.0

@@ -1,11 +1,10 @@
 ---
 name: dfs-gate
-description: Author mechanical gates for recurring defect classes. Use when a defect class has recurred, or an audit finding needs a permanent mechanical check instead of a note.
+description: "Use when turning a recurring defect into a mechanical gate."
 license: MIT
 metadata:
   version: 0.2.0
   platforms: linux, macos, windows
-  author: Haoyu, Hermes Agent
   hermes:
     tags:
     - ci
@@ -58,11 +57,19 @@ If the initial scan returns high hit volume, stop and adjudicate per [references
 4. Refined criterion MUST NOT clear the motivating finding. Transitional suppressions require owner + backlog issue.
 
 ## Pitfalls & Anti-Patterns
+- **Adversarial Gate Review**: Stress-test gate mechanisms against evasion strategies in [references/adversarial-gate-review.md](references/adversarial-gate-review.md).
 - **Headless Browser Fake-Proof**: Never use `--virtual-time-budget` for visual/DOM gates; wait for explicit `dataset.ready` and assert non-zero pixel/bounding-box counts ([references/anti-dilution-and-three-proofs.md](references/anti-dilution-and-three-proofs.md) §2).
 - **Fail Open Security Config**: Linters ignoring misspelled keys exit 0. Verify every key against schema and test intentional violations ([references/anti-dilution-and-three-proofs.md](references/anti-dilution-and-three-proofs.md) §4).
+- **Regex Export/Route Bypass**: Line-anchored regexes (`^export`) miss aliases (`export { a as b }`) and indented exports. Query runtime authorities (AST / `__all__` / dynamic import) instead ([references/anti-dilution-and-three-proofs.md](references/anti-dilution-and-three-proofs.md) §5).
+- **Silent Mutation Mis-match**: Unasserted mutation replacement on CRLF/drifted lines misses silently. Assert `count == 1` before checking gate failure ([references/anti-dilution-and-three-proofs.md](references/anti-dilution-and-three-proofs.md) §6).
 - **Symptom Gating**: String matching without AST or mechanism is defeated by aliasing or code comments.
 - **Prose Substitution**: Text documentation in 01-Rules is ignored without automated execution. Convert recurring defects into mechanical gates.
 
 ## Checkable Completion Criterion
 - Gate committed to `.githooks/` or CI configuration.
 - Three proofs verified (liveness log, mutation quote, runtime budget).
+- **Meta-test verified (MUST)**: the gate script is shipped together with at least one negative
+  fixture it rejects, with the rejection line quoted verbatim. A gate whose only evidence is
+  "it returns 0 on the good input" is unverified — it cannot distinguish "correct" from
+  "checked nothing". See `dfs-gate/references/` for the fixture pattern and
+  `dfs-tdd/references/dead-test-and-quantity-guards.md` §4.

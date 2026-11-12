@@ -1,26 +1,38 @@
 ---
 name: dfs-research
-description: Research external sources and sink findings into the Vault. Use when the user asks to investigate a topic and record what was learned.
+description: "Use when surveying external sources for a spec."
 license: MIT
 metadata:
   version: 0.1.0
   platforms: linux, macos, windows
   hermes:
-    tags: [research, retrieval, web-search, evidence-grading, citation]
-    related_skills: [dfs-inbox-consolidate, dfs-spark, dfs-grill]
-    mcp_tools: [search_vault, omni_search, get_note, get_rule_snippet, save_inbox_draft]
+    tags:
+    - research
+    - retrieval
+    - web-search
+    - evidence-grading
+    - citation
+    related_skills:
+    - dfs-inbox-consolidate
+    - dfs-spark
+    - dfs-grill
+    mcp_tools:
+    - search_vault
+    - omni_search
+    - get_note
+    - get_rule_snippet
+    - save_inbox_draft
 ---
+
 # DFS-Research: Evidence-Graded External Retrieval
 
 Turn an open question into a graded, cited knowledge artifact, then sink it into the Vault.
-
 ## [MUST] The Anti-Fabrication Invariant (RFC 2119 MUST)
 > **Every claim in the research deliverable MUST carry a verifiable source tier (A/B/C) and a resolvable locator (URL, file:line, or RFC citation), or it is explicitly marked `UNVERIFIED`.**
 > When a fact cannot be retrieved, write `UNVERIFIED` and describe the blocker — NEVER fill the gap with plausible-looking hallucinated claims.
 
-**Scope detection:** resolve `{vault_root}` per `dfs/references/vault-root-resolution.md` before touching any Vault path.
+**Knowledge-base paths:** use `{vault_root}` supplied by `$WIKI_PATH` directly.
 
----
 
 ## The 5-Phase Evidence-Graded Research Loop
 
@@ -50,6 +62,7 @@ Tag the run:
   - Scope articulated as a single falsifiable sentence; execution mode tagged (`[HITL]` or `[AFK]`).
 
 ### Phase 1 — Internal First (MCP)
+- **No MCP / no knowledge base?** Fall back to local sources — repo docs, `docs/`, the test suite, `git log` — and record each finding by file path instead of a vault path.
 Retrieve from the Vault before spending a single web request. Escalation ladder (see `dfs/references/mcp-contract.md`):
 ```
 search_vault(query)                      → narrow, known keyword
