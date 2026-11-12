@@ -33,3 +33,27 @@ The same float can represent three incompatible dimensions: **ratio** (`1.27` = 
 1. **Name the Dimension in Types & Identifiers**: Never pass raw numbers across layers under ambiguous names like `val` or `rate`; name the dimension explicitly (`ratio_to_share(ratio)` vs `share_to_percent(share)`).
 2. **Explicit Conversion & Clamping at Bounded Sinks**: Any value feeding a bounded domain (`0..100%` width, `0..1` opacity, angle, bucket index) MUST go through a named conversion function at the boundary and assert the result lies within `[min, max]`.
 3. **Mandatory Dual-Extreme Test Fixtures (`> 1` and `< 1`)**: Seed data where `ratio ≈ 0.95..1.0` masks dimension bugs completely. Tests for any ratio/share/percentage calculation MUST include fixtures on **both sides of 1.0** (e.g. `1.27` and `0.45`) plus boundary zeros.
+
+---
+
+## 4. Presence-Only Assertions (MUST NOT pass for correctness)
+
+A test that proves an artefact *exists* is not a test that proves it is *right*. The following
+assertions are legitimate for smoke tests only and MUST NOT be the sole coverage of a
+value-producing path:
+
+| Presence assertion | What it can never catch |
+|---|---|
+| `assertGreater(file_size, 4000)` | A chart drawn with fabricated numbers, a table with transposed rows |
+| `assertTrue(content.startswith(b"%PDF"))` | Any wrong value inside the PDF |
+| `assertIn("key", payload)` on a schema | A key present but carrying the wrong number |
+| `assertEqual(len(items), 12)` | Twelve rows whose columns belong to a different site |
+
+1. **Pair every presence assertion with a provenance assertion** — assert the emitted value
+   equals the corresponding leaf in the single source of truth (within an explicit tolerance).
+2. **A gate is verified by its rejection, not its acceptance** — every gate MUST ship with a
+   negative fixture that it rejects with a quoted `[FAIL]` line. `assertNotEqual(..., 123)` on a
+   fake JSON body is not a negative fixture; it is the blind spot codified as a passing test.
+3. **Field evidence** — a paper shipped with 64 green unit tests, 4 green mechanical gates, and
+   `{"metric": 123}` plus `b"%PDF-fake"` as its "gate rejects bad input" fixtures. The gate
+   returned 0 on a results file whose plotted numbers contradicted the table by 4x.

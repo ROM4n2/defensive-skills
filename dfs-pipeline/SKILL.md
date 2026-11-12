@@ -1,9 +1,9 @@
 ---
 name: dfs-pipeline
-description: Execute an end-to-end Git Worktree multi-skill pipeline. Use when a task spans several DFS skills and each stage needs an isolated worktree.
-disable-model-invocation: true
+description: "Use when running the worktree multi-skill pipeline."
 license: MIT
 metadata:
+disable-model-invocation: true
   version: 0.2.0
   platforms: linux, macos, windows
   hermes:
@@ -25,12 +25,17 @@ metadata:
     - dfs-orchestrate
     - dfs-maintain
     - dfs-verify
+    - dfs-gate
 ---
+
+
+
 # DFS-PIPELINE: End-to-End Autonomous Engineering Pipeline
 
-> **Invocation — explicit only.** This skill carries top-level `disable-model-invocation: true`.
-> Invoke it only for an explicit end-to-end delivery request. It changes branches, worktrees,
-> implementation files, and integration state; do not auto-select it for general coding.
+> **Invocation — explicit only.** This skill carries top-level `disable-model-invocation: true`,
+> which the current Trae harness reads. The restriction remains: do not auto-select this skill;
+> wait until the user asks for it, or until an already-running DFS skill routes here. Other
+> harnesses may ignore the field — read `dfs/references/harness-field-mapping.md`.
 
 Orchestrate the full development lifecycle with Git Worktree branch isolation, multi-subagent task dispatching (`/dfs-exec`), performance profiling, multi-expert review, and automated knowledge harvesting.
 

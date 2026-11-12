@@ -64,5 +64,17 @@ each one caught a real defect that a green suite and a clean exit had already wa
    self-report. Re-execute at least one mutation physically in the parent tree and quote the
    failing assertion verbatim. This is the step that caught a child whose described mutation
    did not match what its code actually did.
+5. **Cross-layer numeric invariant (MUST whenever the task emits a number)** — a task that
+   produces figures, tables, PDFs or reports is NOT accepted on exit code 0 plus a green suite.
+   Evidence must show the generated artefact's numbers came from the single upstream source of
+   truth, not from a literal typed next to the plot call.
+   - Recipe E: run the repo's SSOT consistency gate (e.g. `gate_ssot_consistency.py`) and, if it
+     does not exist, create it as part of the task — "the gate will come later" is exactly how a
+     15-defect paper once shipped with 64 green tests and 4 green gates.
+   - Proven by mutation: change one leaf in the source-of-truth file and show the downstream
+     figure/table goes red. A gate that has never been shown to reject a known-bad artefact is
+     an unverified gate.
+   - Corollary: `assert size > 4000` and `assert content.startswith(b"%PDF")` are **presence**
+     assertions, never correctness assertions.
 
 ---

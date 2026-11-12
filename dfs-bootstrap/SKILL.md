@@ -1,9 +1,9 @@
 ---
 name: dfs-bootstrap
-description: Initialize a repository with security git hooks and DFS rule anchors. Use when starting a new repo or adding DFS guardrails to an existing one.
-disable-model-invocation: true
+description: "Use when bootstrapping a repo with security hooks."
 license: MIT
 metadata:
+disable-model-invocation: true
   version: 0.2.3
   platforms: linux, macos, windows
   hermes:
@@ -12,9 +12,10 @@ metadata:
 ---
 # DFS-BOOTSTRAP: Repository Security & Knowledge Anchoring
 
-> **Invocation — explicit only.** This skill carries top-level `disable-model-invocation: true`.
-> Invoke it only when the user explicitly asks for repository initialization or another DFS Skill
-> routes here. It writes repository files and security hooks; do not auto-select it for general coding.
+> **Invocation — explicit only.** This skill carries top-level `disable-model-invocation: true`,
+> which the current Trae harness reads. The restriction remains: do not auto-select this skill;
+> wait until the user asks for it, or until an already-running DFS skill routes here. Other
+> harnesses may ignore the field — read `dfs/references/harness-field-mapping.md`.
 
 Initialize any new or existing repository (`<project-root>`) with zero-leak secret detection git hooks and 3-line Defensive Skills knowledge anchors.
 
@@ -47,7 +48,7 @@ Create/Update project-level `CLAUDE.md` and `.agent-rules.md` in repository root
 ### Phase 3.5: WORKMEMORY Scaffold & Agent Distillation (MUST)
 Run the mechanical scaffold, then distill the primer:
 
-1. Preview with `python3 dfs-bootstrap/scripts/bootstrap.py --target <project-root> --dry-run`; after reviewing the output, apply with `python3 dfs-bootstrap/scripts/bootstrap.py --target <project-root>` (idempotent — it scaffolds `WORKMEMORY/` **5-piece set** (`INDEX.md` + **`INDEX-topics.md`** + `PROTOCOL.md` + `PROJECT_OVERVIEW.md` + `work.log`), injects anchors, and skips existing state). The script resolves `templates/` relative to its own location, so templates are read from this Skill directory. `notes/` (oversized-event bodies >4KB) is created on first use — no need to pre-create.
+1. Preview with `python scripts/bootstrap.py --target <project-root> --vault-root <vault-root> --dry-run`; after reviewing the output, apply with `python scripts/bootstrap.py --target <project-root> --vault-root <vault-root>` (idempotent — it scaffolds `WORKMEMORY/` **5-piece set** (`INDEX.md` + **`INDEX-topics.md`** + `PROTOCOL.md` + `PROJECT_OVERVIEW.md` + `work.log`), injects anchors, and skips existing state). The script resolves `templates/` relative to its own location, so templates are read from this Skill directory. `notes/` (oversized-event bodies >4KB) is created on first use — no need to pre-create.
    - `templates/workmemory/INDEX-topics.md` is the WARM topic index the scaffold drops in alongside the hot `INDEX.md`; `notes/` is created on first use.
    - **Hot-index discipline (2026-10-17)**: `INDEX.md` is the per-session HOT layer — it MUST hold only Configuration / 文件清单 / Active handoffs. Topic index and distillation registry live in `INDEX-topics.md` (WARM, loaded on `grep` hit). Never grow `INDEX.md` with topic tables; that cost is paid by **every** new session.
    - **The embedded copies are the published source**: a published skill cannot bundle a whole knowledge base, so `dfs-bootstrap/templates/workmemory/` IS the reference here — edit it directly, and if you keep a private vault `Templates/workmemory/`, treat the vault as the copy. No sync program ships with this repo (the author's one-way sync script inspects a specific vault layout), so there is nothing to run and no drift to check.

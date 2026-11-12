@@ -33,6 +33,11 @@ Route work by **task shape**, never by habit:
    - After a split or move, grep the parent tree for the distinct text/identity of earlier batches' fixes and confirm they still sit inside the owning test.
 6. **Phrase Premise-Dependent Instructions as Intent**:
    - When a brief says "do X because Y holds", require the child to verify Y in the code first and report a contradiction rather than blindly obeying X when Y is false.
+7. **Mandate Base Branch Reset in Child Brief (`git checkout <target-branch>`)**:
+   - Subagent worktrees branch from default-branch HEAD (`master`/`main`) rather than the active branch. Mandate `git checkout/merge <target-branch>` as the very first instruction before reading code or running tests.
+8. **Goal Block Syntax Hygiene & Boundary Sensing**:
+   - Task dispatchers (`delegate_task`) reject angle brackets like `<agent_status>` as unexpanded templates — format prompt blocks using square brackets (e.g. `[Agent Status]`, `[Diff Content]`).
+   - Explicitly instruct the child to report any contradictory comments, stale docstrings, or dead call sites noticed outside its assigned file ownership boundary.
 
 ---
 
@@ -40,6 +45,8 @@ Route work by **task shape**, never by habit:
 
 - **Parent Workspace Files Misrouting Subagent Worktrees (`GOWORK=off`)**: Inside `.worktrees/subagent-<id>`, a parent `go.work`, `pnpm-workspace.yaml`, or Cargo workspace can silently compile/test the *parent* directory instead of the worktree. Mandate `GOWORK=off` (or equivalent isolated root flag) on every command.
 - **Worktree Base Commit Drift**: A harness subagent worktree may branch from `master` HEAD rather than the orchestrator's feature branch. Always check `git log -n 1` on the child branch and cherry-pick/rebase onto the target feature branch before merging.
+- **Cherry-Pick by Branch Ref Over Raw SHA (`git cherry-pick hermes-subagent/subagent-<id>`)**: Cherry-picking by raw commit SHA reported by the child can fail with `fatal: bad object` if Git has not yet flushed loose objects across worktrees. Always cherry-pick via the registered branch reference (`hermes-subagent/subagent-<id>`), verify tests, then delete the branch (`git branch -D`).
+- **Windows Worktree File-Lock Salvage Sequence**: Background indexers or Python processes on Windows frequently lock files inside `.worktrees/subagent-<id>`, causing `rm -rf` to fail with `Permission denied`. Do not halt the pipeline: run `git worktree prune`. Once `git worktree list` confirms only the parent remains, Git internal state is clean; proceed with task completion.
 - **Inner-First & Exact-ID Worktree Cleanup**: Parallel dispatches can nest worktrees (`.worktrees/A/.worktrees/B`). Remove inner before outer, and prune by exact `<subagent-id>` — **never** run `rm -rf .worktrees/*` while sibling subagents are alive. Deduplicate `.worktrees/` entries in `.gitignore` before committing.
 - **Never Emit an Empty Turn on Dispatch or Re-Entry**: Always output a one-line status when dispatching, and execute the full closing cascade (merge -> serial test -> ledger update -> worktree prune -> next task) in the same turn upon a Reviewer `PASS`.
 - **Child Self-Report & Write-Warning Invalidation**: If the harness logs a failed file write during a child run, treat all numbers reported from that file as unverified and re-derive them in the parent tree.

@@ -1,5 +1,5 @@
-
 # PROJECT_OVERVIEW — {{PROJECT_NAME}}
+
 
 > 60 秒项目 primer。新 agent 的第二读（读完 work.log 事件流之前先建立全局认知）。
 > 维护规则：bootstrap 时由 agent 从代码库提炼生成初稿；此后每次 WORK_END / 交接后刷新。

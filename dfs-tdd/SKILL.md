@@ -1,6 +1,6 @@
 ---
 name: dfs-tdd
-description: Enforce strict RED-GREEN-REFACTOR TDD and fake-green guards. Use when implementing a feature test-first, or when a green test suite is suspect.
+description: "Use when enforcing RED-GREEN-REFACTOR discipline."
 license: MIT
 metadata:
   version: 0.4.0

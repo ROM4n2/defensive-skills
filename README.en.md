@@ -38,34 +38,34 @@ Only `dfs-bootstrap`, `dfs-inbox-consolidate`, `dfs-incident`, and `dfs-pipeline
 
 | Skill | Purpose | Explicit only |
 |---|---|---|
-| `dfs` | Route developer intent to the right Defensive Skills workflow. Use only when the user explicitly asks which DFS workflow to use, how this DFS process works, or asks for help choosing a DFS skill; do not use for general coding tasks. | No |
-| `dfs-plan` | Draft bite-sized TDD implementation plans from specs. Use when the user asks for an implementation plan, or before writing code for a multi-step feature. | No |
-| `dfs-exec` | Execute TDD plans via adaptive gear-shifting (Tier 1 Solo-Light, Tier 2 Maker-Checker, Tier 3 Critical-Swarm). Use when an implementation plan exists and the user asks to execute or implement it. | No |
-| `dfs-debug` | Execute 4-step systematic root-cause debugging with a reproduction. Use when the user reports a bug, a failing test, or says something is broken. | No |
-| `dfs-save` | Harvest non-obvious engineering solutions into 99-Inbox drafts. Use when a debugging session or task just produced a reusable insight worth saving. | No |
-| `dfs-handoff` | Generate a session wrap-up and a 1-click continuation card. Use when the user wants to pause, hand off, or resume later in a fresh session. | No |
-| `dfs-team` | Audit code, a design, or a plan with a multi-domain subagent swarm, then collapse the findings into a single consensus report. Use when the target spans two or more specialist domains and needs several independent expert reviews. | No |
-| `dfs-adr` | Draft and archive numbered Architecture Decision Records. Use when the user makes an architecture decision or asks to record one. | No |
-| `dfs-bootstrap` | Initialize a repository with security git hooks and DFS rule anchors. Use when starting a new repo or adding DFS guardrails to an existing one. | **Yes** |
-| `dfs-gate` | Author mechanical gates for recurring defect classes. Use when a defect class has recurred, or an audit finding needs a permanent mechanical check instead of a note. | No |
-| `dfs-maintain` | Maintain repo hygiene, prune worktrees, and sync context. Use when a repo has stale worktrees, drifted context files, or needs a scheduled hygiene pass. | No |
-| `dfs-orchestrate` | Dispatch and verify subagents with file-occupancy guards. Use when several subagents must work in one repo without colliding, or a batch needs a granularity call. | No |
-| `dfs-verify` | Verify unverified audit claims with physical evidence. Use when a report or audit asserts something no probe has confirmed, before anyone acts on it. | No |
-| `dfs-grill` | Interrogate a proposal's boundaries and undecided points through Dual-Lens Socratic inquiry, ending in an architecture decision record. Use when the user wants an idea, design, or plan challenged or pressure-tested before building. | No |
-| `dfs-inbox-consolidate` | Classify and archive 99-Inbox drafts into DFS destinations. Use when the inbox has accumulated drafts and the user asks to file or clean them up. | **Yes** |
-| `dfs-incident` | Triage a production incident and draft a blameless postmortem. Use when a service is down, degraded, or the user asks for an incident review. | **Yes** |
-| `dfs-interview` | Conduct high-rigor 1v1 technical interview defense drills. Use when the user wants to rehearse explaining or defending their own work. | No |
-| `dfs-migrate` | Plan zero-downtime database schema migrations safely. Use when a schema change must ship without taking the service offline. | No |
-| `dfs-onboard` | Rapidly orient an AI agent to develop on an existing codebase. Use when entering an unfamiliar repo and you need to map how it works before editing. | No |
-| `dfs-perf` | Profile multi-language benchmarks, races, and query plans. Use when the user reports slowness, a performance regression, or asks for a benchmark. | No |
-| `dfs-pipeline` | Execute an end-to-end Git Worktree multi-skill pipeline. Use when a task spans several DFS skills and each stage needs an isolated worktree. | **Yes** |
-| `dfs-refactor` | Execute senior-level refactoring with guard-clause flattening. Use when the user asks to clean up, simplify, or restructure existing code. | No |
-| `dfs-release` | Draft semantic releases, changelogs, rollback plans, and verify published releases. Use when the user asks to cut a release, tag a version, write a changelog, or check whether a release actually shipped. | No |
-| `dfs-research` | Research external sources and sink findings into the Vault. Use when the user asks to investigate a topic and record what was learned. | No |
-| `dfs-review` | Review a code diff against 7-language RFC 2119 DFS rules. Use when the user asks for a code review, or before merging a change. | No |
-| `dfs-spark` | Generate a design specification from a fuzzy need through Dual-Lens dialogue, at a size the idea earns. Use when the user has an idea with no design yet and wants it shaped into a spec, a short design note, or a feasibility answer. | No |
-| `dfs-tdd` | Enforce strict RED-GREEN-REFACTOR TDD and fake-green guards. Use when implementing a feature test-first, or when a green test suite is suspect. | No |
-| `dfs-upgrade` | Assess breaking changes and upgrade risk for a dependency. Use when upgrading a package version and you need to know what will break and in which files. | No |
+| `dfs` | Use when choosing which DFS workflow or skill to run. | No |
+| `dfs-plan` | Use when drafting a bite-sized TDD implementation plan. | No |
+| `dfs-exec` | Use when executing a TDD plan with subagents. | No |
+| `dfs-debug` | Use when debugging a reproducible failure or stack trace. | No |
+| `dfs-save` | Use when harvesting a reusable insight into the vault. | No |
+| `dfs-handoff` | Use when ending a session with a continuation card. | No |
+| `dfs-team` | Use when auditing with a multi-domain expert panel. | No |
+| `dfs-adr` | Use when recording an architecture decision as a MADR. | No |
+| `dfs-bootstrap` | Use when bootstrapping a repo with security hooks. | Yes |
+| `dfs-gate` | Use when turning a recurring defect into a mechanical gate. | No |
+| `dfs-maintain` | Use when pruning worktrees and syncing agent context. | No |
+| `dfs-orchestrate` | Use when dispatching subagents with file ownership. | No |
+| `dfs-verify` | Use when verifying audit claims with physical evidence. | No |
+| `dfs-grill` | Use when interrogating a fuzzy design or proposal. | No |
+| `dfs-inbox-consolidate` | Use when routing 99-Inbox drafts to their homes. | Yes |
+| `dfs-incident` | Triage a production incident and draft a blameless postmortem. Use when a service is down, degraded, or the user asks for an incident review. | Yes |
+| `dfs-interview` | Use when drilling a candidate in a technical interview. | No |
+| `dfs-migrate` | Use when planning a zero-downtime schema migration. | No |
+| `dfs-onboard` | Use when onboarding an agent to an unfamiliar codebase. | No |
+| `dfs-perf` | Use when profiling benchmarks, races, or query plans. | No |
+| `dfs-pipeline` | Use when running the worktree multi-skill pipeline. | Yes |
+| `dfs-refactor` | Use when refactoring behind guard clauses. | No |
+| `dfs-release` | Use when cutting a semantic release and changelog. | No |
+| `dfs-research` | Use when surveying external sources for a spec. | No |
+| `dfs-review` | Use when reviewing a diff against RFC 2119 rules. | No |
+| `dfs-spark` | Use when turning a fuzzy idea into a design spec. | No |
+| `dfs-tdd` | Use when enforcing RED-GREEN-REFACTOR discipline. | No |
+| `dfs-upgrade` | Use when assessing a dependency upgrade risk. | No |
 
 ## Current behavior
 

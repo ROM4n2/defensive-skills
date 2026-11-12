@@ -1,6 +1,6 @@
 ---
 name: dfs-grill
-description: Interrogate a proposal's boundaries and undecided points through Dual-Lens Socratic inquiry, ending in an architecture decision record. Use when the user wants an idea, design, or plan challenged or pressure-tested before building.
+description: "Use when interrogating a fuzzy design or proposal."
 license: MIT
 metadata:
   version: 0.3.0
@@ -28,7 +28,7 @@ Determine the inquiry scope immediately:
 
 ---
 
-## [MUST] Scope Detection (MUST — 执行前第一步)
+## [MUST] Knowledge-Base Paths
 
 **在任何操作前，MUST 先检测当前 Vault 根目录**：
 

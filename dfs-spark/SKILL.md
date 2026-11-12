@@ -1,6 +1,6 @@
 ---
 name: dfs-spark
-description: Generate a design specification from a fuzzy need through Dual-Lens dialogue, at a size the idea earns. Use when the user has an idea with no design yet and wants it shaped into a spec, a short design note, or a feasibility answer.
+description: "Use when turning a fuzzy idea into a design spec."
 license: MIT
 metadata:
   version: 0.3.0

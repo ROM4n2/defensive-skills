@@ -1,6 +1,6 @@
 ---
 name: dfs-maintain
-description: Maintain repo hygiene, prune worktrees, and sync context. Use when a repo has stale worktrees, drifted context files, or needs a scheduled hygiene pass.
+description: "Use when pruning worktrees and syncing agent context."
 license: MIT
 metadata:
   version: 0.1.0
@@ -25,7 +25,7 @@ Standard operating procedure for periodic repository maintenance, subagent workt
 
 ---
 
-## The 5-Step Maintenance Protocol
+## The 6-Step Maintenance Protocol
 
 ### Step 1: CI/CD Pipeline Health Audit
 Audit recent automated pipeline runs before touching files.
@@ -82,14 +82,23 @@ gh run watch <run-id>
 - **Checkable Completion Criterion**: `git status` reports working tree clean; local test suite exits 0; remote GitHub Actions CI run completes with `success`.
 - **Line-Ending Contract Check**: re-verify after every programmatic edit when the repo pins an explicit CRLF contract — the exact assertion is in the playbook.
 
+### Step 6: Terminal-Project Consolidation & Link-Aware Doc Archival (MUST)
+When a project reaches terminal delivery (submission accepted, released, archived), collapse the branch graph to one branch of record and move completed phase docs into their archive tree.
+- **Branch consolidation**: `merge --ff-only` the delivery branch into the record branch, `git branch -d` the branches it contains, and for each `--no-merged` candidate prove *superseded* (`git diff --quiet <branch>:<file> <record>:<file>` empty) before preserving its tip as an **annotated** `archive/<name>` tag and deleting the branch. Then re-check every deleted tip is reachable (ancestor of the record, or via its tag).
+- **Link-aware doc archival**: a subtree move repoints nothing — recompute every relative `](…)` link (resolve pre-move, map through the move table, re-relativize post-move) and verify a full-repo scan reports `broken == 0`. Edit CRLF/EOL-contract docs in bytes. Change a generated artifact's status by editing its *emitter* and re-running it, never by patching the output.
+
+Fourteen worktree traps and the full Step 6 procedures (archive-tag commands, the trailing-slash churn guard) are in the playbook.
+
 ---
 
 ## [ANTI] Common Rationalizations & Anti-Patterns
 
-Eleven rationalizations are catalogued with their hazard and guard in the playbook's anti-pattern table. The three that cause irreversible damage:
+Thirteen rationalizations are catalogued with their hazard and guard in the playbook's anti-pattern table. The five that cause irreversible damage:
 
 | Agent Rationalization | Real Hazard | Defensive Guard (MUST) |
 |---|---|---|
 | *"I'll force-delete all subagent branches with `git branch -D`."* | **Silent Deliverable Loss**: unmerged audit reports and findings are permanently destroyed. | Always run `git branch --no-merged master` before deleting branches. |
 | *"I'll just run `rm -rf .worktrees` without removing worktrees via git."* | **Git Index Corruption**: stale lockfiles and phantom references remain. | `git worktree remove --force` then `git worktree prune -v`. |
 | *"These workstreams are independent, so they can run in parallel as-is."* | **Same-File Collision**: logical independence says nothing about file overlap. | Apply `/dfs-orchestrate`'s file-occupancy contract before dispatch; during maintenance, verify the existing table before pruning. |
+| *"`--no-merged` flagged it, so it must hold unique work I have to keep."* | **Branch-Graph Bloat**: a superseded experiment branch keeps live refs and confuses the dispatcher. | Prove *superseded* with `git diff --quiet <branch>:<f> <record>:<f>`; if empty, preserve the tip as an annotated `archive/<name>` tag, then delete the branch. |
+| *"I'll just hand-edit the status string in the generated receipt."* | **Silent Status Revert**: the next regeneration restores the old value and the edit vanishes. | Change the *emitting script* and re-run it; never patch generated output. |

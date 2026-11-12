@@ -1,6 +1,6 @@
 ---
 name: dfs-handoff
-description: Generate a session wrap-up and a 1-click continuation card. Use when the user wants to pause, hand off, or resume later in a fresh session.
+description: "Use when ending a session with a continuation card."
 license: MIT
 metadata:
   version: 0.3.0

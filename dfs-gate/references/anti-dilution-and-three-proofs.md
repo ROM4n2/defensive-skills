@@ -44,3 +44,17 @@ When the first scan returns a large hit list, adjudicate in this exact order —
 
 - **Security-gate config failing OPEN**: Linter/scanner YAML loaders routinely ignore misspelled keys and run 0 rules (`exit 0`). Verify every config key against schema/source and test with one intentional violation.
 - **String-matching a symptom instead of AST/mechanism**: A gate matching a literal variable name or comment (`"ev.max_turns"`) is satisfied by a code comment or defeated by aliasing. Parse the AST or match the structural call site, and strip comments before matching.
+
+---
+
+## 5. Authority Introspection vs Regex & Comment-Stripping State Machine (MUST)
+
+- **Authority Introspection over Regex Parsing**: When gating module exports, public APIs, or route tables, ask the runtime authority (`node --input-type=module -e "import('./m.js').then(x=>console.log(JSON.stringify(Object.keys(x))))"`, Python `__all__`/AST) rather than line-anchored regexes (`^export`). Regexes silently miss `export { a as b }` (exported name is RHS of `as`), indented exports, and `export *`.
+- **Comment-Stripping State Machine**: Before scanning for forbidden tokens (`fetch`, `document`, private APIs), strip comments using a tokenizer state machine. Naive regex comment stripping breaks on JS regex literals (`/a/*b/` opens a phantom comment) or documentation strings inside the gate itself.
+
+---
+
+## 6. Prescriptive Actions & Pre-Asserted Mutation Proofs
+
+- **Prescriptive Action Remediation (MUST)**: Gates running on an Agent execution path MUST NOT emit passive diagnostics only (`file:line: error`). Every violation must pair the cause with an actionable remediation command: `[GATE REJECT] {cause}. ACTION: {exact_command_or_replacement}`.
+- **Mutation Pre-Assertion (Count == 1)**: When proving a gate via mutation injection, always assert that the target snippet was replaced exactly once (`assert raw.count(old) == 1`). Whitespace, CRLF differences, or context drift cause silent zero-replacements that report false green runs.

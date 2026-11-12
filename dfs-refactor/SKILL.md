@@ -1,6 +1,6 @@
 ---
 name: dfs-refactor
-description: Execute senior-level refactoring with guard-clause flattening. Use when the user asks to clean up, simplify, or restructure existing code.
+description: "Use when refactoring behind guard clauses."
 license: MIT
 metadata:
   version: 0.3.0
@@ -24,7 +24,7 @@ metadata:
 Execute senior-level code refactoring focusing on complexity reduction, Guard Clause flattening, stdlib consolidation, and dead code elimination while maintaining 100% Green test coverage.
 
 ## The Behavior Preservation Invariant (RFC 2119 MUST)
-> DO NOT touch production code until the full test suite is verified GREEN. Stop immediately if test count changes.
+> DO NOT touch production code until the full test suite is verified GREEN with an exact passing count $N$. Stop immediately if the collected test set or the count $N$ changes; test IDs and assertions must remain unchanged.
 
 ---
 
@@ -67,7 +67,7 @@ A deep module has a minimal public interface and high-cohesion internals:
 |---|---|---|
 | *"There are no tests, but I'll refactor carefully using clean patterns."* | **Undetected Regressions**: restructuring untested code introduces subtle behavioral breakages. | MUST verify a passing test baseline before refactoring. If missing, invoke `/dfs-tdd` first. |
 | *"While cleaning up this function, I also added a helpful new option."* | **Conflated Diff Blast Radius**: mixing refactoring with behavior changes ruins git bisect and auditability. | Refactoring commits MUST contain ZERO behavioral or feature additions. |
-| *"A test failed after flattening, so I updated the assertion to match."* | **Reward Hacking & Test Corruption**: silently changing expected outcomes masks genuine regressions. | NEVER modify existing test assertions during refactoring unless signature changes were pre-approved. |
+| *"A test failed after flattening, so I updated the assertion to match."* | **Reward Hacking & Test Corruption**: silently changing expected outcomes masks genuine regressions. | NEVER add, delete, rename, or modify tests or assertions during refactoring; signature or behavior changes belong to a separate change outside this workflow. |
 | *"I'll batch all cleanups across 10 files into one final commit."* | **Unreviewable Mega-Diffs**: inability to isolate which transformation caused a failure if rolled back. | Commit atomically per refactoring concern (delete, flatten, stdlib, deepen). |
 
 ---
@@ -80,6 +80,6 @@ Every refactoring deliverable MUST conclude with the Quantitative Delta Report (
 
 ## Checkable Completion Criterion
 - Max indentation depth <= 2 across refactored functions (guard clauses verified).
-- Baseline test pass count conserved: post-refactor pass count >= pre-refactor count N.
+- Baseline test set and pass count conserved: post-refactor pass count == pre-refactor count N; no tests added, removed, renamed, or assertions changed.
 - Zero feature or behavioral additions mixed into the refactoring commit.
 - Quantitative Delta Report delivered per references/split-and-seam-safety.md.

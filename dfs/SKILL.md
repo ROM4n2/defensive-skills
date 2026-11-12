@@ -1,6 +1,6 @@
 ---
 name: dfs
-description: Route developer intent to the right Defensive Skills workflow. Use only when the user explicitly asks which DFS workflow to use, how this DFS process works, or asks for help choosing a DFS skill; do not use for general coding tasks.
+description: "Use when choosing which DFS workflow or skill to run."
 license: MIT
 metadata:
   version: 0.2.0
@@ -79,7 +79,7 @@ All DFS skills share the core architecture contracts housed in `dfs/references/`
 
 | Shared Reference | Scope & Governed Invariant |
 |---|---|
-| [`dfs/references/vault-root-resolution.md`](dfs/references/vault-root-resolution.md) | ADR-0001: Tier 1 (Env) -> Tier 2 (Walk) -> Tier 3 (Local) root resolution |
+| [`dfs/references/vault-root-resolution.md`](dfs/references/vault-root-resolution.md) | Parameter-based knowledge-base path contract |
 | [`dfs/references/subagent-dispatch.md`](dfs/references/subagent-dispatch.md) | Runtime-neutral subagent dispatch protocols (`delegate_task` vs `subagent_type`) |
 | [`dfs/references/a-mac-gate.md`](dfs/references/a-mac-gate.md) | A-MAC admission gate: non-obvious, physically verified, reusable learnings |
 | [`dfs/references/acceptance-recipes.md`](dfs/references/acceptance-recipes.md) | Deterministic physical receipts: snapshots, hash checks, and kill-resume proofs |

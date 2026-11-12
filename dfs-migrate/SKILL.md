@@ -1,6 +1,6 @@
 ---
 name: dfs-migrate
-description: Plan zero-downtime database schema migrations safely. Use when a schema change must ship without taking the service offline.
+description: "Use when planning a zero-downtime schema migration."
 license: MIT
 metadata:
   version: 0.3.0

@@ -1,6 +1,6 @@
 ---
 name: dfs-interview
-description: Conduct high-rigor 1v1 technical interview defense drills. Use when the user wants to rehearse explaining or defending their own work.
+description: "Use when drilling a candidate in a technical interview."
 license: MIT
 metadata:
   version: 0.3.0

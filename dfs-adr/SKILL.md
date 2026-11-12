@@ -1,14 +1,25 @@
 ---
 name: dfs-adr
-description: Draft and archive numbered Architecture Decision Records. Use when the user makes an architecture decision or asks to record one.
+description: "Use when recording an architecture decision as a MADR."
 license: MIT
 metadata:
   version: 0.2.0
   platforms: linux, macos, windows
   hermes:
-    tags: [adr, architecture, decision-record, madr, documentation]
-    related_skills: [dfs-grill, dfs-spark, dfs-plan]
+    tags:
+    - adr
+    - architecture
+    - decision-record
+    - madr
+    - documentation
+    related_skills:
+    - dfs-grill
+    - dfs-spark
+    - dfs-plan
+    - dfs-save
 ---
+
+
 # DFS-ADR: Architecture Decision Record Generator
 
 Lock in key architectural decisions into permanent history in `08-Projects/{project}/01-ADR/` or `01-Rules/` using the MADR (Markdown Architecture Decision Record) specification.
@@ -52,7 +63,7 @@ The ADR document structure comprises 5 core sections:
   - All 5 MADR sections populated; considered options contain at least 2 distinct alternatives with concrete pros/cons.
 
 ### Phase 3: Dual-Track Archiving & Verification
-- Call `save_inbox_draft` MCP to create an entry in `99-Inbox/`, or directly write to `08-Projects/{project}/01-ADR/`.
+- Call `save_inbox_draft` MCP to create an entry in `99-Inbox/`, or directly write to `08-Projects/{project}/01-ADR/`. **No MCP / no knowledge base?** Write the file by hand at the same path (create the directory first) — ADR content and numbering do not depend on the MCP.
 - Update the project's `README.md` or `.agent-context.md` with the new ADR reference.
 - **Checkable Completion Criterion**:
   - ADR markdown written to target path; project README/context updated with link to new ADR.

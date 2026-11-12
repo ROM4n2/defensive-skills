@@ -1,11 +1,10 @@
 ---
 name: dfs-orchestrate
-description: Dispatch and verify subagents with file-occupancy guards. Use when several subagents must work in one repo without colliding, or a batch needs a granularity call.
+description: "Use when dispatching subagents with file ownership."
 license: MIT
 metadata:
   version: 0.3.0
   platforms: linux, macos, windows
-  author: Haoyu, Hermes Agent
   hermes:
     tags:
     - delegation
@@ -43,6 +42,8 @@ metadata:
 - **Dual-Layer Dispatch Routing & Fresh-Context Follow-Up (MUST)**: Route work by task shape (in-thread vs fresh subagent vs persistent CLI worker). Never resurrect a bloated 50K-token worker session for a small follow-up fix; dispatch a fresh small-context subagent with exact `file:line` delta. Load [references/brief-and-pitfalls-playbook.md](references/brief-and-pitfalls-playbook.md) §1.
 - **Reference repo invariants**: Restate only the delta; cite repository anchor files to avoid repeating full invariants.
 - **Pass actionable evidence**: Cite exact `file:line` quotes, never subjective conclusions.
+- **Subagent base reset (MUST)**: Mandate `git checkout/merge <target-branch>` as child's first action; prevents silent work on stale default-branch HEAD.
+- **Goal syntax & boundary sensing**: Format prompts with `[Agent Status]` (never `<...>` template markers); require child to report stale paths/contradictions found outside owned files.
 - **Prescribe receipt & blast-radius gate list**: Command + exit code + counts + diff stat; grep callers across test tree for changed symbols.
 - **Relocation & multi-batch split rules**: Enforce frozen surface (zero assertion changes) and require residual inventory handbacks. Load [references/brief-and-pitfalls-playbook.md](references/brief-and-pitfalls-playbook.md) §2.
 - **Batching & escalation**: Size dispatches by domain; escalate lightweight tasks to maker-checker if they touch production code.
@@ -58,7 +59,7 @@ metadata:
 - **Adversarial brief**: Require reviewers to falsify assumptions, rerun mutations verbatim, and test riskiest hops (load `templates/adversarial-reviewer-brief.md`).
 
 ### 6. Merge, then clean
-- **Inner-first & exact-ID cleanup**: Prune target worktrees by exact ID (`rm -rf .worktrees/subagent-<id>`), never blanket wildcards.
+- **Branch-ref integration & exact-ID cleanup**: Cherry-pick via branch ref (`git cherry-pick hermes-subagent/subagent-<id>`), delete child branch, and prune by exact worktree ID. If Windows file locks block directory removal, `git worktree prune` confirms git-level unregistration — proceed without blocking.
 
 ---
 
@@ -69,6 +70,8 @@ metadata:
 
 ## Pitfalls
 - **Parent workspace misrouting (`GOWORK=off`)**: Isolate toolchains so subagent worktrees never compile parent roots.
+- **Template placeholder rejection**: Harness dispatchers reject `<tag>` as unexpanded templates — use square brackets `[...]`.
+- **Cherry-pick bad object failure**: Do not cherry-pick raw child commit SHAs before Git syncs loose objects; use registered branch refs.
 - **No empty turns**: Always emit a status line on dispatch, and complete the full merge-and-prune cascade in the same turn upon a PASS verdict.
 - **Wildcard worktree deletion**: Never run `rm -rf .worktrees/*` while sibling subagents are alive.
 - **Hoisting forced copies**: Hoist cross-boundary helper copies before subsequent batches land to prevent multi-copy drift.

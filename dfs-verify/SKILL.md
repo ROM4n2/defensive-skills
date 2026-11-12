@@ -1,11 +1,10 @@
 ---
 name: dfs-verify
-description: Verify unverified audit claims with physical evidence. Use when a report or audit asserts something no probe has confirmed, before anyone acts on it.
+description: "Use when verifying audit claims with physical evidence."
 license: MIT
 metadata:
   version: 0.2.0
   platforms: linux, macos, windows
-  author: Haoyu, Hermes Agent
   hermes:
     tags:
     - verification
@@ -52,6 +51,7 @@ A multi-expert audit, a linter sweep, or a reviewer's report routinely ships fin
 - **Unset config keys**: Verify `config --get <key>` is set before blaming eviction code.
 - **Hypothetical I/O vs present reality**: Refute P1 claims when all registered implementations are in-memory sub-millisecond ops.
 - **Weak-test claims require comparative mutation proof**: Apply one mutation where old assertion stays green and new goes red.
+- **Context Anchoring & Probe Recipes**: For anchor verification and diagnostic probes, see [references/context-anchor-verification.md](references/context-anchor-verification.md) and [references/probe-recipes.md](references/probe-recipes.md).
 For the full 9-item audit pitfall catalog and evaluation harness falsification rules, load [references/verification-pitfalls-and-eval-gates.md](references/verification-pitfalls-and-eval-gates.md) §3.
 
 ## Checkable Completion Criterion
