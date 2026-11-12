@@ -12,11 +12,7 @@ metadata:
     - decision-record
     - madr
     - documentation
-    related_skills:
-    - dfs-grill
-    - dfs-spark
-    - dfs-plan
-    - dfs-save
+    related_skills: [dfs-grill, dfs-spark, dfs-plan, dfs-save]
 ---
 
 
