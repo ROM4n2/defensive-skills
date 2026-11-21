@@ -90,19 +90,21 @@ MUTATIONS = [
     # mutated nothing — two vacuous probes that reported the rule as unenforced. `main()` now
     # rejects a transform that returns its input unchanged, so this class cannot come back quietly.
     ("rule_7_related_skills_resolve_to_real_skills",
-     "dfs-adr/SKILL.md", lambda t: re.sub(
-         r"(?m)^(    related_skills: \[)(?=.)", r"\1dfs-does-not-exist, ", t, count=1)
-     or re.sub(r"(?m)^    related_skills:\r?\n",
-               "    related_skills:\n      - dfs-does-not-exist\n", t, count=1)),
+     "dfs-adr/SKILL.md", lambda t: (
+         re.sub(r"(?m)^(    related_skills: \[)(?=.)", r"\1dfs-does-not-exist, ", t, count=1)
+         if re.search(r"(?m)^    related_skills: \[", t)
+         else re.sub(r"(?m)^(    related_skills:\r?\n)([ \t]*)(- )",
+                     r"\1\2\3dfs-does-not-exist\n\2\3", t, count=1))),
     # A repeated entry still RESOLVES, so the dangling check stays silent and only the no-duplicate
     # assertion can catch it. The duplicated entry is a real one already listed, on purpose.
     # Both shapes are probed: the published tree writes flow lists, other trees write block lists, and
     # a shape-blind probe silently mutating nothing is exactly what `main()` now refuses to accept.
     ("rule_7_related_skills_resolve_to_real_skills",
-     "dfs-adr/SKILL.md", lambda t: re.sub(
-         r"(?m)^(    related_skills: \[)([^,\]]+)", r"\1\2, \2", t, count=1)
-     or re.sub(r"(?ms)^(    related_skills:\n)(      - )([^\n]+)",
-               r"\1\2\3\n\2\3", t, count=1)),
+     "dfs-adr/SKILL.md", lambda t: (
+         re.sub(r"(?m)^(    related_skills: \[)([^,\]]+)", r"\1\2, \2", t, count=1)
+         if re.search(r"(?m)^    related_skills: \[", t)
+         else re.sub(r"(?ms)^(    related_skills:\n)([ \t]*)(- )([^\n]+)",
+                     r"\1\2\3\4\n\2\3\4", t, count=1))),
     # Inline flow lists remain a supported shape (vault-side trees), so this probe injects the
     # bogus tool declaration the old-fashioned way: it must still be parsed, then rejected.
     ("rule_9_mcp_contract_tools_are_canonical",

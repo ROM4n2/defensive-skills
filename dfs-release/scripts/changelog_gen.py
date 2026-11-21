@@ -38,7 +38,7 @@ SEMVER = re.compile(r"\d+\.\d+\.\d+")
 def emit(text: str) -> None:
     """打印，且在控制台编码吃不下字符时降级 —— 绝不因为一行日志崩掉发版脚本。
 
-  GBK 控制台打印 emoji（ / ℹ️ / ）会抛 UnicodeEncodeError；发版脚本在打印阶段
+    GBK 控制台打印 emoji（✅ / ℹ️ / 📦）会抛 UnicodeEncodeError；发版脚本在打印阶段
     崩掉，会把"其实已经写完盘"误报成失败。
     """
     try:

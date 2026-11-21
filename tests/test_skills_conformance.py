@@ -174,18 +174,31 @@ OPTIONAL_SCRIPT_POINTERS = {
 # markdown pointer in a body. Key: `<skill>/<references|templates>/<rel>`; value: the program that
 # must actually name the file, relative to the skills root.
 #
-# The four `WORKMEMORY/` templates are read by `bootstrap.py` when it scaffolds a new repo, and the
-# body routes the reader to that script rather than to the individual files. Requiring a body
-# pointer for each would be a false positive, so each is declared instead.
+# The five `WORKMEMORY/` templates are read by the bootstrap scaffolding engine when it scaffolds a
+# new repo, and the body routes the reader to the protocol phase rather than to the individual files.
+# Requiring a body pointer for each would be a false positive, so each is declared instead.
+#
+# After the 0.5.0 modularisation, `bootstrap.py` is a thin CLI entrypoint and the template roster
+# lives in `dfs_bootstrap/constants.py` (`WORKMEMORY_FILES`), consumed by `dfs_bootstrap/workmemory.py`.
+# The declaration points at the file that actually enumerates the names — not the entrypoint — so a
+# future rename still turns it stale rather than silently passing.
 #
 # This is a declaration, not a mute, and it self-invalidates three ways (see the rule): the asset
 # becoming body-routed, the asset leaving the tree, or the named program no longer mentioning it —
 # each of those turns the declaration stale and fails Rule 13.
 CODE_ROUTED_ASSETS = {
-    "dfs-bootstrap/templates/workmemory/INDEX.md": "dfs-bootstrap/scripts/bootstrap.py",
-    "dfs-bootstrap/templates/workmemory/PROJECT_OVERVIEW.md": "dfs-bootstrap/scripts/bootstrap.py",
-    "dfs-bootstrap/templates/workmemory/PROTOCOL.md": "dfs-bootstrap/scripts/bootstrap.py",
-    "dfs-bootstrap/templates/workmemory/work.log": "dfs-bootstrap/scripts/bootstrap.py",
+    "dfs-bootstrap/templates/workmemory/INDEX.md": "dfs-bootstrap/scripts/dfs_bootstrap/constants.py",
+    "dfs-bootstrap/templates/workmemory/INDEX-topics.md": "dfs-bootstrap/scripts/dfs_bootstrap/constants.py",
+    "dfs-bootstrap/templates/workmemory/PROJECT_OVERVIEW.md": "dfs-bootstrap/scripts/dfs_bootstrap/constants.py",
+    "dfs-bootstrap/templates/workmemory/PROTOCOL.md": "dfs-bootstrap/scripts/dfs_bootstrap/constants.py",
+    "dfs-bootstrap/templates/workmemory/work.log": "dfs-bootstrap/scripts/dfs_bootstrap/constants.py",
+    # Hook/gate/CI templates are written by the CLI and hook installer, not linked from the body.
+    "dfs-bootstrap/templates/githooks-dfs-checks.sh": "dfs-bootstrap/scripts/dfs_bootstrap/cli.py",
+    "dfs-bootstrap/templates/githooks-pre-commit.sh": "dfs-bootstrap/scripts/dfs_bootstrap/hook.py",
+    "dfs-bootstrap/templates/repo/check_repo_hygiene.py": "dfs-bootstrap/scripts/dfs_bootstrap/cli.py",
+    "dfs-bootstrap/templates/repo/check_repo_structure.py": "dfs-bootstrap/scripts/dfs_bootstrap/cli.py",
+    "dfs-bootstrap/templates/repo/ci-steps-github.yml": "dfs-bootstrap/scripts/dfs_bootstrap/cli.py",
+    "dfs-bootstrap/templates/repo/ci-wiring-guard-test.py.txt": "dfs-bootstrap/scripts/dfs_bootstrap/cli.py",
 }
 
 

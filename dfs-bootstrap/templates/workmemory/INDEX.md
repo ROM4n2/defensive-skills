@@ -1,6 +1,5 @@
 # WORKMEMORY INDEX — {{PROJECT_NAME}}
 
-
 > **本文件是 HOT 索引，MUST 保持极小**——只放：配置 / 文件清单 / Active handoffs / 已归档 handoffs。
 > 主题索引与蒸馏登记**不在这里** ⇒ 见 `INDEX-topics.md`（WARM 层，`grep` 命中才加载）。
 > 理由：热层每个会话都要读，主题表会随 WARM 分片持续膨胀；把它留在热层等于让每个新会话
@@ -8,7 +7,8 @@
 
 ## Configuration
 
-- HOT_RETENTION_EVENTS: 50 # work.log 热层保留事件数；轮转阈值 = 本值 × 1.5
+- HOT_RETENTION_EVENTS: 15 # work.log 热层保留事件数；轮转阈值 = 本值 × 1.5（22.5 → 23）
+  # 15 由「热层总量 ≤ 24KB 上下文预算 / 单事件均值 ~1.6KB」反推；调大前先确认 work.log 还在预算内。
 
 ## 文件清单
 

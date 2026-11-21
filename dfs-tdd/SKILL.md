@@ -3,7 +3,7 @@ name: dfs-tdd
 description: "Use when enforcing RED-GREEN-REFACTOR discipline."
 license: MIT
 metadata:
-  version: 0.4.0
+  version: 0.5.0
   platforms: linux, macos, windows
   hermes:
     tags:
@@ -42,6 +42,7 @@ Execute Test-Driven Development enforcing **The Iron Law**: Zero production code
 - Use Defensive Skills pure test templates (`get_code_template("test-suite", lang="...")`).
 - Enforce the **Four Dead-Test Defenses**, **Bidirectional Format-Contract Round-Trip**, and **Quantity Dual-Extreme Fixtures (`>1` and `<1`)** — load [references/dead-test-and-quantity-guards.md](references/dead-test-and-quantity-guards.md) when testing parsers, static guards, or ratio/share/percent math.
 - **Checkable Completion Criterion**: The test file exists and asserts the unbuilt behavior.
+- **Suite cost**: when the whole suite stops fitting in a contributor's patience, tier it by module declaration (`TEST_TIER`) with a per-module budget gate rather than by directory — see [references/tiered-test-runners.md](references/tiered-test-runners.md).
 
 ### Step 2: Run Test & Confirm Failure
 - Run the test command in the terminal.
@@ -79,9 +80,10 @@ Execute Test-Driven Development enforcing **The Iron Law**: Zero production code
 
 ## [ANTI] Common Rationalizations & Anti-Patterns
 
-| Agent Rationalization (Anti-Pattern) | Real Hazard (DPO Bad Case) | Defensive Guard (MUST) |
-|---|---|---|
-| *"The test failed, so let me delete or weaken the assert."* | **Malicious Reward Hacking**: masking bugs to simulate 100% pass rates. | NEVER delete or weaken a failing test. Fix production code until the contract passes. |
-| *"I'll add `@pytest.mark.skip` or `t.Skip()` to make the suite green."* | **Test Suite Rot**: real regressions pass silently in CI/CD. | Zero tolerance for newly skipped tests. A skipped test is considered a failing test. |
-| *"I'll write the implementation first, then write a test to cover it."* | **Fake Green (Tautological Test)**: tests tailored to pass implementation bugs. | Step 2 failure receipt is mandatory before creating production implementation files. |
-| *"The implementation looks correct, so I can skip running the test."* | **Premature Completion**: declaring victory without empirical evidence. | Terminal execution receipt with raw exit code 0 is mandatory for completion claims. |
+The five canonical rationalizations (test weakening, skip markers, implementation-first, unverified
+completion, unreachable coverage) and why each guard is mechanical rather than advisory live in
+[references/anti-patterns.md](references/anti-patterns.md). Load it during review, or when a
+contributor proposes deleting, skipping, or weakening a test.
+
+**Non-negotiable in one line**: a test that could not have failed tells you nothing; a completion
+claim without a quoted `Ran N tests` summary or raw exit code is a self-report, not evidence.

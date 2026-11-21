@@ -19,7 +19,7 @@ Standard operating procedure for periodic repository maintenance, subagent workt
 - When cleaning up accumulated `.worktrees/` and subagent branches after multi-agent workflows.
 - When maintenance must account for active parallel workstreams — use `/dfs-orchestrate` for the actual file-occupancy partition, not this maintenance Skill.
 - When automated candidate PRs or abandoned branches stall scheduled discovery pipelines.
-- When synchronizing `.agent-context.md` or repository baselines after a large milestone.
+- When synchronizing `AGENTS.md` / `WORKMEMORY/PROJECT_OVERVIEW.md` (or legacy `.agent-context.md`) baselines after a large milestone.
 
 > **Full playbook**: every rule below has a detailed entry — commands, Windows/MSYS traps, and the reasoning behind each guard — in [`references/maintenance-playbook.md`](references/maintenance-playbook.md). Load it before executing a step you have not run recently.
 
@@ -65,7 +65,7 @@ Fourteen named traps govern this step — uncommitted child changes invisible to
 ### Step 4: Machine Context & Baseline Synchronization
 When the codebase has evolved across multiple sessions, project-level context files become stale.
 1. Re-run primary test and build commands to capture physical numbers — **from the repo's sanctioned baseline, not your language default**.
-2. Update `.agent-context.md` (or equivalent context anchor) with recomputed figures and newly established red lines.
+2. Update the repo's context anchor (`WORKMEMORY/PROJECT_OVERVIEW.md` + `AGENTS.md`, or legacy `.agent-context.md` if still used) with recomputed figures and newly established red lines.
 3. Track project-specific gotchas in `.agents/skills/<project>-gotchas/SKILL.md` rather than polluting global cross-session memory.
 
 The local/CI split rule, the removed-anchor rule, and why provenance must sit next to every number are in the playbook.

@@ -27,12 +27,12 @@ metadata:
 # DFS-Research: Evidence-Graded External Retrieval
 
 Turn an open question into a graded, cited knowledge artifact, then sink it into the Vault.
+
 ## [MUST] The Anti-Fabrication Invariant (RFC 2119 MUST)
 > **Every claim in the research deliverable MUST carry a verifiable source tier (A/B/C) and a resolvable locator (URL, file:line, or RFC citation), or it is explicitly marked `UNVERIFIED`.**
 > When a fact cannot be retrieved, write `UNVERIFIED` and describe the blocker — NEVER fill the gap with plausible-looking hallucinated claims.
 
-**Knowledge-base paths:** use `{vault_root}` supplied by `$WIKI_PATH` directly.
-
+**Knowledge-base access:** prefer `search_vault` / `save_inbox_draft` MCP tools; if reading vault files directly, resolve `{vault_root}` per `dfs/references/vault-root-resolution.md`.
 
 ## The 5-Phase Evidence-Graded Research Loop
 
@@ -62,7 +62,7 @@ Tag the run:
   - Scope articulated as a single falsifiable sentence; execution mode tagged (`[HITL]` or `[AFK]`).
 
 ### Phase 1 — Internal First (MCP)
-- **No MCP / no knowledge base?** Fall back to local sources — repo docs, `docs/`, the test suite, `git log` — and record each finding by file path instead of a vault path.
+**No MCP / no knowledge base?** Fall back to local sources — repo docs, `docs/`, the test suite, `git log` — and record each finding by file path instead of a vault path.
 Retrieve from the Vault before spending a single web request. Escalation ladder (see `dfs/references/mcp-contract.md`):
 ```
 search_vault(query)                      → narrow, known keyword

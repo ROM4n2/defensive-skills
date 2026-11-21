@@ -55,7 +55,7 @@ Conduct thorough, unsparing code review on a git diff or pull request against De
 ### Step 2 — Retrieve Applicable Language Standards
 1. **Pull Authoritative RFC 2119 Rubric**:
    - The 7-language RFC 2119 rules live in the Vault. Retrieve the current version so review never drifts out of date:
-     - `get_rule_snippet(rule, section)`: pull the specific section for each language the diff touches. **No MCP?** Read the rule file directly from the knowledge-base path the caller supplied.
+     - `get_rule_snippet(rule, section)`: pull the specific section for each language the diff touches.
      - `list_standards()`: enumerate available language standards when diff spans unfamiliar files.
    - Pass retrieved rule text to the reviewer subagent as the authoritative rubric. Never restate rules from memory.
 2. **Checkable Completion Criterion**:

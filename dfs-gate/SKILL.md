@@ -3,7 +3,7 @@ name: dfs-gate
 description: "Use when turning a recurring defect into a mechanical gate."
 license: MIT
 metadata:
-  version: 0.2.0
+  version: 0.3.0
   platforms: linux, macos, windows
   hermes:
     tags:
@@ -64,6 +64,9 @@ If the initial scan returns high hit volume, stop and adjudicate per [references
 - **Silent Mutation Mis-match**: Unasserted mutation replacement on CRLF/drifted lines misses silently. Assert `count == 1` before checking gate failure ([references/anti-dilution-and-three-proofs.md](references/anti-dilution-and-three-proofs.md) §6).
 - **Symptom Gating**: String matching without AST or mechanism is defeated by aliasing or code comments.
 - **Prose Substitution**: Text documentation in 01-Rules is ignored without automated execution. Convert recurring defects into mechanical gates.
+- **Dead Gate (Normalization Trap)**: A gate reading a representation an upstream stage already normalized (`git show :path` after `git add` under `text eol=lf`) can never fire on the defect it names. Gate the *declaration* (the `.gitattributes` pin) plus the narrow case where worktree bytes are load-bearing; load [references/dead-gate-traps.md](references/dead-gate-traps.md) §1.
+- **Unreachable Wiring**: Testing the gate module directly leaves the call site uncovered — a hook's invocation can be deleted while every test stays green. One test MUST trigger the defect through the outermost entry point and assert the gate's own tag ([references/dead-gate-traps.md](references/dead-gate-traps.md) §2).
+- **Self-Rejection**: A gate MUST pass on the artifacts its own installer produces. A host-path rule rejects a bootstrap-generated anchor that embeds a machine root — invisible to fixture-based gate tests ([references/dead-gate-traps.md](references/dead-gate-traps.md) §3).
 
 ## Checkable Completion Criterion
 - Gate committed to `.githooks/` or CI configuration.
@@ -73,3 +76,7 @@ If the initial scan returns high hit volume, stop and adjudicate per [references
   "it returns 0 on the good input" is unverified — it cannot distinguish "correct" from
   "checked nothing". See `dfs-gate/references/` for the fixture pattern and
   `dfs-tdd/references/dead-test-and-quantity-guards.md` §4.
+- **Fire-ability verified (MUST)**: the negative fixture is triggered through the outermost entry point
+  the user actually hits (hook / CI target / CLI default), asserting the gate's own tag — not merely a
+  non-zero exit, which an unrelated early failure can also produce. Checklist in
+  [references/dead-gate-traps.md](references/dead-gate-traps.md) §5.

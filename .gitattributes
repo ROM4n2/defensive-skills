@@ -28,3 +28,4 @@ README.en.md  text eol=lf
 # bootstrap.py reads with universal newlines — which is exactly why it is pinned rather than
 # trusted to stay harmless.
 dfs-bootstrap/templates/workmemory/*   text eol=lf
+dfs-bootstrap/templates/repo/*         text eol=lf

@@ -12,7 +12,11 @@ metadata:
     - decision-record
     - madr
     - documentation
-    related_skills: [dfs-grill, dfs-spark, dfs-plan, dfs-save]
+    related_skills:
+    - dfs-grill
+    - dfs-spark
+    - dfs-plan
+    - dfs-save
 ---
 
 
@@ -59,8 +63,8 @@ The ADR document structure comprises 5 core sections:
   - All 5 MADR sections populated; considered options contain at least 2 distinct alternatives with concrete pros/cons.
 
 ### Phase 3: Dual-Track Archiving & Verification
-- Call `save_inbox_draft` MCP to create an entry in `99-Inbox/`, or directly write to `08-Projects/{project}/01-ADR/`. **No MCP / no knowledge base?** Write the file by hand at the same path (create the directory first) — ADR content and numbering do not depend on the MCP.
-- Update the project's `README.md` or `.agent-context.md` with the new ADR reference.
+- Call `save_inbox_draft` MCP to create an entry in `99-Inbox/`, or directly write to `08-Projects/{project}/01-ADR/`.
+- Update the project's `README.md` or ADR index (e.g., `docs/README.md`, or legacy `.agent-context.md` if still used) with the new ADR reference.
 - **Checkable Completion Criterion**:
   - ADR markdown written to target path; project README/context updated with link to new ADR.
 

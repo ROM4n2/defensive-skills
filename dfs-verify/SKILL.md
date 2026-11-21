@@ -5,6 +5,7 @@ license: MIT
 metadata:
   version: 0.2.0
   platforms: linux, macos, windows
+  author: Haoyu, Hermes Agent
   hermes:
     tags:
     - verification

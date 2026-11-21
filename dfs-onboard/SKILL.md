@@ -61,8 +61,8 @@ Extract critical gotchas:
 
 ---
 
-### Phase 4: Machine-Readable `.agent-context.md` Generation
-Write `.agent-context.md` in project root:
+### Phase 4: Context Anchor Update (`AGENTS.md` / `WORKMEMORY`, Legacy `.agent-context.md`)
+Update the repo's primary anchor (`AGENTS.md` for stable rules/commands and `WORKMEMORY/PROJECT_OVERVIEW.md` for current state/baseline; use `.agent-context.md` only in legacy repos that already maintain it):
 
 ```markdown
 # [NOTE] Agent Context: {Project Name}
@@ -82,18 +82,16 @@ Write `.agent-context.md` in project root:
 - {Gotcha 2: e.g. All SQL queries must use prepared statements}
 
 ### 4. [STEP] Defensive Skills Linkage
-- Global Standards: `{vault_root}/AGENTS.md` (resolve via `$WIKI_PATH` → `$OBSIDIAN_VAULT_PATH` → upward search)
-- Vault Search: `search_vault` MCP tool (server: `mcp/knowledge_server.py`; without MCP use the `mcp/README.md` fallback table)
-  (DFS-PORT: the private vault-side `search-vault.py` CLI is not shipped with this repo)
+- Vault Search: `search_vault` MCP tool (`save_inbox_draft` for durable lessons)
 ```
 
-**Pre-generation guard (MUST)**: check the repo first — if `.agent-context.md` was deliberately removed before (e.g. it duplicated `AGENTS.md` / a shared-memory directory), or the repo documents an equivalent machine-readable anchor (e.g. gitignored `AGENTS.md` / `CLAUDE.md` / `WORKMEMORY`), **do NOT recreate it**; follow the repo's existing convention, refresh the existing anchors in-place, and note the substitution in your handoff.
+**Legacy `.agent-context.md` guard (MUST)**: if the repo uses `AGENTS.md` / `CLAUDE.md` / `WORKMEMORY/` (or deliberately removed `.agent-context.md`), **do NOT create or recreate `.agent-context.md`**; follow the repo's existing convention, refresh the existing anchors in-place, and note the substitution in your handoff.
 
 Prompt human partner: `Codebase onboarded. Test baseline verified ({pass_count} passed). Ready to develop?`
 ---
 
 ## Checkable Completion Criterion
-- `.agent-context.md` created (or existing convention acknowledged) with verified build/test commands, LOC baseline, and passing test count.
+- Repo context anchor (`AGENTS.md` / `WORKMEMORY/PROJECT_OVERVIEW.md`, or legacy `.agent-context.md`) updated with verified build/test commands, LOC baseline, and passing test count.
 - Physical execution receipt of existing test suite captured (Exit code 0 or baseline failure count).
 - Repo invariants file refreshed with this session's gotchas (three mandatory classes above) — diff-verified, not rewritten from scratch.
 
@@ -113,6 +111,6 @@ When an invariants/anchor file already exists, the second onboarding is a **diff
 | Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
 |---|---|---|
 | *"I will infer the project architecture from memory without running tests."* | **Ground-Truth Drift**: Assumptions about outdated dependencies or broken build environments lead to broken plans. | Run existing build and test commands immediately; capture authentic baseline passing counts before writing code. |
-| *"I'll explore the whole repository deeply before answering the user."* | **Context Bloat & Token Depletion**: Indiscriminate deep reads consume context without producing actionable value. | Follow the 3-phase rapid onboarding ladder: identify framework, read entry points, run test suite, and record in `.agent-context.md`. |
-| *"If .agent-context.md was deleted before, I should recreate it anyway."* | **Repository Convention Violation**: Recreating intentionally pruned or substituted files creates duplicate drift. | Follow the Pre-generation Guard: if `.agent-context.md` was deliberately removed or substituted, follow existing conventions. |
+| *"I'll explore the whole repository deeply before answering the user."* | **Context Bloat & Token Depletion**: Indiscriminate deep reads consume context without producing actionable value. | Follow the 3-phase rapid onboarding ladder: identify framework, read entry points, run test suite, and record in `AGENTS.md` / `WORKMEMORY` (or legacy `.agent-context.md`). |
+| *"If .agent-context.md was deleted before, I should recreate it anyway."* | **Repository Convention Violation**: Recreating intentionally pruned or substituted files creates duplicate drift. | Follow the Legacy `.agent-context.md` Guard: never create `.agent-context.md` when `AGENTS.md` / `WORKMEMORY` is the repo anchor. |
 | *"I ran pytest from repo root and it failed with ModuleNotFoundError, so the baseline is broken."* | **False-Positive Baseline Failure**: In monorepos, subprojects expect `PYTHONPATH=<service>` or execution within their subfolder. | Always check package layout before recording broken baselines. |

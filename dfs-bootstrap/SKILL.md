@@ -2,9 +2,9 @@
 name: dfs-bootstrap
 description: "Use when bootstrapping a repo with security hooks."
 license: MIT
-metadata:
 disable-model-invocation: true
-  version: 0.2.3
+metadata:
+  version: 0.5.0
   platforms: linux, macos, windows
   hermes:
     tags: [bootstrap, git-hooks, security, pre-commit, repo-init]
@@ -13,81 +13,77 @@ disable-model-invocation: true
 # DFS-BOOTSTRAP: Repository Security & Knowledge Anchoring
 
 > **Invocation — explicit only.** This skill carries top-level `disable-model-invocation: true`,
-> which the current Trae harness reads. The restriction remains: do not auto-select this skill;
-> wait until the user asks for it, or until an already-running DFS skill routes here. Other
-> harnesses may ignore the field — read `dfs/references/harness-field-mapping.md`.
+> which prevents automatic model selection while preserving explicit `/dfs-bootstrap` invocation in
+> Antigravity and Claude Code. Wait until the user asks for it, or until an already-running DFS skill
+> routes here. Harnesses that ignore the field still enforce this banner — see
+> `dfs/references/harness-field-mapping.md`.
 
-Initialize any new or existing repository (`<project-root>`) with zero-leak secret detection git hooks and 3-line Defensive Skills knowledge anchors.
+Initialize any repository with a zero-leak secret hook, two mechanical gates, and a single-source-of-truth
+rules anchor. The full procedure, worked example, and field evidence live in
+[`references/bootstrap-phases.md`](references/bootstrap-phases.md); load it for any Phase below.
 
-> **Detailed playbook**: this skill's long-form sections were moved to [`references/bootstrap-phases.md`](references/bootstrap-phases.md). Load it when you need the full procedure, the worked example, or the field evidence — the constraints above are self-sufficient without it.
+## Two Modes (MUST — choose before running)
 
-## The 5-Phase Bootstrap Protocol
+| Mode | When | What git sees |
+|---|---|---|
+| `--mode owner` (default) | You own the repository | Artifacts tracked; `.gitignore` / `.gitattributes` appended to |
+| `--mode overlay` | Secondary development on **someone else's upstream** | Nothing tracked: exclusions in `.git/info/exclude`, LF pins in `.git/info/attributes`, hook in `.git/dfs-hooks` |
 
-### Phase 0: Git Initialization (MUST — 此步不得跳过)
-Run `git init` when `.git` is missing; confirm the repository and initial branch before any write, and stop on failure. Before Phase 4 commits, require non-empty global `user.name` and `user.email`; missing values must be set by the user. Apply MUST perform initialization; dry-run only previews it. See `references/bootstrap-phases.md` for verification commands.
+Choosing wrong is a leak: owner mode on a fork puts `AGENTS.md` / `WORKMEMORY/` in your PR; overlay on
+your own repo leaves the apparatus untracked and unshared. Overlay guarantees and the "upstream already
+owns `AGENTS.md`/a hook" case: [`references/overlay-mode.md`](references/overlay-mode.md).
 
-### Phase 1: Security Git Hooks & .gitignore Protection (MUST)
-Verify `.gitignore` covers every sensitive pattern, install `.githooks/pre-commit` from
-`templates/githooks-pre-commit.sh` with LF/no-BOM, and pin those endings in `.gitattributes` so a
-fresh checkout cannot re-break the hook. The exact pattern list, the normalization commands, and
-the `.gitattributes` block are in
-[`references/bootstrap-phases.md`](references/bootstrap-phases.md).
+## The 5-Phase Protocol (constraints only — details in tier 3)
 
-### Phase 2: Knowledge Vault Anchor Injection (MUST)
-Create/Update project-level `CLAUDE.md` and `.agent-rules.md` in repository root with the standardized 3-line anchor:
-
-```markdown
-## [NOTE] 工程规范与避坑检索
-- 核心规范源：优先通过 `search_vault` MCP 或环境变量 `$WIKI_PATH`/`$OBSIDIAN_VAULT_PATH` 解析；无外部知识库时以本仓 `AGENTS.md` 及 `docs/` 为自闭环规范源
-- 检索避坑规范：调用 `search_vault` MCP；无 MCP 时检索本地工程文档与测试套件
-- 发现新踩坑自动沉淀：优先调用 `save_inbox_draft`；无外部知识库时写草稿至 `WORKMEMORY/notes/YYYY-MM-DD-{topic}.md`
-```
-
----
-
-### Phase 3.5: WORKMEMORY Scaffold & Agent Distillation (MUST)
-Run the mechanical scaffold, then distill the primer:
-
-1. Preview with `python scripts/bootstrap.py --target <project-root> --vault-root <vault-root> --dry-run`; after reviewing the output, apply with `python scripts/bootstrap.py --target <project-root> --vault-root <vault-root>` (idempotent — it scaffolds `WORKMEMORY/` **5-piece set** (`INDEX.md` + **`INDEX-topics.md`** + `PROTOCOL.md` + `PROJECT_OVERVIEW.md` + `work.log`), injects anchors, and skips existing state). The script resolves `templates/` relative to its own location, so templates are read from this Skill directory. `notes/` (oversized-event bodies >4KB) is created on first use — no need to pre-create.
-   - `templates/workmemory/INDEX-topics.md` is the WARM topic index the scaffold drops in alongside the hot `INDEX.md`; `notes/` is created on first use.
-   - **Hot-index discipline (2026-10-17)**: `INDEX.md` is the per-session HOT layer — it MUST hold only Configuration / 文件清单 / Active handoffs. Topic index and distillation registry live in `INDEX-topics.md` (WARM, loaded on `grep` hit). Never grow `INDEX.md` with topic tables; that cost is paid by **every** new session.
-   - **The embedded copies are the published source**: a published skill cannot bundle a whole knowledge base, so `dfs-bootstrap/templates/workmemory/` IS the reference here — edit it directly, and if you keep a private vault `Templates/workmemory/`, treat the vault as the copy. No sync program ships with this repo (the author's one-way sync script inspects a specific vault layout), so there is nothing to run and no drift to check.
-2. **Agent distillation step (script cannot do this)**: read the project codebase and fill `WORKMEMORY/PROJECT_OVERVIEW.md` from its template skeleton — 一段话项目定位（目标/技术栈/运行方式）、当前状态（进行中工作与待办）、高频坑（现象→根因→解法）。Replace the placeholder comments with real content distilled from README/AGENTS.md/git log/ADR.
-3. Append a bootstrap `NOTE` event to `work.log` recording what was distilled (identity: ask user for model-id if unsure).
-4. Event discipline (SHOULD): `WORK_START` 附「不做范围」一行（明确排除的功能/重构/顺手修改）；`WORK_END` 收尾时做回写检查——稳定结论回写（dfs/模块文档/INDEX）、临时产物（日志/真实数据/凭据/截图）不入库。
-5. Protocol reference: 优先解析 `$WIKI_PATH/01-Rules/CROSS-AGENT-MEMORY.md`；无外部知识库时以本仓 `WORKMEMORY/PROTOCOL.md` 为自包含真源。
-
----
-
-### Phase 4: Binary Verification & Mechanical Test (HARD GATE)
-A green `bash .githooks/pre-commit` on a clean tree proves only that the hook does not crash — it
-does NOT prove it blocks anything. Verify the barrier with these probes before claiming success:
-
-1. **Clean tree** — `bash .githooks/pre-commit` must exit 0 (no false positive on repo content).
-2. **Adversarial (content)** — stage a throwaway file holding a synthetic key, e.g.
-   `python -c "open('__probe__.txt','w').write('k = sk-' + '0'*32)" && git add __probe__.txt`
-   （探针内容用**运行时拼接**，不把 `sk-` 字面量写进本文件：本仓是**公开**仓，字面量既会命中本仓 hook，也可能命中 GitHub 的 secret scanning —— 拼接出的内容仍能触发 hook，探针效力不变。）
-   Then run `git commit` — it MUST exit 1 with a `[LINE]` attribution, and `git rev-parse HEAD` MUST
-   be unchanged (the commit was truly aborted, not merely warned).
-3. **Adversarial (filename)** — `printf 'x=1' > .env && git add -f .env`; the hook MUST exit 1 with `[NAME]`.
-4. **Checkout durability (Windows)** — `rm .githooks/pre-commit && git checkout -- .githooks/pre-commit`,
-   then confirm `file .githooks/pre-commit` reports plain `ASCII text`, not `with CRLF line terminators`
-   (catches a missing `.gitattributes` LF pin).
-5. Clean up every probe (`git reset -q HEAD ...` + `rm -f`), confirm the worktree is back to the intended state.
-6. Announce: `[PASS] Repository bootstrapped with zero-leakage pre-commit guard and Vault anchors.`
----
+- **Phase 0 — Git init (MUST)**: `git init` if `.git` missing; confirm repo + branch before any write;
+  require non-empty `user.name`/`user.email` before Phase 4 commits (set by the user, never silently).
+- **Phase 1 — Hook, ignores & EOL pins (MUST)**: cover sensitive patterns **plus agent scratch** (`.worktrees/`,
+  `.vault-exec-ledger.json`). Install the hook LF/no-BOM **and pin endings in `.gitattributes` in the same
+  step** — on Windows `core.autocrlf=true` otherwise re-materialises CRLF and git cannot spawn the hook.
+  `core.hooksPath` activation runs **every** run (local config does not survive a clone); repointing it
+  needs `--take-hooks-path`. Index the 0755 explicitly (`core.filemode=false`). Full mechanism:
+  `references/bootstrap-phases.md` Phase 1.
+- **Phase 1b — Repository gates (SHOULD, default on)**: two stdlib gates land in `scripts/` (`--no-gates`
+  skips). A project-owned copy (no marker) is never overwritten; a DFS-marked older copy auto-upgrades.
+  Thresholds, pragmas, opt-ins: [`references/gate-reference.md`](references/gate-reference.md).
+- **Phase 2 — Rules anchor (MUST)**: `AGENTS.md` is the single source of truth; `CLAUDE.md` is exactly the
+  2-line `@AGENTS.md` pointer (a custom copy is backed up as `CLAUDE.md.dfsbak`). Scaffold the 5-piece
+  `WORKMEMORY/` (INDEX / INDEX-topics / PROJECT_OVERVIEW / PROTOCOL / work.log); `INDEX.md` is the HOT
+  layer, topics go to `INDEX-topics.md` (WARM). Fill the overview from the real codebase.
+- **Phase 3 — Local-only gate (default on)**: `templates/local-gates/fingerprint-gate.sh` installs into
+  `$GIT_DIR/local-gates/` — **never into the tracked tree**. It keeps this machine's identifiers out of a
+  public remote; a tracked copy would carry the identifiers it hides. Patterns are absolute paths
+  carrying identity (real username dirs, private vault paths). Do NOT list generic tool dir names
+  (`\.codebuddy/`, `\.trae-cn/`) — they carry no identity and flag legitimate "ignore this dir" comments.
+  Details: `references/gate-reference.md` §7.
+- **Phase 4 — Binary verification (HARD GATE)**: green `bash .githooks/pre-commit` on a clean tree only proves
+  no crash. Six probes: clean passes; synthetic secret `[LINE]`; sensitive filename `[NAME]`; CRLF under
+  `.githooks/` `[EOL]`; host path / conflict marker `[ABS_PATH]`/`[CONFLICT]` through the hook; HEAD unchanged
+  after every abort. Assemble probe content at runtime; target a sibling under `.githooks/`, never the running
+  hook. Commands: `references/bootstrap-phases.md` Phase 4.
 
 ## Checkable Completion Criterion
-- `.githooks/pre-commit` installed with LF line endings and executable permissions.
-- `git config core.hooksPath` set to `.githooks`.
-- Synthetic secret probe and filename probe both exit 1 with abort proof.
+- Hook installed LF, **100755 in the index**, carrying the current `# dfs-bootstrap-hook-version:` marker.
+- `core.hooksPath` set (verified each run); `.gitattributes` (or `.git/info/attributes`) pins `.githooks/**`
+  and `WORKMEMORY/**` to LF.
+- `AGENTS.md` holds the rules anchor; `CLAUDE.md` is exactly the 2-line pointer.
+- `--target` was the repository **root** — a subdirectory is refused with exit 2.
+- All six probes exit 1 with their own tag; `git rev-parse HEAD` unchanged.
+- Overlay mode only: `git status --porcelain`, `git diff`, `git diff --cached` all empty.
 
----
+## Running the tests (blocks, not everything)
+```bash
+python -B tests/blocks.py --list        # root hook doctor report repair bootstrap overlay gates ...
+python -B tests/blocks.py doctor        # only the block you touched
+python -B tests/blocks.py all           # before shipping
+python -B tests/mutation_check_structure.py   # proves the tests can fail (~2 min)
+```
+`tests/harness.py` builds a real git repo per test and runs the real CLI; nothing is mocked.
 
-## Common Rationalizations & Anti-Patterns
+## [ANTI] Common Rationalizations
+Eight canonical rationalizations (skipping the hook, CRLF without pins, live secret probes, rule
+duplication, expanded anchors, stale hooks, fork pollution, silent bloat) and their mechanical guards
+live in [references/anti-patterns.md](references/anti-patterns.md).
 
-| Agent Rationalization (Anti-Pattern) | Real Hazard | Defensive Guard (MUST) |
-|---|---|---|
-| *"I'll skip pre-commit secret hooks during initial scaffolding to move faster."* | **Credential Leakage**: Unprotected commits leak API keys or local configurations permanently into git history. | Install and activate `.githooks/pre-commit` before making the first commit in any repository. |
-| *"I'll configure git hooks without normalizing line endings."* | **CRLF Shebang Failure**: Windows CRLF line endings break bash execution (`cannot spawn .githooks/pre-commit`). | Force LF line endings and no UTF-8 BOM on all `.githooks/*` files upon creation. |
-| *"Testing with a live secret literal verifies the hook works."* | **Secret Scanner Invalidation**: Committing real secret tokens trips remote platform scanners and revokes credentials. | Use runtime-concatenated synthetic probes (e.g. `'sk-' + '0'*32`) that exercise regexes without tripping remote scanners. |
+**Non-negotiable**: a bootstrap that cannot prove its gate blocks something, and cannot prove it left the
+tracked tree untouched, has been verified only by execution — not by evidence.

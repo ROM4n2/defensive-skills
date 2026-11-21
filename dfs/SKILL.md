@@ -24,8 +24,8 @@ Intelligently detect workspace environment state and route developer intent to t
 ## Environment-Aware Auto-Detection (Step 0)
 Before routing, perform non-invasive environment inspection:
 1. **Empty / Fresh Directory**: No `.git` or no `.githooks` -> Recommend `/dfs-bootstrap`
-2. **Existing Codebase (Unonboarded)**: No `.agent-context.md` -> Recommend `/dfs-onboard`
-2b. **Onboarded but no repo invariants anchor** (`.agent-context.md` exists, but no `AGENTS.md` / `CLAUDE.md` / `docs/agents/INVARIANTS.md` carrying the red lines and known traps) -> Recommend a `/dfs-onboard` Phase-3 refresh: every later subagent brief must otherwise restate the invariants in full, which is the largest avoidable token cost in a multi-dispatch run.
+2. **Existing Codebase (Unonboarded)**: No `AGENTS.md` / `CLAUDE.md` / `WORKMEMORY/` (nor legacy `.agent-context.md`) -> Recommend `/dfs-onboard`
+2b. **Onboarded but no repo invariants anchor** (`WORKMEMORY/` or legacy `.agent-context.md` exists, but no `AGENTS.md` / `CLAUDE.md` / `docs/agents/INVARIANTS.md` carrying the red lines and known traps) -> Recommend a `/dfs-onboard` Phase-3 refresh: every later subagent brief must otherwise restate the invariants in full, which is the largest avoidable token cost in a multi-dispatch run.
 3. **Active Implementation Plan**: `implementation_plan.md` or `.vault-exec-ledger.json` present -> Recommend `/dfs-exec` or `/dfs-pipeline`
 4. **Fuzzy Idea, No Design Yet**: Vague user prompt -> Recommend `/dfs-spark` (spec definition), follow with `/dfs-grill` if boundaries are fuzzy
 5. **Bug / Outage / Test Failure**: Stack trace or error log -> Recommend `/dfs-debug` (dev) or `/dfs-incident` (prod outage)
@@ -59,15 +59,15 @@ Before routing, perform non-invasive environment inspection:
 
 ## [NOTE] Worked example — detection to route
 
-Observed workspace (Step 0): `.git` yes · `.githooks` yes · `.agent-context.md` yes · no `implementation_plan.md`
+Observed workspace (Step 0): `.git` yes · `.githooks` yes · `AGENTS.md` yes · no `implementation_plan.md`
 
 ```
 $ user: CI 打包崩了，报 CFBundleIdentifier missing
 $ <pasted build log>
 
 [dfs] Step 0 case 5 — stack trace / error log
-      bootstrapped (.githooks) and onboarded (.agent-context.md) -> cases 1 and 2 skip
-      a build-time failure, not a live outage                    -> not /dfs-incident
+      bootstrapped (.githooks) and onboarded (AGENTS.md) -> cases 1 and 2 skip
+      a build-time failure, not a live outage          -> not /dfs-incident
 => route: /dfs-debug
 ```
 
@@ -84,7 +84,7 @@ All DFS skills share the core architecture contracts housed in `dfs/references/`
 | [`dfs/references/a-mac-gate.md`](dfs/references/a-mac-gate.md) | A-MAC admission gate: non-obvious, physically verified, reusable learnings |
 | [`dfs/references/acceptance-recipes.md`](dfs/references/acceptance-recipes.md) | Deterministic physical receipts: snapshots, hash checks, and kill-resume proofs |
 | [`dfs/references/harness-field-mapping.md`](dfs/references/harness-field-mapping.md) | Frontmatter support matrix across Claude Code, Hermes, Codex, and OpenCode |
-| [`dfs/references/mcp-contract.md`](dfs/references/mcp-contract.md) | MCP tool contracts, fallback tables, and high-signal output rules |
+| [`dfs/references/mcp-contract.md`](dfs/references/mcp-contract.md) | Canonical MCP tool contracts and high-signal output rules |
 
 ---
 

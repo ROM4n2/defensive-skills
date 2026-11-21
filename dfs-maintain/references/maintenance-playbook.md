@@ -19,7 +19,7 @@ Standard operating procedure for periodic repository maintenance, subagent workt
 - When cleaning up accumulated `.worktrees/` and subagent branches after multi-agent workflows.
 - When maintenance must account for active parallel workstreams — use `/dfs-orchestrate` for the actual file-occupancy partition, not this maintenance Skill.
 - When automated candidate PRs or abandoned branches stall scheduled discovery pipelines.
-- When synchronizing `.agent-context.md` or repository baselines after a large milestone.
+- When synchronizing `AGENTS.md` / `WORKMEMORY/PROJECT_OVERVIEW.md` (or legacy `.agent-context.md`) baselines after a large milestone.
 
 ---
 
@@ -98,7 +98,7 @@ rm -rf .worktrees/<stale-child> 2>/dev/null || true
 When the codebase has evolved across multiple sessions, project-level context files become stale:
 1. Re-run primary test and build commands to capture physical numbers — **from the repo's sanctioned baseline, not your language default**. When the repo states a local/CI split ("local runs targeted tests only, the full suite lives in CI"), the figures come from the latest CI run's receipt (`gh run list` / `gh run view <id> --json jobs`) plus a narrow local subset; running the full suite locally against that stated discipline freezes the host when other agents share the machine. Record provenance (CI run id vs local run) next to every number — a figure nobody can re-derive is not a baseline.
    - File count, test suite count, route count, passing assertions.
-2. Update `.agent-context.md` (or equivalent context anchor):
+2. Update the repo's context anchor (`WORKMEMORY/PROJECT_OVERVIEW.md` + `AGENTS.md`, or legacy `.agent-context.md` if still used):
    - Replace outdated test counts and file lists with recomputed figures.
    - Record newly established local engineering red lines and gotchas.
    - **If the anchor was deliberately removed** (common: it duplicated an `AGENTS.md` / shared-memory directory the repo now keeps), do NOT recreate it — follow the repo's existing anchor, note the substitution in the handoff, and record the fresh figures there instead.
